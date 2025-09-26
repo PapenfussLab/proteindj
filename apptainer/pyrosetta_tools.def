@@ -1,0 +1,34 @@
+Bootstrap: docker
+From: mambaorg/micromamba:1.5.8
+
+%post -c /bin/bash
+    apt-get update && apt-get upgrade -y
+    apt-get install -y \
+        wget \
+        unzip \
+        git \
+        procps \
+        coreutils \
+        grep \
+        pigz \
+        sed
+
+    micromamba create -n pyrosetta -c conda-forge python=3.9 pip pyyaml -y
+    eval "$(micromamba shell hook --shell bash)"
+    micromamba activate pyrosetta
+
+    pip install pyrosetta-installer 
+    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+
+    pip install biopython pandas matplotlib torch
+
+    apt-get autoremove -y
+    apt-get clean
+
+%environment
+    # so we can just run it out of the box without having to set the prefix
+    export PATH=/opt/conda/envs/pyrosetta/bin:$PATH
+
+# Entry point for the container when run.
+%runscript
+    exec "$@"

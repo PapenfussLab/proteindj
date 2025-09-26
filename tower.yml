@@ -1,0 +1,5 @@
+reports:
+  "results/all_designs.csv":
+    display: "Metadata for all designs"
+  "results/best_designs.csv":
+    display: "Metadata for best designs"

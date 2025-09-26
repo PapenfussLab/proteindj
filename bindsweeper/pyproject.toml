@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bindsweeper"
+version = "0.1.7" 
+authors = [
+    { name = "Dylan Silke", email = "silke.dy@wehi.edu.au"},
+    { name = "Josh Hardy", email = "hardy.j@wehi.edu.au"}
+]
+description = "A tool to perform a parameter sweep of the ProteinDJ pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "click>=8.0.0",
+    "pyyaml>=5.1",
+    "pandas>=2.2.3",
+    "pytest-timeout>=2.4.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+"Repository" = "https://github.com/PapenfussLab/proteindj.git"
+
+[project.scripts]
+bindsweeper = "bindsweeper.cli:cli"
+
+[tool.setuptools.packages.find]
+exclude = ["scaffolds*", "tests*"]
+
+[tool.setuptools.package-data]
+bindsweeper = ["*.json"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+extend-exclude = [
+    "__pycache__",
+    ".pytest_cache",
+    "htmlcov",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by formatter
+    "B904",  # raise without from inside except
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bindsweeper"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

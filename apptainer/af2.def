@@ -1,0 +1,45 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+%post
+
+  apt-get -q update
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+        git \
+        python3.10 \
+        python3-pip
+    # running as fakeroot, just surpressing warning
+    python3.10 -m pip install -q -U --no-cache-dir pip
+    rm -rf /var/lib/apt/lists/*
+    apt-get autoremove -y
+    apt-get clean
+
+  ldconfig
+  ldconfig -p
+
+  # running as fakeroot, just supressing warning
+  pip install -q --no-cache-dir   \
+        git+https://github.com/NVIDIA/dllogger#egg=dllogger \
+        dm-haiku==0.0.10 \
+        dm-tree==0.1.8 \
+        biopython==1.81 \
+        ml-collections==0.1.1 \
+        tensorflow==2.13.0 \
+        ml_dtypes mock 
+
+  pip install --upgrade --no-cache-dir jax==0.3.25 jaxlib==0.3.25+cuda11.cudnn805 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+  pip install pyrosetta-installer 
+  python3 -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+
+  git clone https://github.com/PapenfussLab/dl_binder_design.git  /dl_binder_design
+
+%environment
+  export PATH="/opt/conda/bin${PATH:+:${PATH}}"
+  export LD_LIBRARY_PATH="/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
+%runscript
+  exec   "$@"
+
+%labels
+AUTHOR esteva.m@wehi.edu.au

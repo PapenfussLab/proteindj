@@ -1,0 +1,19 @@
+mode: binder_denovo
+profile: milton
+
+fixed_params:
+  rfd_contigs: "[A17-131/0 60-100]"
+  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  rfd_noise_scale: 1.0
+  rfd_ckpt_override: "complex_beta"
+
+  af2_max_pae_interaction: 5
+  af2_max_rmsd_binder_bndaln: 1
+  af2_min_plddt_overall: 80
+
+sweep_params:
+  rfd_hotspots:
+    values:
+      - null
+      - "[A56]"
+      - "[A56,A115,A123]"

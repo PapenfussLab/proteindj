@@ -1,0 +1,33 @@
+Bootstrap: docker
+From: mambaorg/micromamba:1.5.8
+
+%post
+    apt-get -q update
+    apt-get install --no-install-recommends -y \
+        wget unzip git build-essential cmake procps coreutils grep sed \
+        python3.10 \
+        pip
+
+    apt-get autoremove -y
+    apt-get clean
+
+    git clone https://github.com/PapenfussLab/dl_binder_design.git /dl_binder_design
+    cd /dl_binder_design/include
+
+    echo "creating micromamba environments"
+    micromamba create -n mpnn -f proteinmpnn_fastrelax.yml -y
+
+    cd ../mpnn_fr
+    git clone https://github.com/dauparas/ProteinMPNN.git   
+
+    micromamba clean --all --yes
+
+
+
+%environment
+    # so we can just run it out of the box without having to set the prefix
+    export PATH=/opt/conda/envs/pyrosetta/bin:$PATH
+
+# Entry point for the container when run.
+%runscript
+    exec "$@"

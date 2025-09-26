@@ -1,0 +1,12 @@
+# Default results configuration for BindSweeper
+# This file is automatically read on installation and provides default
+# settings for all sweep runs. Individual sweep configs no longer need
+# to specify results_config sections.
+
+results_config:
+  rank_dirname: results
+  results_dirname: best_designs
+  csv_filename: best_designs.csv
+  output_csv: sweep_results.csv
+  pdb_output_dir: sweep_designs
+  zip_results: true

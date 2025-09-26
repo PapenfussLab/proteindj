@@ -1,0 +1,109 @@
+{
+  "binder_denovo": {
+    "rfd_input_pdb": {
+      "type": "string",
+      "description": "Input PDB file path for target protein",
+      "pattern": ".*\\.pdb$",
+      "example": "/path/to/target.pdb"
+    },
+    "rfd_contigs": {
+      "type": "string",
+      "description": "Contigs specification for binder design",
+      "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
+      "example": "[A17-131/0 60-100]"
+    },
+    "rfd_hotspots": {
+      "type": ["string", "null"],
+      "description": "Hotspot residues on target chain(s) for binder design. Use null for no hotspots",
+      "pattern": "^\\[[A-Z]\\d+(,[A-Z]\\d+)*\\]$",
+      "example": "[A56,A115,A123] or null"
+    },
+    "rfd_noise_scale": {
+      "type": "number",
+      "description": "Scale of noise for RFD translations (ca) and rotations (frame). 0 is recommended for binder modes to increase success rates",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "example": 0.0
+    },
+    "rfd_ckpt_override": {
+      "type": "string",
+      "description": "Override the diffusion model checkpoint used by RFdiffusion. For binder_denovo mode, complex_beta is recommended",
+      "enum": ["complex_base", "complex_beta"],
+      "example": "complex_beta"
+    }
+  },
+  "binder_foldconditioning": {
+    "rfd_input_pdb": {
+      "type": "string",
+      "description": "Input PDB file path for target protein",
+      "pattern": ".*\\.pdb$",
+      "example": "/path/to/target.pdb"
+    },
+    "rfd_scaffold_dir": {
+      "type": "string",
+      "description": "Path to directory containing fold conditioning secondary structure (*_ss.pt) and block adjacency files (*_adj.pt)",
+      "example": "binderscaffolds/scaffolds_assorted"
+    },
+    "rfd_hotspots": {
+      "type": ["string", "null"],
+      "description": "Hotspot residues on target chain(s) for binder design. Use null for no hotspots",
+      "pattern": "^\\[[A-Z]\\d+(,[A-Z]\\d+)*\\]$",
+      "example": "[A56,A115,A123]"
+    },
+    "rfd_noise_scale": {
+      "type": "number",
+      "description": "Scale of noise for RFD translations (ca) and rotations (frame). 0 is recommended for binder modes to increase success rates",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "example": 0.0
+    }
+  },
+  "binder_partialdiffusion": {
+    "rfd_input_pdb": {
+      "type": "string",
+      "description": "Input PDB file path for target protein",
+      "pattern": ".*\\.pdb$",
+      "example": "/path/to/target.pdb"
+    },
+    "rfd_noise_scale": {
+      "type": "number",
+      "description": "Scale of noise for RFD translations (ca) and rotations (frame). 0 is recommended for binder modes to increase success rates",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "example": 0.0
+    },
+    "rfd_partial_diffusion_timesteps": {
+      "type": "integer",
+      "description": "Number of timesteps for partial diffusion",
+      "minimum": 1,
+      "example": 20
+    }
+  },
+  "binder_motifscaffolding": {
+    "rfd_input_pdb": {
+      "type": "string",
+      "description": "Input PDB file path for target protein",
+      "pattern": ".*\\.pdb$",
+      "example": "/path/to/target.pdb"
+    },
+    "rfd_ckpt_override": {
+      "type": "string",
+      "description": "Override the diffusion model checkpoint used by RFdiffusion. For binder modes, complex_beta is recommended",
+      "enum": ["complex_base", "complex_beta"],
+      "example": "complex_beta"
+    },
+    "rfd_contigs": {
+      "type": "string",
+      "description": "Contigs specification for variable insertion/deletion positions",
+      "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
+      "example": "[5-10/A1-80/10-20/0 B81-209]"
+    },
+    "rfd_noise_scale": {
+      "type": "number",
+      "description": "Scale of noise for RFD translations (ca) and rotations (frame). 0 is recommended for binder modes to increase success rates",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "example": 0.0
+    }
+  }
+}
