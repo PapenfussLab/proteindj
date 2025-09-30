@@ -119,7 +119,11 @@ In this example, Nextflow will use all of the default parameter values from the 
 
 `nextflow run main.nf -profile monomer_denovo`
 
-After running the pipeline you can find all the results as well as intermediate files and logs in your specified `out_dir` organised as below:
+You can specify multiple profiles, for example, to combine a profile for your HPC environment (e.g. Milton at WEHI) with a design mode profile:
+
+`nextflow run main.nf -profile milton,binder_denovo`
+
+After running the pipeline, you can find all the results as well as intermediate files and logs in your specified `out_dir` organised as below:
 
 ```
 out_dir/
@@ -174,6 +178,8 @@ We have designed ProteinDJ to be compatible with the [Seqera platform](https://s
 ### Troubleshooting and common errors <a name="errors"></a>
 
 `AssertionError: ('B', 134) is not in pdb file!` - A mismatch between your contigs and the input PDB file. Likely due to a chain break or an incorrect chain ID.
+
+`Unknown variable 'metadata_ch_fold'` - We are using topic channels for metadata, and this feature is only available in Nextflow v24.04 and above. This error occurs with earlier versions of Nextflow.
 
 ### Data used for benchmarking <a name="append-bench"></a>
 
