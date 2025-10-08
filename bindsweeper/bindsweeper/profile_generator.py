@@ -2,6 +2,7 @@
 """Nextflow profile generation for parameter sweeps."""
 
 import re
+import os
 from typing import Any
 
 from .parameter_converters import get_converter
@@ -88,92 +89,24 @@ def generate_profile_content(
 
 
 
-def append_profiles_to_bindsweeper_config(
+def write_profiles_to_bindsweeper_config(
     profiles: list[str], config_path: str = "bindsweeper.config", dry_run: bool = False
 ) -> None:
-    """Append generated profiles to bindsweeper.config file."""
+    """Write generated profiles to bindsweeper.config file."""
     if dry_run:
-        print("\nWould append profiles to bindsweeper.config:")
+        print("\nWould write profiles to bindsweeper.config:")
         for profile in profiles:
             print(profile)
         return
 
     try:
-        # Check if config file exists, create if it doesn't
-        import os
-
-        if not os.path.exists(config_path):
-            # Create new config file with profiles section
-            content = "profiles {\n" + "".join(profiles) + "}\n"
-        else:
-            # Read existing file
-            with open(config_path) as f:
-                content = f.read()
-
-            # Check if profiles section exists
-            match = re.search(r"profiles\s*{\s*", content)
-            if not match:
-                # No profiles section, add it
-                content = content.rstrip() + "\n\nprofiles {\n" + "".join(profiles) + "}\n"
-            else:
-                # Find the closing brace of the profiles section
-                brace_count = 1
-                search_pos = match.end()
-
-                while search_pos < len(content) and brace_count > 0:
-                    if content[search_pos] == '{':
-                        brace_count += 1
-                    elif content[search_pos] == '}':
-                        brace_count -= 1
-                    search_pos += 1
-
-                # Insert profiles before the closing brace
-                insert_pos = search_pos - 1  # Position of closing brace
-                content = content[:insert_pos] + "".join(profiles) + content[insert_pos:]
+        content = "profiles {\n" + "".join(profiles) + "}\n"
 
         # Write to file
         with open(config_path, "w") as f:
             f.write(content)
 
-        print(f"Successfully appended {len(profiles)} profiles to {config_path}")
+        print(f"Successfully wrote {len(profiles)} profiles to {config_path}")
 
     except Exception as e:
-        raise ValueError(f"Failed to append profiles to {config_path}: {str(e)}")
-
-
-def insert_profiles_into_config(
-    config_path: str, profiles: list[str], dry_run: bool = False
-) -> None:
-    """Insert generated profiles into the nextflow.config file."""
-    if dry_run:
-        print("\nWould insert profiles into nextflow.config:")
-        for profile in profiles:
-            print(profile)
-        return
-
-    try:
-
-        with open(config_path) as f:
-            content = f.read()
-
-        # Find the profiles section
-        match = re.search(r"profiles\s*{\s*", content)
-        if not match:
-            raise ValueError("Profiles section not found in nextflow.config")
-
-        # Calculate insertion position (after the opening brace)
-        insert_pos = match.end()
-
-        # Insert profiles
-        new_content = (
-            content[:insert_pos] + "\n" + "".join(profiles) + content[insert_pos:]
-        )
-
-        # Write back to file
-        with open(config_path, "w") as f:
-            f.write(new_content)
-
-        print(f"Successfully inserted {len(profiles)} profiles into nextflow.config")
-
-    except Exception as e:
-        raise ValueError(f"Failed to insert profiles into nextflow.config: {str(e)}")
+        raise ValueError(f"Failed to write profiles to {config_path}: {str(e)}")

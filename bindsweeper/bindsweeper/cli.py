@@ -9,7 +9,7 @@ import sys
 
 import click
 
-from .profile_generator import append_profiles_to_bindsweeper_config, insert_profiles_into_config
+from .profile_generator import write_profiles_to_bindsweeper_config
 from .results_processor import ResultsProcessor
 from .sweep_config import SweepConfig
 from .sweep_engine import SweepEngine
@@ -214,7 +214,7 @@ def cli(
                 if quick_combinations:
                     # Generate quick test profiles
                     quick_profiles = engine.generate_profiles(quick_combinations)
-                    append_profiles_to_bindsweeper_config(
+                    write_profiles_to_bindsweeper_config(
                         quick_profiles, "bindsweeper.config", dry_run
                     )
 
@@ -264,8 +264,8 @@ def cli(
                     # Generate profiles
                     profiles = engine.generate_profiles(combinations)
 
-                    # Append profiles to bindsweeper.config
-                    append_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
+                    # Write profiles to bindsweeper.config
+                    write_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
 
                     # Execute sweep
                     results = engine.execute_sweep(combinations, dry_run, continue_on_error)
