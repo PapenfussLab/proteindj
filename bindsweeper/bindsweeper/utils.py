@@ -57,20 +57,12 @@ def find_config_files(
     # Find nextflow.config
     nextflow_config = os.path.join(current_dir, "nextflow.config")
     if not os.path.isfile(nextflow_config):
-        if dry_run:
-            print(f"Would prompt for nextflow.config (not found in {current_dir})")
-            nextflow_config = "dummy_path/nextflow.config"
-        else:
-            nextflow_config = prompt_for_file("nextflow.config", current_dir)
+        nextflow_config = prompt_for_file("nextflow.config", current_dir)
 
     # Find sweep.yaml
     sweep_yaml = os.path.join(current_dir, "sweep.yaml")
     if not os.path.isfile(sweep_yaml):
-        if dry_run:
-            print(f"Would prompt for sweep.yaml (not found in {current_dir})")
-            sweep_yaml = "dummy_path/sweep.yaml"
-        else:
-            sweep_yaml = prompt_for_file("sweep.yaml", current_dir)
+        sweep_yaml = prompt_for_file("sweep.yaml", current_dir)
 
     # Confirm config files with user
     if not skip_confirmation and not confirm_config_files(nextflow_config, sweep_yaml):
@@ -125,9 +117,6 @@ def confirm_output_directory(out_dir: str) -> bool:
 def parse_out_dir_from_nextflow(config_path: str, dry_run: bool = False) -> str:
     """Parse nextflow.config file to extract out_dir parameter."""
     import re
-
-    if dry_run:
-        return os.path.expandvars("/dummy/output/path")
 
     try:
         with open(config_path) as f:

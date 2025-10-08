@@ -64,7 +64,7 @@ class ResultsProcessor:
                         pdb_output_dir, output_csv, config_paths
                     )
                     if zip_path:
-                        logger.info(f"Created zip file: {zip_path}")
+                        logger.info(f"Created zip archive: {zip_path}")
         else:
             # No successful designs found - create empty CSV
             logger.info("No successful designs found to process, creating empty results CSV")
@@ -223,7 +223,6 @@ class ResultsProcessor:
 
             # Clean up original files
             shutil.rmtree(pdb_dir)
-            os.remove(csv_file)
             logger.info("Cleaned up temporary files")
 
             return zip_path
