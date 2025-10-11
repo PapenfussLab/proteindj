@@ -178,10 +178,10 @@ AlphaFold2 Initial-Guess Filtering Parameters.
 | `af2_max_pae_overall`        | `5`             | Max predicted aligned error for all chains             |
 | `af2_max_pae_binder`         | `5`             | Max predicted aligned error for binder                 |
 | `af2_max_pae_target`         | `5`             | Max predicted aligned error for target                 |
-| `af2_max_rmsd_overall`       | `2`             | Max C-alpha RMSD when all chains are aligned           |
-| `af2_max_rmsd_binder_bndaln` | `1`             | Max binder C-alpha RMSD when binder chains are aligned |
-| `af2_max_rmsd_binder_tgtaln` | `2`             | Max binder C-alpha RMSD when target chains are aligned |
-| `af2_max_rmsd_target`        | `1`             | Max target C-alpha RMSD when target chains are aligned |
+| `af2_max_rmsd_overall`       | `2`             | Max C-alpha RMSD between AF2 prediction and input design when all chains are aligned           |
+| `af2_max_rmsd_binder_bndaln` | `1`             | Max binder C-alpha RMSD between AF2 prediction and input design when binder chains are aligned |
+| `af2_max_rmsd_binder_tgtaln` | `2`             | Max binder C-alpha RMSD between AF2 prediction and input design when target chains are aligned |
+| `af2_max_rmsd_target`        | `1`             | Max target C-alpha RMSD between AF2 prediction and input design when target chains are aligned |
 | `af2_min_plddt_overall`      | `90`            | Min average pLDDT score for all chains                 |
 | `af2_min_plddt_binder`       | `85`            | Min pLDDT score required for binder                    |
 | `af2_min_plddt_target`       | `90`            | Min pLDDT score required for target                    |
@@ -192,9 +192,9 @@ Boltz-2 Filtering Parameters.
 
 | Parameter                   | Suggested Value | Description                                                                                     |
 | --------------------------- | --------------- | ----------------------------------------------------------------------------------------------- |
-| `boltz_max_overall_rmsd`    | `null`          | Max C-alpha RMSD between all chains of Boltz-2 prediction and RFD design                        |
-| `boltz_max_binder_rmsd`     | `null`          | Max C-alpha RMSD between binder chains of Boltz-2 prediction and RFD design. Binder modes only. |
-| `boltz_max_target_rmsd`     | `null`          | Max C-alpha RMSD between target chains of Boltz-2 prediction and RFD design. Binder modes only. |
+| `boltz_max_overall_rmsd`    | `null`          | Max C-alpha RMSD between all chains of Boltz-2 prediction and input design                        |
+| `boltz_max_binder_rmsd`     | `null`          | Max C-alpha RMSD between binder chains of Boltz-2 prediction and input design. Binder modes only. |
+| `boltz_max_target_rmsd`     | `null`          | Max C-alpha RMSD between target chains of Boltz-2 prediction and input design. Binder modes only. |
 | `boltz_min_conf_score`      | `null`          | Minimum confidence score of the prediction                                                      |
 | `boltz_min_ptm`             | `null`          | Minimum predicted template modelling score of the prediction                                    |
 | `boltz_min_ptm_interface`   | `null`          | Minimum predicted template modelling score of the prediction interface                          |

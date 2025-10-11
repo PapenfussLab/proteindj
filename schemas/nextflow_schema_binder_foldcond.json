@@ -467,17 +467,17 @@
         },
         "boltz_max_overall_rmsd": {
           "type": "number",
-          "description": "Max RMSD between all chains of Boltz-2 prediction and RFD design. e.g. 2",
+          "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2",
           "hidden": true
         },
         "boltz_max_binder_rmsd": {
           "type": "number",
-          "description": "Max RMSD between binder chains of Boltz-2 prediction and RFD design. e.g. 1",
+          "description": "Max RMSD between binder chains of Boltz-2 prediction and input design. e.g. 1",
           "hidden": true
         },
         "boltz_max_target_rmsd": {
           "type": "number",
-          "description": "Max RMSD between target chains of Boltz-2 prediction and RFD design. e.g. 1",
+          "description": "Max RMSD between target chains of Boltz-2 prediction and input design. e.g. 1",
           "hidden": true
         },
         "boltz_min_conf_score": {

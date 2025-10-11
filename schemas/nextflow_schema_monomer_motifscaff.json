@@ -401,7 +401,7 @@
         },
         "boltz_max_overall_rmsd": {
           "type": "number",
-          "description": "Max RMSD between all chains of Boltz-2 prediction and RFD design. e.g. 2",
+          "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2",
           "hidden": true
         },
         "boltz_min_conf_score": {
