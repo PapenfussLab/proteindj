@@ -53,14 +53,14 @@
           "type": "string",
           "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[5-10/A1-80/10-20/0 B81-209]"
+          "default": "[5-10/A1-88/10-20/0 B89-203]"
         },
         "rfd_input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
-          "default": "${projectDir}/lib/rfd_previous_results/fold_2.pdb"
+          "default": "${projectDir}/lib/examplebinder.pdb"
         },
         "rfd_inpaint_seq": {
           "type": "string",
@@ -71,7 +71,7 @@
           "type": "string",
           "description": "Length of diffused chain when performing motif scaffolding e.g. 100-120",
           "pattern": "^\\d+-\\d+$",
-          "default": "100-100"
+          "default": "110-110"
         }
       }
     },

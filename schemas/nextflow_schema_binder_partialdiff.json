@@ -53,14 +53,14 @@
           "type": "string",
           "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[80-80/0 B81-209]"
+          "default": "[88-88/0 B89-203]"
         },
         "rfd_input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
-          "default": "${projectDir}/lib/rfd_previous_results/fold_2.pdb"
+          "default": "${projectDir}/lib/examplebinder.pdb"
         },
         "rfd_partial_diffusion_timesteps": {
           "type": "integer",
