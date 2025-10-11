@@ -9,7 +9,7 @@ import sys
 
 import click
 
-from .profile_generator import append_profiles_to_bindsweeper_config, insert_profiles_into_config
+from .profile_generator import write_profiles_to_bindsweeper_config
 from .results_processor import ResultsProcessor
 from .sweep_config import SweepConfig
 from .sweep_engine import SweepEngine
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--debug", is_flag=True, help="Enable debug logging")
-@click.version_option(version="0.1.7")
+@click.version_option(version="0.1.8")
 @click.option("--dry-run", is_flag=True, help="Print commands without executing them")
 @click.option(
     "--skip-sweep", is_flag=True, help="Skip parameter sweep and only process results"
@@ -93,6 +93,9 @@ def cli(
     current_dir = os.getcwd()
 
     try:
+        if dry_run:
+            click.echo(f"Performing dry run to validate config and preview parameter combinations\n")
+
         # Use provided nextflow_config or discover it
         if nextflow_config:
             nextflow_config_path = nextflow_config
@@ -116,9 +119,7 @@ def cli(
             if os.path.exists(sweep_yaml):
                 click.echo(f"✓ Automatically detected sweep configuration: {sweep_yaml}")
             else:
-                if dry_run:
-                    sweep_yaml = "dummy_path/sweep.yaml"
-                elif skip_sweep:
+                if skip_sweep:
                     # In skip_sweep mode, we still need a config for validation, but make it optional
                     click.echo("✓ Skip-sweep mode: config validation will be skipped")
                     sweep_yaml = None
@@ -213,7 +214,7 @@ def cli(
                 if quick_combinations:
                     # Generate quick test profiles
                     quick_profiles = engine.generate_profiles(quick_combinations)
-                    append_profiles_to_bindsweeper_config(
+                    write_profiles_to_bindsweeper_config(
                         quick_profiles, "bindsweeper.config", dry_run
                     )
 
@@ -255,7 +256,7 @@ def cli(
                     click.echo(f"Each combination runs a full ProteinDJ pipeline which can take significant time and resources.", err=True)
                     click.echo(f"Consider using --quick-test first to validate your configuration with 2 designs per combination.\n", err=True)
                     
-                    if not skip_confirmation and not click.confirm("Do you want to proceed with the full sweep?"):
+                    if not skip_confirmation and not dry_run and not click.confirm("Do you want to proceed with the full sweep?"):
                         click.echo("Sweep cancelled by user.")
                         sys.exit(0)
 
@@ -263,8 +264,8 @@ def cli(
                     # Generate profiles
                     profiles = engine.generate_profiles(combinations)
 
-                    # Append profiles to bindsweeper.config
-                    append_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
+                    # Write profiles to bindsweeper.config
+                    write_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
 
                     # Execute sweep
                     results = engine.execute_sweep(combinations, dry_run, continue_on_error)
@@ -276,8 +277,9 @@ def cli(
             results_config = config.results_config if config else ResultsConfig()
             processor = ResultsProcessor(results_config, out_dir)
             processor.process_results(results, config_paths, dry_run, skip_sweep)
-
-        click.echo("Sweep completed successfully!")
+            click.echo("\nSweep completed successfully!")
+        else:
+            click.echo("\nDry run completed successfully!")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
