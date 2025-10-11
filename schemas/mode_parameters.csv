@@ -47,6 +47,7 @@ af2_extra_config,null,af2_extra_config,,af2_extra_config,,af2_extra_config,,af2_
 boltz_recycling_steps,3,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,
 boltz_diffusion_samples,1,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,
 boltz_sampling_steps,50,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,
+boltz_use_potentials,false,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,
 boltz_extra_config,null,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,
 rfd_min_helices,null,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,
 rfd_max_helices,null,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,
