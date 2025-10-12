@@ -299,7 +299,7 @@ Motif scaffolding, also known as inpainting, uses a reference scaffold and adds 
 
 <img src="../img/binder_motifscaff.png" width="400">
 
-We need to provide an input PDB file containing a binder and a target protein, and contigs that specify which part of the binder we want to keep and where we want new residues to be inserted. For example, we have a PDB structure with a binder (chain A, residues 1-80) and a target (chain B, residues 81-209). To add 5-10 residues to the N-terminus and 10-20 residues to the C-terminus of the binder (chain A) we would use the contigs "[5-10/A1-80/10-20/0 B81-209]". The '/0' indicates a chain break between the diffused residues and chain B.
+We need to provide an input PDB file containing a binder and a target protein, and contigs that specify which part of the binder we want to keep and where we want new residues to be inserted. For example, we have a PDB structure with a binder (chain A, residues 1-88) and a target (chain B, residues 89-203). To add 5 residues to the N-terminus and 10-20 residues to the C-terminus of the binder (chain A) we would use the contigs "[5-5/A1-88/10-20/0 B89-203]". The '/0' indicates a chain break between the diffused residues and chain B.
 
 By default, RFdiffusion will use the 'base' diffusion model checkpoint, but the RFdiffusion GitHub recommends using 'complex_base' or 'complex_beta' for motif scaffolding of binders.
 
@@ -307,23 +307,23 @@ By default, RFdiffusion will use the 'base' diffusion model checkpoint, but the 
     binder_motifscaff {
         params {
             rfd_mode = 'binder_motifscaff'
-            rfd_input_pdb = "./lib/rfd_previous_results/fold_2.pdb"
-            rfd_contigs = "[5-10/A1-80/10-20/0 B81-209]"
+            rfd_input_pdb = "./lib/examplebinder.pdb"
+            rfd_contigs = "[5-10/A1-88/10-20/0 B89-203]"
             rfd_ckpt_override = 'complex_base'
         }
     }
 ```
 
-Our insertions length will be randomly chosen from the ranges provided, but we can constrain the length of the binder to 100 residues total, by using the rfd_length parameter e.g.
+Our insertions length will be randomly chosen from the ranges provided, but we can constrain the length of the binder to 110 residues total, by using the rfd_length parameter e.g.
 
 ```
     binder_motifscaff {
         params {
             rfd_mode = 'binder_motifscaff'
-            rfd_input_pdb = "./lib/rfd_previous_results/fold_2.pdb"
-            rfd_contigs = "[5-10/A1-80/10-20/0 B81-209]"
+            rfd_input_pdb = "./lib/examplebinder.pdb"
+            rfd_contigs = "[5-10/A1-88/10-20/0 B89-203]"
             rfd_ckpt_override = 'complex_base'
-            rfd_length = '100-100'
+            rfd_length = '110-110'
         }
     }
 ```
@@ -336,14 +336,14 @@ Partial diffusion is useful if you have an existing binder that you want to nois
 
 <img src="../img/binder_partdiff.png" width="400">
 
-We need to provide an input PDB containing the binder and target chains. The contigs must specify all the target chain residues (e.g. 'B81-209') as well as the exact length of the binder ('80-80/0'). We also must specify the timesteps to noise/denoise the structure. The full trajectory is 50 timesteps, so 20 timesteps is 40% of the normal noising/denoising trajectory.
+We need to provide an input PDB containing the binder and target chains. The contigs must specify all the target chain residues (e.g. 'B89-203') as well as the exact length of the binder ('88-88/0'). We also must specify the timesteps to noise/denoise the structure. The full trajectory is 50 timesteps, so 20 timesteps is 40% of the normal noising/denoising trajectory.
 
 ```
 binder_partialdiff {
     params {
         rfd_mode = 'binder_partialdiff'
-        rfd_input_pdb = "./lib/rfd_previous_results/fold_2.pdb"
-        rfd_contigs = "[80-80/0 B81-209]"
+        rfd_input_pdb = "./lib/examplebinder.pdb"
+        rfd_contigs = "[88-88/0 B89-203]"
         rfd_partial_diffusion_timesteps = 20
     }
 }

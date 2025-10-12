@@ -151,7 +151,18 @@ Due to the inherently stochastic nature of protein design, often we see problema
 - Sequence Filtering - Filters designs according to the score of the generated sequence
 - AlphaFold2/Boltz-2 Filtering - Filters designs according to the quality of the structure prediction
 
-We recommend disabling filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs. We prepared a [Filtering Guide](docs/parameters.md/#filtering-parameters) on the filters available in ProteinDJ with recommended values for each.
+The most powerful predictors of experimental success are structure prediction metrics, but some metrics are more effective than others. Here are some recommended filters for binder design from the literature and their corresponding parameters in ProteinDJ:
+
+| Parameter                  | RFdiffusion paper<sup>1</sup> | AlphaProteo whitepaper<sup>2</sup> |
+| -------------------------- | --------------------- | ---------------------- |
+| af2_max_pae_interaction    | 10                    | 7                      |
+| af2_min_plddt_overall      | 80                    | 90                     |
+| af2_max_rmsd_binder_bndaln | 1                     | 1.5                    |
+
+<sup> 1. Watson, J.L. et al. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8; 2. Zambaldi, V. et al. arXiv (2024). https://doi.org/10.48550/arXiv.2409.08022
+</sup>
+
+We recommend disabling other filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs. We have prepared a [Filtering Guide](docs/parameters.md/#filtering-parameters) on all the filters available in ProteinDJ with recommended values for each.
 
 ## Metrics and metadata <a name="metrics"></a>
 

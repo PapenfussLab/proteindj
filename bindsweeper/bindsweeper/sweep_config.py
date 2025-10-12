@@ -18,11 +18,11 @@ from .sweep_types import SweepType, create_sweep
 class ResultsConfig:
     """Configuration for results processing."""
 
-    rank_dirname: str = "rank"
-    results_dirname: str = "results"
-    csv_filename: str = "best.csv"
-    output_csv: str = "merged_best.csv"
-    pdb_output_dir: str = "merged_best_designs"
+    rank_dirname: str = "results"
+    results_dirname: str = "best_designs"
+    csv_filename: str = "best_designs.csv"
+    output_csv: str = "sweep_results.csv"
+    pdb_output_dir: str = "sweep_designs"
     zip_results: bool = True
 
 

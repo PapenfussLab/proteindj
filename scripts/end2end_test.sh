@@ -50,6 +50,7 @@ run_test_mode() {
     # Run the pipeline
     if nextflow run main.nf \
         -profile "${COMPUTE},test,${mode}" \
+        --zip_pdbs false \
         --out_dir "${output_dir}" \
         > "${log_file}" 2>&1; then
         status="PASSED"

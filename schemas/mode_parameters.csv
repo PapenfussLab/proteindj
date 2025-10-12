@@ -3,18 +3,19 @@ rfd_mode,,rfd_mode,monomer_denovo,rfd_mode,monomer_foldcond,rfd_mode,monomer_mot
 rfd_num_designs,8,rfd_num_designs,8,rfd_num_designs,,rfd_num_designs,,rfd_num_designs,,rfd_num_designs,,rfd_num_designs,,rfd_num_designs,,rfd_num_designs,
 seqs_per_design,8,seqs_per_design,8,seqs_per_design,,seqs_per_design,,seqs_per_design,,seqs_per_design,,seqs_per_design,,seqs_per_design,,seqs_per_design,
 out_dir,${projectDir}/pdj_results,out_dir,${projectDir}/pdj_denovo,out_dir,${projectDir}/pdj_monomer_foldcond,out_dir,${projectDir}/pdj_monomer_motifscaff,out_dir,${projectDir}/pdj_monomer_partialdiff,out_dir,${projectDir}/pdj_binder_denovo,out_dir,${projectDir}/pdj_binder_foldcond,out_dir,${projectDir}/pdj_binder_motifscaff,out_dir,${projectDir}/pdj_binder_partialdiff
-rfd_contigs,null,rfd_contigs,[80-80],,,rfd_contigs,[A17-43/9-15/A53-117/3-6/A121-131],rfd_contigs,[A17-111/20],rfd_contigs,[A17-131/0 60-100],,,rfd_contigs,[5-10/A1-80/10-20/0 B81-209],rfd_contigs,[80-80/0 B81-209]
-rfd_input_pdb,null,,,,,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/lib/rfd_previous_results/fold_2.pdb,rfd_input_pdb,${projectDir}/lib/rfd_previous_results/fold_2.pdb
+rfd_contigs,null,rfd_contigs,[80-80],,,rfd_contigs,[A17-43/9-15/A53-117/3-6/A121-131],rfd_contigs,[A17-111/20],rfd_contigs,[A17-131/0 60-100],,,rfd_contigs,[5-10/A1-88/10-20/0 B89-203],rfd_contigs,[88-88/0 B89-203]
+rfd_input_pdb,null,,,,,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,rfd_input_pdb,${projectDir}/lib/examplebinder.pdb,rfd_input_pdb,${projectDir}/lib/examplebinder.pdb
 rfd_hotspots,null,,,,,,,,,rfd_hotspots,"[A56,A115,A123]",rfd_hotspots,"[A56,A115,A123]",,,,
 rfd_scaffold_dir,null,,,rfd_scaffold_dir,${projectDir}/binderscaffolds/scaffolds_assorted,,,,,,,rfd_scaffold_dir,${projectDir}/binderscaffolds/scaffolds_assorted,,,,
 rfd_target_adj,null,,,,,,,,,,,rfd_target_adj,${projectDir}/benchmarkdata/5o45_pd-l1_adj.pt,,,,
 rfd_target_ss,null,,,,,,,,,,,rfd_target_ss,${projectDir}/benchmarkdata/5o45_pd-l1_ss.pt,,,,
 rfd_mask_loops,TRUE,,,rfd_mask_loops,,,,,,,,rfd_mask_loops,FALSE,,,,
 rfd_inpaint_seq,null,,,,,rfd_inpaint_seq,[A17-19/A129-131],,,,,,,rfd_inpaint_seq,,,
-rfd_length,null,,,,,rfd_length,,,,,,,,rfd_length,100-100,,
+rfd_length,null,,,,,rfd_length,,,,,,,,rfd_length,110-110,,
 rfd_partial_diffusion_timesteps,null,,,,,,,rfd_partial_diffusion_timesteps,20,,,,,,,rfd_partial_diffusion_timesteps,20
 seq_method,mpnn,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,
 pred_method,af2,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,
+zip_pdbs,true,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,
 run_rfd_only,FALSE,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,
 skip_rfd,FALSE,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,
 skip_rfd_seq,FALSE,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,
@@ -47,6 +48,7 @@ af2_extra_config,null,af2_extra_config,,af2_extra_config,,af2_extra_config,,af2_
 boltz_recycling_steps,3,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,,boltz_recycling_steps,
 boltz_diffusion_samples,1,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,,boltz_diffusion_samples,
 boltz_sampling_steps,50,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,,boltz_sampling_steps,
+boltz_use_potentials,false,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,,boltz_use_potentials,
 boltz_extra_config,null,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,,boltz_extra_config,
 rfd_min_helices,null,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,,rfd_min_helices,
 rfd_max_helices,null,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,,rfd_max_helices,
