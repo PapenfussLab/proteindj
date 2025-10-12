@@ -366,7 +366,7 @@
                 "boltz_use_potentials": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Use physics-based potentials during inference to improves physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
+                    "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
                     "hidden": true
                 },
                 "boltz_extra_config": {

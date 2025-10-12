@@ -131,7 +131,7 @@ Advanced parameters to control the behaviour of Full-Atom MPNN
 | `boltz_recycling_steps`   | 3       | Number of recycling steps in Boltz-2 predictions.                                         |
 | `boltz_diffusion_samples` | 1       | Number of diffusion samples in Boltz-2 predictions.                                       |
 | `boltz_sampling_steps`    | 200     | Number of sampling steps in Boltz-2 predictions.                                          |
-| `boltz_use_potentials`    | false   | Use physics-based potentials during inference to improves physical plausibility of predictions (also known as Boltz-2x). Increases prediction time.                                          |
+| `boltz_use_potentials`    | false   | Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time.                                          |
 | `boltz_extra_config`      | null    | Additional raw parameters for Boltz-2 predictions. e.g. '--msa_pairing_strategy complete' |
 
 ---
