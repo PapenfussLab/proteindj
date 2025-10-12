@@ -1,9 +1,9 @@
 process PublishResults {
     label 'pyrosetta_tools'
 
-    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "*.csv"
-    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "*.json"
-    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "best_designs/*.pdb"
+    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "all_designs.csv"
+    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "success_metrics.json"
+    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "best_designs*"
     publishDir "${params.out_dir}/run/report", mode: 'copy', pattern: "filter_best_designs.log"
 
     input:
@@ -17,8 +17,7 @@ process PublishResults {
 
     output:
     path "all_designs.csv"
-    path ("best_designs/*.pdb"), optional: true
-    path ("best_designs.csv"), optional: true
+    path ("best_designs*"), optional: true
     path "filter_best_designs.log"
     path "success_metrics.json"
 
@@ -33,6 +32,7 @@ process PublishResults {
 
     def final_pdbs_exist = final_pdbs.name != "placeholder.pdb"
     def param_combo = params.bindsweeper_param_combo ?: "default"
+    def num_processes = task.cpus - 1
     
     // Check for placeholder
     if (final_pdbs_exist) {
@@ -45,7 +45,7 @@ process PublishResults {
             --output-csv best_designs.csv \
             --output-dir best_designs \
             2>&1 | tee filter_best_designs.log
-            
+
         # Generate success metrics JSON
         python /scripts/generate_success_metrics.py \
             --rfd-count ${rfd_count} \
@@ -56,6 +56,14 @@ process PublishResults {
             --final-designs-count ${filter_pred_count} \
             --parameter-combination "${param_combo}" \
             --output success_metrics.json
+        # Optionally compress PDB files
+        if [ ${params.zip_pdbs} == 'true' ] ; then
+            tar -h \
+                --use-compress-program="pigz -p ${num_processes}" \
+                -cf best_designs.tar.gz \
+                best_designs
+            rm -rf best_designs
+        fi
         """
     }
     else {

@@ -65,6 +65,7 @@ These parameters control the workflow of ProteinDJ.
 | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `seq_method`        | 'mpnn'  | Sequence design method. Options: `'mpnn'` (ProteinMPNN Fast-Relax) or `'fampnn'` (Full-Atom MPNN).                                                                                                                       |
 | `pred_method`       | 'af2'   | Structure prediction method. Options: `'af2'` (AlphaFold2 Initial-Guess) or `'boltz'` (Boltz-2).                                                                                                                         |
+| `zip_pdbs`      | true   | Whether to compress output final designs in a tar.gz archive. If false, results will be output as uncompressed PDB files. |
 | `run_rfd_only`      | false   | Whether to run only RFdiffusion and skip sequence design, prediction, and analysis.                                                                                                                                      |
 | `skip_rfd`          | false   | Skip RFdiffusion, run sequence design, prediction, and analysis only. Requires valid `skip_input_dir` containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B. |
 | `skip_rfd_seq`      | false   | Skip RFdiffusion and sequence design, run structure prediction and analysis only. Requires valid `skip_input_dir` containing PDB files. Binder design PDBs must have binder as chain A and target as chain B.            |
@@ -130,6 +131,7 @@ Advanced parameters to control the behaviour of Full-Atom MPNN
 | `boltz_recycling_steps`   | 3       | Number of recycling steps in Boltz-2 predictions.                                         |
 | `boltz_diffusion_samples` | 1       | Number of diffusion samples in Boltz-2 predictions.                                       |
 | `boltz_sampling_steps`    | 200     | Number of sampling steps in Boltz-2 predictions.                                          |
+| `boltz_use_potentials`    | false   | Use physics-based potentials during inference to improves physical plausibility of predictions (also known as Boltz-2x). Increases prediction time.                                          |
 | `boltz_extra_config`      | null    | Additional raw parameters for Boltz-2 predictions. e.g. '--msa_pairing_strategy complete' |
 
 ---

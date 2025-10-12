@@ -93,6 +93,12 @@
             "boltz"
           ]
         },
+        "zip_pdbs": {
+          "type": "boolean",
+          "description": "Whether to compress output final designs in a tar.gz archive. If false, results will be output as uncompressed PDB files.",
+          "default": true,
+          "hidden": true
+        },
         "run_rfd_only": {
           "type": "boolean",
           "description": "Whether to run RFdiffusion only and skip downstream stages (i.e. sequence design, prediction, and analysis)",

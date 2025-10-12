@@ -15,6 +15,7 @@ rfd_length,null,,,,,rfd_length,,,,,,,,rfd_length,110-110,,
 rfd_partial_diffusion_timesteps,null,,,,,,,rfd_partial_diffusion_timesteps,20,,,,,,,rfd_partial_diffusion_timesteps,20
 seq_method,mpnn,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,,seq_method,
 pred_method,af2,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,,pred_method,
+zip_pdbs,true,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,,zip_pdbs,
 run_rfd_only,FALSE,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,,run_rfd_only,
 skip_rfd,FALSE,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,,skip_rfd,
 skip_rfd_seq,FALSE,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,,skip_rfd_seq,
