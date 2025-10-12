@@ -230,7 +230,7 @@ class SweepEngine:
         param_combo_arg = f"--bindsweeper_param_combo '{param_combo}'" if param_combo else ""
 
         # Use both nextflow.config and bindsweeper.config with -C flag
-        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} -profile {profile_str} --out_dir '{output_dir}' {param_combo_arg}".strip()
+        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} -profile {profile_str} --out_dir '{output_dir}' --zip_pdbs false {param_combo_arg}".strip()
 
     def generate_profiles(self, combinations: list[SweepCombination]) -> list[str]:
         """Generate profile content for all combinations."""

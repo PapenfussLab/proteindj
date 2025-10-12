@@ -53,14 +53,14 @@
           "type": "string",
           "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[80-80/0 B81-209]"
+          "default": "[88-88/0 B89-203]"
         },
         "rfd_input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
-          "default": "${projectDir}/lib/rfd_previous_results/fold_2.pdb"
+          "default": "${projectDir}/lib/examplebinder.pdb"
         },
         "rfd_partial_diffusion_timesteps": {
           "type": "integer",
@@ -92,6 +92,12 @@
             "af2",
             "boltz"
           ]
+        },
+        "zip_pdbs": {
+          "type": "boolean",
+          "description": "Whether to compress output final designs in a tar.gz archive. If false, results will be output as uncompressed PDB files.",
+          "default": true,
+          "hidden": true
         },
         "run_rfd_only": {
           "type": "boolean",
@@ -328,6 +334,12 @@
           "minimum": 1,
           "hidden": true
         },
+        "boltz_use_potentials": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
+          "hidden": true
+        },
         "boltz_extra_config": {
           "type": "string",
           "hidden": true,
@@ -448,17 +460,17 @@
         },
         "boltz_max_overall_rmsd": {
           "type": "number",
-          "description": "Max RMSD between all chains of Boltz-2 prediction and RFD design. e.g. 2",
+          "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2",
           "hidden": true
         },
         "boltz_max_binder_rmsd": {
           "type": "number",
-          "description": "Max RMSD between binder chains of Boltz-2 prediction and RFD design. e.g. 1",
+          "description": "Max RMSD between binder chains of Boltz-2 prediction and input design. e.g. 1",
           "hidden": true
         },
         "boltz_max_target_rmsd": {
           "type": "number",
-          "description": "Max RMSD between target chains of Boltz-2 prediction and RFD design. e.g. 1",
+          "description": "Max RMSD between target chains of Boltz-2 prediction and input design. e.g. 1",
           "hidden": true
         },
         "boltz_min_conf_score": {

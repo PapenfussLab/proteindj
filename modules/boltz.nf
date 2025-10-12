@@ -51,6 +51,7 @@ process RunBoltz {
             --diffusion_samples ${params.boltz_diffusion_samples} \
             --recycling_steps ${params.boltz_recycling_steps} \
             --sampling_steps ${params.boltz_sampling_steps} \
+            ${params.boltz_use_potentials ? '--use_potentials' : ''} \
             --cache /boltzcache \
             ${params.boltz_extra_config ? params.boltz_extra_config : ''} \
             2>&1 | tee boltz_${batch_id}.log
