@@ -187,9 +187,10 @@
           "default": "soluble",
           "enum": [
             "vanilla",
-            "soluble"
+            "soluble",
+            "hyper"
           ],
-          "description": "Checkpoint type to use for ProteinMPNN. Choose from 'vanilla' or 'soluble' (default = 'soluble').",
+          "description": "Checkpoint type to use for ProteinMPNN. Choose from 'vanilla', 'soluble' or 'hyper' (default = 'soluble').",
           "hidden": true
         },
         "mpnn_checkpoint_model": {

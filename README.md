@@ -2,14 +2,16 @@
 
 <img height="240" src="img/logo.png"><img height="240" alt="bindsweeper_logo" src="img/bindsweeper_logo.png" />
 
-[BioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
+[bioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
 
 ProteinDJ is a Nextflow pipeline for protein design that installs and utilises multiple external software packages, including:
 
 - AlphaFold2 Initial Guess (from https://github.com/nrbennet/dl_binder_design)
+- BindCraft (from https://github.com/martinpacesa/BindCraft)
 - BioPython (from https://biopython.org/)
 - Boltz-2 (from https://github.com/jwohlwend/boltz)
 - Full-Atom MPNN (from https://github.com/richardshuai/fampnn)
+- HyperMPNN (from https://github.com/meilerlab/HyperMPNN)
 - ProteinMPNN-FastRelax (from https://github.com/nrbennet/dl_binder_design)
 - RFdiffusion (from https://github.com/RosettaCommons/RFdiffusion)
 - PyRosetta (from https://www.pyrosetta.org/)
@@ -208,17 +210,21 @@ We used five structures for testing and benchmarking our pipeline.
 
 ### Citations for software packages used in ProteinDJ <a name="append-citations"></a>
 
-ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. BioRxiv. https://doi.org/10.1101/2025.09.24.678028
+ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. bioRxiv. https://doi.org/10.1101/2025.09.24.678028
 
 AlphaFold2 Initial Guess and ProteinMPNN-FastRelax - Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023). https://doi.org/10.1038/s41467-023-38328-5
 
 AlphaFold2 - Jumper, J., Evans, R., Pritzel, A. et al. Highly accurate protein structure prediction with AlphaFold. Nature 596, 583–589 (2021). https://doi.org/10.1038/s41586-021-03819-2
 
+BindCraft - Pacesa, M., Nickel, L., Schellhaas, C. et al. One-shot design of functional protein binders with BindCraft. Nature 646, 483-492 (2025). https://doi.org/10.1038/s41586-025-09429-6
+
 BioPython - Cock, P. J., Antao, T. et al. Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics 25, 1422-1423, (2009). https://doi.org/10.1093/bioinformatics/btp163
 
 Boltz-2 - Wohlwend, J., et al. Boltz-2 Democratizing Biomolecular Interaction Modeling, bioRxiv 2024.11.19.624167 (2024). https://doi.org/10.1101/2024.11.19.624167
 
-Full-Atom MPNN - Shuai, R.W., et al., Sidechain conditioning and modeling for full-atom protein sequence design with FAMPNN, bioRxiv 2025.02.13.637498 (2025). https://doi.org/10.1101/2025.02.13.637498
+Full-Atom MPNN - Shuai, R.W., et al. Sidechain conditioning and modeling for full-atom protein sequence design with FAMPNN, bioRxiv 2025.02.13.637498 (2025). https://doi.org/10.1101/2025.02.13.637498
+
+HyperMPNN - Ertelt, M., Schlegel, P., Beining, M. et al. HyperMPNN-A general strategy to design thermostable proteins learned from hyperthermophiles. bioRxiv (2024) https://doi.org/10.1101/2024.11.26.625397
 
 RFdiffusion - Watson, J.L., Juergens, D., Bennett, N.R. et al. De novo design of protein structure and function with RFdiffusion. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8
 
