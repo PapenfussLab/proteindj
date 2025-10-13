@@ -140,7 +140,7 @@ if [ -d "params" ]; then
     print_success "AlphaFold2 params already extracted, skipping..."
 else
     print_status "Extracting AlphaFold2 parameters..."
-    tar --extract --verbose --file="$AF2_FILE" params_model_1.npz params_model_1_multimer_v3.npz params_model_1_ptm.npz LICENSE|| exit 1
+    tar --extract --verbose --file="$AF2_FILE" || exit 1
     rm -f alphafold_params_2022-12-06.tar
 
     print_success "AlphaFold2 parameters extracted!"
@@ -204,11 +204,11 @@ fi
 
 # Check AlphaFold2 models
 print_status "Checking AlphaFold2 models..."
-af2_count=$(ls -1 models/af2/params_model_1*.npz 2>/dev/null | wc -l)
-if [ "$af2_count" -eq 3 ]; then
-    print_success "AlphaFold2: Found all 3 params files"
+af2_count=$(ls -1 models/af2/params_model_*.npz 2>/dev/null | wc -l)
+if [ "$af2_count" -eq 15 ]; then
+    print_success "AlphaFold2: Found all 15 params files"
 else
-    print_error "AlphaFold2: Expected 3 .npz files, found $af2_count"
+    print_error "AlphaFold2: Expected 15 .npz files, found $af2_count"
 fi
 
 # Check Boltz-2 models
