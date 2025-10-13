@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 include { RFDiffusionWorkflow } from './workflows/rfdiffusion.nf'
-include { FilterRFD ; RunRFDiffusion } from './modules/rfdiffusion.nf'
+include { FilterFold ; RunRFDiffusion } from './modules/rfdiffusion.nf'
 include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { PrepFAMPNN ; FilterFAMPNN; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
@@ -78,7 +78,7 @@ workflow {
         if (!params.num_designs) {
             error("Please provide the number of designs to generate")
         }
-
+        
         if (params.design_mode=="bindcraft"){
             // Use Bindcraft for fold design
             validateBindCraftParams(
@@ -130,70 +130,58 @@ workflow {
             // Compress output files
             CompressBC("bc", bc_pdbs_jsons.flatten().collect())
 
-            // PLACEHOLDER for Filtering Stage not implemented yet
             // Batch PDBs and JSONS for CPU tasks
             Utils
                 .rebatchTuples(bc_pdbs_jsons, 200)
                 .set { fold_tuples }
 
-            // If Running BC only these are the final pdbs
-            if (params.run_rfd_only) {
-                fold_tuples
-                    .flatten()
-                    .collect()
-                    .ifEmpty(file("${projectDir}/lib/placeholder.pdb"))
-                    .set { final_pdbs }
-            }
-            else {
-                fold_tuples
-                    .set { filt_rfd_pdbs_jsons }
-            }
         } else {
-        // Use RFdiffusion for fold design
-        def rfdParams = new RFDiffusionParams(params)
-        // Generate the command string
-        def rfdCommand = rfdParams.generateCommandString()
-        log.info("RFdiffusion command: ${rfdCommand} inference.num_designs=${batch_size}")
+            // Use RFdiffusion for fold design
+            def rfdParams = new RFDiffusionParams(params)
+            // Generate the command string
+            def rfdCommand = rfdParams.generateCommandString()
+            log.info("RFdiffusion command: ${rfdCommand} inference.num_designs=${batch_size}")
 
-        // Collect input files
-        def inputFiles = collectInputFiles(params)
+            // Collect input files
+            def inputFiles = collectInputFiles(params)
 
-        // Copy input files to output directory
-        inputFiles.each { inputFile ->
-            "rsync -r ${inputFile} ${inputsDir}/.".execute()
+            // Copy input files to output directory
+            inputFiles.each { inputFile ->
+                "rsync -r ${inputFile} ${inputsDir}/.".execute()
+            }
+
+            // Launch RFDiffusion Workflow
+            RFDiffusionWorkflow(
+                rfdCommand,
+                params.num_designs,
+                batch_size,
+                params.design_mode,
+                inputFiles,
+            )
+
+            RFDiffusionWorkflow.out.pdbs_jsons.set { rfd_pdbs_jsons }
+            // Compress output files
+            CompressRFD("rfd", rfd_pdbs_jsons.flatten().collect())
+
+            // Batch RFD PDBs and JSONS for CPU tasks
+            Utils
+                .rebatchTuples(rfd_pdbs_jsons, 200)
+                .set { fold_tuples }
         }
 
-        // Launch RFDiffusion Workflow
-        RFDiffusionWorkflow(
-            rfdCommand,
-            params.num_designs,
-            batch_size,
-            params.design_mode,
-            inputFiles,
-        )
-
-        RFDiffusionWorkflow.out.pdbs_jsons.set { rfd_pdbs_jsons }
-        // Compress output files
-        CompressRFD("rfd", rfd_pdbs_jsons.flatten().collect())
-
-        // Batch RFD PDBs and JSONS for CPU tasks
-        Utils
-            .rebatchTuples(rfd_pdbs_jsons, 200)
-            .set { fold_tuples }
-        // RFdiffusion filtering - secondary structure and radius of gyration
-        FilterRFD(fold_tuples)
+        // Fold filtering - secondary structure and radius of gyration
+        FilterFold(fold_tuples)
 
         // If Running RFD only these are the final pdbs
         if (params.run_rfd_only) {
-            FilterRFD.out.pdbs_jsons
+            FilterFold.out.pdbs_jsons
                 .flatten()
                 .collect()
                 .ifEmpty(file("${projectDir}/lib/placeholder.pdb"))
                 .set { final_pdbs }
         }
         else {
-            FilterRFD.out.pdbs_jsons.set { filt_rfd_pdbs_jsons }
-        }
+            FilterFold.out.pdbs_jsons.set { filt_fold_pdbs_jsons }
         }
     }
     else if (params.skip_rfd & !params.skip_rfd_seq & !params.skip_rfd_seq_pred) {
@@ -232,7 +220,7 @@ workflow {
         // Batch RFD PDBs and JSONS for CPU tasks
         Utils
             .rebatchTuples(rfd_pdbs_jsons, 200)
-            .set { filt_rfd_pdbs_jsons }
+            .set { filt_fold_pdbs_jsons }
     }
     else {
         println("Skipping RFDiffusion stage as skip_rfd_seq=true or skip_rfd_seq_pred=true.")
@@ -245,7 +233,7 @@ workflow {
         // Sequence design (either MPNN or FAMPNN)
         if (params.seq_method == "mpnn") {
             // Add FIXED labels to PDBs for target residues so the sequence does not change
-            PrepMPNN(filt_rfd_pdbs_jsons)
+            PrepMPNN(filt_fold_pdbs_jsons)
             
             // Method specific batching
             if (params.mpnn_relax_max_cycles > 0) {
@@ -287,7 +275,7 @@ workflow {
             // FAMPNN path
             // Rebatch files for Prep Step
             Utils
-                .rebatchTuples(filt_rfd_pdbs_jsons, 10)
+                .rebatchTuples(filt_fold_pdbs_jsons, 10)
                 .set { fampnn_prep_input_tuple }
             
             // Restore side-chains to RFD output and prepare CSV file with fixed residues
@@ -554,7 +542,7 @@ workflow {
     }
     else {
         Utils.countPdbFiles(fold_tuples).set { rfd_count }
-        Utils.countPdbFiles(filt_rfd_pdbs_jsons).set { filter_rfd_count }
+        Utils.countPdbFiles(filt_fold_pdbs_jsons).set { filter_rfd_count }
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }

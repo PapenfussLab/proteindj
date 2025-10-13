@@ -25,10 +25,10 @@ Metrics calculated on the RFdiffusion-generated folds.
 | Metric             | Description                                                                        |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `rfd_sampled_mask` | Contigs used by RFdiffusion to produce the fold. (e.g., `['E6-155/0', '100-100']`) |
-| `rfd_helices`      | Number of alpha-helices in the RFdiffusion fold (calculated by PyRosetta).         |
-| `rfd_strands`      | Number of beta-strands in the RFdiffusion fold (calculated by PyRosetta).          |
-| `rfd_total_ss`     | Total secondary structures (helices + strands) in the RFdiffusion fold.            |
-| `rfd_RoG`          | Radius of gyration (compactness measure) for RFdiffusion fold.                     |
+| `fold_helices`      | Number of alpha-helices in the designed fold (calculated by PyRosetta).         |
+| `fold_strands`      | Number of beta-strands in the designed fold (calculated by PyRosetta).          |
+| `fold_total_ss`     | Total secondary structures (helices + strands) in the designed fold.            |
+| `fold_RoG`          | Radius of gyration (compactness measure) for designed fold.                     |
 | `rfd_time`         | Time taken (seconds) by RFdiffusion to produce a fold.                             |
 
 ---

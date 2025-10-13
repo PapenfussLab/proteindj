@@ -62,7 +62,7 @@ class MetadataConverter:
             # RFdiffusion fields
             'rfd_sampled_mask',
             # RFD design secondary structure and RoG
-            'rfd_helices', 'rfd_strands', 'rfd_total_ss', 'rfd_RoG',
+            'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # BindCraft design fields
             'bc_length','bc_plddt','bc_target_rmsd',
             # MPNN/FAMPNN fields

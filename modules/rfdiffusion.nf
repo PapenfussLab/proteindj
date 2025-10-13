@@ -32,23 +32,23 @@ process RunRFDiffusion {
         python3.10 /scripts/metadata_converter.py --input_dir rfd_results --converter rfd --input_ext trb -o rfd_metadata_${batch_id}.jsonl
         """
 }
-process FilterRFD {
+process FilterFold {
     label 'pyrosetta_tools'
-    publishDir "${params.out_dir}/run/filter_rfd", mode: 'copy', pattern: "*.log"
+    publishDir "${params.out_dir}/run/filter_fold", mode: 'copy', pattern: "*.log"
 
     input:
     tuple path(pdb_files), path(json_files)
 
     output:
     tuple path("filtered_output/*.pdb"), path("filtered_output/*.json"), emit: pdbs_jsons, optional: true
-    path ("rfd_data_*.jsonl"), topic: metadata_ch_fold
-    path "filter_rfd_*.log"
+    path ("fold_data_*.jsonl"), topic: metadata_ch_fold
+    path "filter_fold_*.log"
 
     script:
     // Only pass parameters if filter values are provided
     def paramString = Utils.formatFilterParams(
         params,
-        "rfd",
+        "fold",
         [
             "min_ss",
             "max_ss",
@@ -63,7 +63,7 @@ process FilterRFD {
 
     def num_processes = task.cpus - 1
     """
-    python /scripts/filter_rfd.py \
+    python /scripts/filter_fold.py \
         --input-dir . \
         --output-dir "filtered_output" \
         ${paramString} \

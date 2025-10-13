@@ -373,42 +373,42 @@
       "description": "Metrics are calculated on the binder chain only in binder design modes, otherwise all chains are used in calculations.",
       "default": "",
       "properties": {
-        "rfd_min_helices": {
+        "fold_min_helices": {
           "type": "integer",
           "description": "Minimum number of alpha-helices required. e.g. 3",
           "hidden": true
         },
-        "rfd_max_helices": {
+        "fold_max_helices": {
           "type": "integer",
           "description": "Maximum number of alpha-helices allowed. e.g. 6",
           "hidden": true
         },
-        "rfd_min_strands": {
+        "fold_min_strands": {
           "type": "integer",
           "description": "Minimum number of beta-strands required. e.g. 2",
           "hidden": true
         },
-        "rfd_max_strands": {
+        "fold_max_strands": {
           "type": "integer",
           "description": "Maximum number of beta-strands allowed. e.g. 6",
           "hidden": true
         },
-        "rfd_min_ss": {
+        "fold_min_ss": {
           "type": "integer",
           "description": "Minimum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 4",
           "hidden": true
         },
-        "rfd_max_ss": {
+        "fold_max_ss": {
           "type": "integer",
           "description": "Maximum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 8",
           "hidden": true
         },
-        "rfd_min_rog": {
+        "fold_min_rog": {
           "type": "number",
           "description": "Minimum radius of gyration (\u00c5). e.g. 10",
           "hidden": true
         },
-        "rfd_max_rog": {
+        "fold_max_rog": {
           "type": "number",
           "description": "Maximum radius of gyration (\u00c5). e.g. 20",
           "hidden": true

@@ -163,14 +163,14 @@ RFdiffusion Filtering Parameters. Metrics are calculated on the binder chain onl
 
 | Parameter         | Description                                                             |
 | ----------------- | ----------------------------------------------------------------------- |
-| `rfd_min_helices` | Minimum number of alpha-helices required.                               |
-| `rfd_max_helices` | Maximum number of alpha-helices allowed.                                |
-| `rfd_min_strands` | Minimum number of beta-strands required.                                |
-| `rfd_max_strands` | Maximum number of beta-strands allowed.                                 |
-| `rfd_min_ss`      | Minimum number of secondary structure elements (α-helices + β-strands). |
-| `rfd_max_ss`      | Maximum number of secondary structure elements (α-helices + β-strands). |
-| `rfd_min_rog`     | Minimum radius of gyration (Å).                                         |
-| `rfd_max_rog`     | Maximum radius of gyration (Å).                                         |
+| `fold_min_helices` | Minimum number of alpha-helices required.                               |
+| `fold_max_helices` | Maximum number of alpha-helices allowed.                                |
+| `fold_min_strands` | Minimum number of beta-strands required.                                |
+| `fold_max_strands` | Maximum number of beta-strands allowed.                                 |
+| `fold_min_ss`      | Minimum number of secondary structure elements (α-helices + β-strands). |
+| `fold_max_ss`      | Maximum number of secondary structure elements (α-helices + β-strands). |
+| `fold_min_rog`     | Minimum radius of gyration (Å).                                         |
+| `fold_max_rog`     | Maximum radius of gyration (Å).                                         |
 
 #### BindCraft Filtering Parameters
 
