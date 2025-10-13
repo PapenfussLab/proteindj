@@ -9,7 +9,7 @@ This guide will walk you through installing ProteinDJ and all its dependencies a
 Before starting, ensure you have:
 
 - **Linux/Unix system** with internet access
-- **Sufficient storage space**: ~11 GB for downloading models and ~40 GB for containers
+- **Sufficient storage space**: ~11 GB for downloading models and ~50 GB for containers
 - **Administrative access** or ability to install software
 - **SLURM cluster** (if using HPC environment)
 
@@ -17,7 +17,7 @@ Before starting, ensure you have:
 
 | Component   | Minimum                    | Recommended     |
 | ----------- | -------------------------- | --------------- |
-| **Storage** | 50 GB                      | 100 GB          |
+| **Storage** | 60 GB                      | 100 GB          |
 | **RAM**     | 32 GB                      | 48 GB+          |
 | **GPU**     | NVIDIA GPU with 16GB+ VRAM | NVIDIA A30/A100 |
 | **CPU**     | 8 cores                    | 24+ cores       |
