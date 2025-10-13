@@ -2,6 +2,7 @@
 .nextflow.log*
 pdj_results/
 models/
+test/
 
 # Bindsweeper
 bindsweeper.config

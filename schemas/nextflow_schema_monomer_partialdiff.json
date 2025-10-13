@@ -11,7 +11,7 @@
       "description": "These parameters are required for ProteinDJ and are used by every mode.",
       "default": "",
       "properties": {
-        "rfd_mode": {
+        "design_mode": {
           "type": "string",
           "description": "Pipeline mode.",
           "default": "monomer_partialdiff",
@@ -19,15 +19,15 @@
             "monomer_partialdiff"
           ]
         },
-        "rfd_num_designs": {
+        "num_designs": {
           "type": "integer",
           "default": 8,
-          "description": "Number of designs to generate using RFdiffusion."
+          "description": "Number of designs to generate using RFdiffusion or Bindcraft."
         },
         "seqs_per_design": {
           "type": "integer",
           "default": 8,
-          "description": "Number of sequences to generate per RFdiffusion design."
+          "description": "Number of sequences to generate per design."
         },
         "out_dir": {
           "type": "string",
@@ -37,8 +37,8 @@
         }
       },
       "required": [
-        "rfd_mode",
-        "rfd_num_designs",
+        "design_mode",
+        "num_designs",
         "seqs_per_design",
         "out_dir"
       ]
@@ -55,7 +55,7 @@
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
           "default": "[A17-111/20]"
         },
-        "rfd_input_pdb": {
+        "input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",

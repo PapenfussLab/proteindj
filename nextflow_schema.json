@@ -11,19 +11,19 @@
             "description": "These parameters are required for ProteinDJ and are used by every mode.",
             "default": "",
             "properties": {
-                "rfd_mode": {
+                "design_mode": {
                     "type": "string",
-                    "description": "Pipeline mode. Choose from 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', or 'monomer_partialdiff'."
+                    "description": "Pipeline mode. Choose from 'bindcraft' to use BindCraft or 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', or 'monomer_partialdiff' to use RFdiffusion."
                 },
-                "rfd_num_designs": {
+                "num_designs": {
                     "type": "integer",
                     "default": 8,
-                    "description": "Number of designs to generate using RFdiffusion."
+                    "description": "Number of designs to generate using RFdiffusion or Bindcraft."
                 },
                 "seqs_per_design": {
                     "type": "integer",
                     "default": 8,
-                    "description": "Number of sequences to generate per RFdiffusion design."
+                    "description": "Number of sequences to generate per design."
                 },
                 "out_dir": {
                     "type": "string",
@@ -33,8 +33,8 @@
                 }
             },
             "required": [
-                "rfd_mode",
-                "rfd_num_designs",
+                "design_mode",
+                "num_designs",
                 "seqs_per_design",
                 "out_dir"
             ]
@@ -50,16 +50,16 @@
                     "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
                     "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$"
                 },
-                "rfd_input_pdb": {
+                "input_pdb": {
                     "type": "string",
                     "pattern": ".*\\.pdb$",
                     "format": "file-path",
                     "description": "Path to an input PDB file. e.g. 'target.pdb'"
                 },
-                "rfd_hotspots": {
+                "hotspot_residues": {
                     "type": "string",
-                    "description": "Specifies hotspot residues for binding. e.g. '[A56,A115,A123]'",
-                    "pattern": "^\\[[A-Z]\\d+(,[A-Z]\\d+)*\\]$"
+                    "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
+                    "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$"
                 },
                 "rfd_scaffold_dir": {
                     "type": "string",

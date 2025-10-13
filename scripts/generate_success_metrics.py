@@ -23,13 +23,13 @@ def parse_arguments():
         "--rfd-count", 
         type=int,
         required=True,
-        help="Number of RFdiffusion designs generated"
+        help="Number of designs generated"
     )
     parser.add_argument(
         "--filter-rfd-count",
         type=int, 
         required=True,
-        help="Number of RFdiffusion designs after filtering"
+        help="Number of designs after filtering"
     )
     parser.add_argument(
         "--seq-count",

@@ -1,6 +1,6 @@
 {
   "binder_denovo": {
-    "rfd_input_pdb": {
+    "input_pdb": {
       "type": "string",
       "description": "Input PDB file path for target protein",
       "pattern": ".*\\.pdb$",
@@ -12,7 +12,7 @@
       "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
       "example": "[A17-131/0 60-100]"
     },
-    "rfd_hotspots": {
+    "hotspot_residues": {
       "type": ["string", "null"],
       "description": "Hotspot residues on target chain(s) for binder design. Use null for no hotspots",
       "pattern": "^\\[[A-Z]\\d+(,[A-Z]\\d+)*\\]$",
@@ -33,7 +33,7 @@
     }
   },
   "binder_foldconditioning": {
-    "rfd_input_pdb": {
+    "input_pdb": {
       "type": "string",
       "description": "Input PDB file path for target protein",
       "pattern": ".*\\.pdb$",
@@ -44,7 +44,7 @@
       "description": "Path to directory containing fold conditioning secondary structure (*_ss.pt) and block adjacency files (*_adj.pt)",
       "example": "binderscaffolds/scaffolds_assorted"
     },
-    "rfd_hotspots": {
+    "hotspot_residues": {
       "type": ["string", "null"],
       "description": "Hotspot residues on target chain(s) for binder design. Use null for no hotspots",
       "pattern": "^\\[[A-Z]\\d+(,[A-Z]\\d+)*\\]$",
@@ -59,7 +59,7 @@
     }
   },
   "binder_partialdiffusion": {
-    "rfd_input_pdb": {
+    "input_pdb": {
       "type": "string",
       "description": "Input PDB file path for target protein",
       "pattern": ".*\\.pdb$",
@@ -80,7 +80,7 @@
     }
   },
   "binder_motifscaffolding": {
-    "rfd_input_pdb": {
+    "input_pdb": {
       "type": "string",
       "description": "Input PDB file path for target protein",
       "pattern": ".*\\.pdb$",

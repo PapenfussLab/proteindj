@@ -12,9 +12,9 @@ These parameters are required for ProteinDJ and are used by every mode.
 
 | Parameter         | Default         | Description                                                                                                                                                                                     |
 | ----------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rfd_mode`        | null            | Pipeline mode. Choose from: `monomer_denovo`, `monomer_foldcond`, `monomer_motifscaff`, `monomer_partialdiff`, `binder_denovo`, `binder_foldcond`, `binder_motifscaff`, or `binder_partialdiff` |
-| `rfd_num_designs` | 8               | Number of designs to generate using RFdiffusion                                                                                                                                                 |
-| `seqs_per_design` | 8               | Number of sequences to generate per RFdiffusion design                                                                                                                                          |
+| `design_mode`        | null            | Pipeline mode. Choose from: `monomer_denovo`, `monomer_foldcond`, `monomer_motifscaff`, `monomer_partialdiff`, `binder_denovo`, `binder_foldcond`, `binder_motifscaff`, `binder_partialdiff`, or `bindcraft` |
+| `num_designs` | 8               | Number of designs to generate using RFdiffusion or Bindcraft                                                                                                                                                 |
+| `seqs_per_design` | 8               | Number of sequences to generate per design                                                                                                                                          |
 | `out_dir`         | `./pdj_results` | Output directory for results. Existing results will be overwritten                                                                                                                              |
 
 ---
@@ -26,8 +26,8 @@ These parameters are used for some of the ProteinDJ modes.
 | Parameter                         | Default | Description                                                                                                                                                        | Required for Modes                                                                                                         |
 | --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `rfd_contigs`                     | null    | Contigs specification strings, e.g. `[A17-145/0 50-100]`. See docs for examples. Required for multiple modes.                                                      | `binder_denovo`, `binder_motifscaff`, `binder_partialdiff`, `monomer_denovo`, `monomer_motifscaff`, `monomer_partialdiff`  |
-| `rfd_input_pdb`                   | null    | Path to input PDB file (e.g., target for binders, `'./target.pdb'`). Required for several modes.                                                                   | `binder_denovo`, `binder_foldcond`, `binder_motifscaff`, `binder_partialdiff`, `monomer_motifscaff`, `monomer_partialdiff` |
-| `rfd_hotspots`                    | null    | Hotspot residues for binder design, e.g. `[A56,A115,A123]`. Optional for `binder_denovo` and `binder_foldcond`.                                                    |                                                                                                                            |
+| `input_pdb`                   | null    | Path to input PDB file (e.g., target for binders, `'./target.pdb'`). Required for several modes.                                                                   | `binder_denovo`, `binder_foldcond`, `binder_motifscaff`, `binder_partialdiff`, `monomer_motifscaff`, `monomer_partialdiff` |
+| `hotspot_residues`                    | null    | Hotspot residues for binder design, e.g. `[A56,A115,A123]`. Optional for `binder_denovo` and `binder_foldcond`.                                                    |                                                                                                                            |
 | `rfd_scaffold_dir`                | null    | Directory containing scaffold secondary structure and block adjacency files (e.g. `'./binderscaffolds/scaffolds_assorted'`). Required for fold conditioning modes. | `binder_foldcond`, `monomer_foldcond`                                                                                      |
 | `rfd_target_ss`                   | null    | Fold conditioning secondary structure file for target (e.g. `'./target_ss.pt'`). Required for `binder_foldcond`.                                                   | `binder_foldcond`                                                                                                          |
 | `rfd_target_adj`                  | null    | Fold conditioning block adjacency file for target (e.g. `'./target_adj.pt'`). Required for `binder_foldcond`.                                                      | `binder_foldcond`                                                                                                          |
@@ -43,8 +43,8 @@ These parameters are used for some of the ProteinDJ modes.
 | Parameter                       | monomer denovo | monomer foldcond | monomer motifscaff | monomer partialdiff | binder denovo | binder foldcond | binder motifscaff | binder partialdiff |
 | ------------------------------- | -------------- | ---------------- | ------------------ | ------------------- | ------------- | --------------- | ----------------- | ------------------ |
 | rfd_contigs                     | Required       | -                | Required           | Required            | Required      | -               | Required          | Required           |
-| rfd_input_pdb                   | -              | -                | Required           | Required            | Required      | Required        | Required          | Required           |
-| rfd_hotspots                    | -              | -                | -                  | -                   | _Optional_    | _Optional_      | -                 | -                  |
+| input_pdb                   | -              | -                | Required           | Required            | Required      | Required        | Required          | Required           |
+| hotspot_residues                    | -              | -                | -                  | -                   | _Optional_    | _Optional_      | -                 | -                  |
 | rfd_scaffold_dir                | -              | Required         | -                  | -                   | -             | Required        | -                 | -                  |
 | rfd_target_adj                  | -              | -                | -                  | -                   | -             | Required        | -                 | -                  |
 | rfd_target_ss                   | -              | -                | -                  | -                   | -             | Required        | -                 | -                  |
@@ -140,11 +140,22 @@ Advanced parameters to control the behaviour of Full-Atom MPNN
 
 Due to the inherently stochastic nature of protein design, often we see problematic results during the pipeline. It can save computation time to discard designs mid-pipeline that fail to meet success criteria. We have implemented three filtering stages that can be used to reject poor designs:
 
-- RFD Filtering - Filters designs according to the number of secondary structure elements and radius of gyration
+- Fold Filtering - Filters designs according to the number of secondary structure elements and radius of gyration.
 - Sequence Filtering - Filters designs according to the score of the generated sequence
 - AlphaFold2/Boltz-2 Filtering - Filters designs according to the quality of the structure prediction
 
-We recommend disabling filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs. We have suggested some values below. If enabled, each of the filters must pass separately for a design to pass. Set to 'null' to disable filtering for each parameter.
+The most powerful predictors of experimental success are structure prediction metrics, but some metrics are more effective than others. Here are some recommended filters for binder design from the literature and their corresponding parameters in ProteinDJ:
+
+| Parameter                  | RFdiffusion paper<sup>1</sup> | AlphaProteo whitepaper<sup>2</sup> |
+| -------------------------- | --------------------- | ---------------------- |
+| af2_max_pae_interaction    | 10                    | 7                      |
+| af2_min_plddt_overall      | 80                    | 90                     |
+| af2_max_rmsd_binder_bndaln | 1                     | 1.5                    |
+
+<sup> 1. Watson, J.L. et al. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8; 2. Zambaldi, V. et al. arXiv (2024). https://doi.org/10.48550/arXiv.2409.08022
+</sup>
+
+We recommend disabling other filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs.
 
 #### RFdiffusion Filtering Parameters
 
@@ -161,9 +172,18 @@ RFdiffusion Filtering Parameters. Metrics are calculated on the binder chain onl
 | `rfd_min_rog`     | Minimum radius of gyration (Å).                                         |
 | `rfd_max_rog`     | Maximum radius of gyration (Å).                                         |
 
+#### BindCraft Filtering Parameters
+
+There are no filtering paramters for BindCraft as it has built-in filtering of designs and will automatically reject designs that meet any of the following criteria:
+- Low confidence (pLDDT < 0.7)
+- Severe clashes (clashes detected between C-alpha atoms)
+- Insufficient contact between binder and target (less than three residues contacting the target)
+
+Note that if a design fails, BindCraft will generate a new design until it finds one that meets the criteria. This can lead to long run times compared to RFdiffusion but results in binder designs that are more likely to succeed in the subsequent Structure Prediction stage. 
+
 #### Sequence Filtering Parameters
 
-Sequence Filtering Parameters for ProteinMPNN and Full-Atom MPNN
+Sequence Filtering Parameters for ProteinMPNN and Full-Atom MPNN. Recommended to disable unless you know what you are doing.
 
 | Parameter         | Suggested Value | Description                                                                                                      |
 | ----------------- | --------------- | ---------------------------------------------------------------------------------------------------------------- |

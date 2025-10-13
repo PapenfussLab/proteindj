@@ -3,14 +3,14 @@ profile: milton
 
 fixed_params:
   rfd_contigs: "[A17-131/0 60-100]"
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   rfd_ckpt_override: "complex_beta"
 
 sweep_params:
-  rfd_hotspots:
+  hotspot_residues:
     values:
-      - "[A56,A115,A123]" 
-      - "[A56,A115]"      
+      - "A56,A115,A123" 
+      - "A56,A115"      
 
   rfd_noise_scale:
     values:

@@ -96,8 +96,8 @@ public class RFDiffusionParams extends HashMap<String, Object> {
    
     private void validateParameters() {
         // Validate mode
-        if (!(this.rfd_mode in VALID_MODES)) {
-            throw new IllegalArgumentException("Invalid mode: ${this.rfd_mode}. Must be one of: ${VALID_MODES.join(', ')}")
+        if (!(this.design_mode in VALID_MODES)) {
+            throw new IllegalArgumentException("Invalid mode: ${this.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
         }
        
         // Validate mode-specific parameters
@@ -106,16 +106,16 @@ public class RFDiffusionParams extends HashMap<String, Object> {
    
     private void validateModeSpecificParameters() {
         // Common parameters for multiple modes
-        if (this.rfd_mode in ['binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_motifscaff', 'monomer_partialdiff']) {
+        if (this.design_mode in ['binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_motifscaff', 'monomer_partialdiff']) {
             validateContigs()
         }
        
-        if (this.rfd_mode in ['binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'binder_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']) {
+        if (this.design_mode in ['binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'binder_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']) {
             validateInputPdb()
         }
        
         // Mode-specific parameters
-        switch (this.rfd_mode) {
+        switch (this.design_mode) {
             case 'binder_partialdiff':
                 if (!this.rfd_partial_diffusion_timesteps) {
                     throw new IllegalArgumentException("rfd_partial_diffusion_timesteps is required when mode is 'binder_partialdiff'")
@@ -145,13 +145,13 @@ public class RFDiffusionParams extends HashMap<String, Object> {
     }
    
     private void validateInputPdb() {
-        if (!this.rfd_input_pdb) {
+        if (!this.input_pdb) {
             throw new IllegalArgumentException("Please provide input PDB file path for RFdiffusion")
         }
        
-        def inputFile = new File(this.rfd_input_pdb)
+        def inputFile = new File(this.input_pdb)
         if (!inputFile.exists()) {
-            throw new FileNotFoundException("Input PDB file not found at path: ${this.rfd_input_pdb}. Please ensure the file exists and the path is correct.")
+            throw new FileNotFoundException("Input PDB file not found at path: ${this.input_pdb}. Please ensure the file exists and the path is correct.")
         }
     }
    
@@ -218,13 +218,13 @@ public class RFDiffusionParams extends HashMap<String, Object> {
         cmd << "inference.output_prefix=./rfd_results/fold"
         
         // Add contigs if applicable to this mode
-        if (this.rfd_mode in ['binder_denovo', 'binder_partialdiff', 'binder_motifscaff', 'monomer_denovo', 'monomer_motifscaff', 'monomer_partialdiff'] && this.rfd_contigs) {
+        if (this.design_mode in ['binder_denovo', 'binder_partialdiff', 'binder_motifscaff', 'monomer_denovo', 'monomer_motifscaff', 'monomer_partialdiff'] && this.rfd_contigs) {
             cmd << "\'contigmap.contigs=${this.rfd_contigs}\'"
         }
         
         // Use just filename, will be in the process working directory
-        if (this.rfd_mode in ['binder_denovo', 'binder_foldcond', 'binder_partialdiff', 'binder_motifscaff', 'monomer_motifscaff', 'monomer_partialdiff'] && this.rfd_input_pdb) {
-            cmd << "inference.input_pdb=${getSimpleFileName(this.rfd_input_pdb)}"
+        if (this.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_partialdiff', 'binder_motifscaff', 'monomer_motifscaff', 'monomer_partialdiff'] && this.input_pdb) {
+            cmd << "inference.input_pdb=${getSimpleFileName(this.input_pdb)}"
         }
         
         // Add model parameter with automatic "_ckpt.pt" suffix
@@ -251,12 +251,12 @@ public class RFDiffusionParams extends HashMap<String, Object> {
     
     private void addBinderDenovoParameters(List<String> cmd) {
         // Add hotspots validation and parameter in binder_denovo mode
-        if (this.rfd_hotspots) {
+        if (this.hotspot_residues) {
             // Validate hotspots before adding to command
             if (this.rfd_contigs) {
-                validateHotspots(this.rfd_contigs, this.rfd_hotspots)
+                validateHotspots(this.rfd_contigs, this.hotspot_residues)
             }
-            cmd << "\'ppi.hotspot_res=${this.rfd_hotspots}\'"
+            cmd << "\'ppi.hotspot_res=[${this.hotspot_residues}]\'"
         }
     }
     
@@ -271,7 +271,7 @@ public class RFDiffusionParams extends HashMap<String, Object> {
         
         // Use simple filenames
         // Note inference.input_pdb is also passed to avoid an error although target_path is the value that is actually used
-        cmd << "scaffoldguided.target_path=${getSimpleFileName(this.rfd_input_pdb)}"
+        cmd << "scaffoldguided.target_path=${getSimpleFileName(this.input_pdb)}"
         cmd << "scaffoldguided.target_ss=${getSimpleFileName(this.rfd_target_ss)}"
         cmd << "scaffoldguided.target_adj=${getSimpleFileName(this.rfd_target_adj)}"
         
@@ -281,8 +281,8 @@ public class RFDiffusionParams extends HashMap<String, Object> {
         }
         
         // Add hotspots for binder_foldcond mode
-        if (this.rfd_hotspots) {
-            cmd << "\'ppi.hotspot_res=${this.rfd_hotspots}\'"
+        if (this.hotspot_residues) {
+            cmd << "\'ppi.hotspot_res=[${this.hotspot_residues}]\'"
         }
     }
 
@@ -345,7 +345,7 @@ public class RFDiffusionParams extends HashMap<String, Object> {
         addCommonParameters(cmd)
         
         // Add mode-specific parameters
-        switch (this.rfd_mode) {
+        switch (this.design_mode) {
             case 'binder_denovo':
                 addBinderDenovoParameters(cmd)
                 break

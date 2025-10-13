@@ -23,7 +23,7 @@ def generate_profile_name(
         formatted_value = converter.format_value_for_name(value)
 
         # For parameters with custom formatters that include the parameter name, use formatted value directly
-        if param_name in ["hotspots", "rfd_hotspots"] and formatted_value.startswith("hotspots"):
+        if param_name in ["hotspots", "hotspot_residues"] and formatted_value.startswith("hotspots"):
             components.append(formatted_value)
         else:
             # Shorten parameter names for readability
@@ -55,11 +55,11 @@ def generate_profile_content(
     lines = [f"    {profile_name} {{", "        params {"]
 
     # Add mode first
-    lines.append(f"            rfd_mode = '{mode}'")
+    lines.append(f"            design_mode = '{mode}'")
 
     # Add all other parameters
     for key, value in sorted(profile_params.items()):
-        if key == "rfd_mode":
+        if key == "design_mode":
             continue  # Already added
 
         # Format value appropriately

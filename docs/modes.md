@@ -2,7 +2,7 @@
 
 # ProteinDJ Guide to Design Modes
 
-Due to the creative nature of protein design and the complexity of RFdiffusion there are many ways you can use ProteinDJ. To help with delineating this, we have created eight RFdiffusion modes for ProteinDJ. Each mode is described in detail below, but for now, here's a quick summary of each one with a simple illustration of each mode in action:
+Due to the creative nature of protein design and the complexity of RFdiffusion there are many ways you can use ProteinDJ. To help with delineating this, we have created design modes for ProteinDJ. Each mode is described in detail below, but for now, here's a quick summary of each one with a simple illustration of each mode in action:
 
 [**Monomer design**](#monomerdesign)
 - [**monomer_denovo**](#mode-monomerdenovo) – diffusion of new monomers from noise
@@ -29,7 +29,7 @@ To generate a de novo monomer is straightforward. All we need to provide is a co
 ```
 monomer_denovo {
     params {
-        rfd_mode = 'monomer_denovo'
+        design_mode = 'monomer_denovo'
         rfd_contigs = "[80-80]"
     }
 }
@@ -40,7 +40,7 @@ If we wanted to vary the length, we can specify a range e.g. `[80-150]` and RFdi
 ```
 monomer_denovo {
     params {
-        rfd_mode = 'monomer_denovo'
+        design_mode = 'monomer_denovo'
         rfd_contigs = "[80-150]"
     }
 }
@@ -59,7 +59,7 @@ To run fold conditioning you need a directory containing pytorch files (`rfd_sca
 ```
 monomer_foldcond {
     params {
-        rfd_mode = 'monomer_foldcond'
+        design_mode = 'monomer_foldcond'
         rfd_scaffold_dir = "./binderscaffolds/scaffolds_assorted"
     }
 }
@@ -70,7 +70,7 @@ If you want to add more variation to the scaffolds, you can pass additional para
 ```
 monomer_foldcond {
     params {
-        rfd_mode = 'monomer_foldcond'
+        design_mode = 'monomer_foldcond'
         rfd_scaffold_dir = "./binderscaffolds/scaffolds_assorted"
         rfd_extra_config = "scaffoldguided.sampled_insertion=15 scaffoldguided.sampled_N=5 scaffoldguided.sampled_C=5"
     }
@@ -90,8 +90,8 @@ We need to provide an input PDB file containing a single chain and contigs that 
 ```
 monomer_motifscaff {
     params {
-        rfd_mode = 'monomer_motifscaff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_motifscaff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[5-15/A17-131/30-40]"
     }
 }
@@ -102,8 +102,8 @@ We could also replace the first 10 amino acids of chain A with 5-15 residues:
 ```
 monomer_motifscaff {
     params {
-        rfd_mode = 'monomer_motifscaff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_motifscaff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[5-15/A27-131]"
     }
 }
@@ -114,8 +114,8 @@ Or we could even do multiple insertions/replacements within chain A of variable 
 ```
 monomer_motifscaff {
     params {
-        rfd_mode = 'monomer_motifscaff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_motifscaff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-43/9-15/A53-117/3-6/A121-131]"
     }
 }
@@ -126,8 +126,8 @@ Finally, we can mask the sequence of the first three and last three residues to 
 ```
 monomer_motifscaff {
     params {
-        rfd_mode = 'monomer_motifscaff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_motifscaff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-43/9-15/A53-117/3-6/A121-131]"
         rfd_inpaint_seq = "[A17-19/A129-131]"
     }
@@ -149,8 +149,8 @@ For example, the PD-L1 structure has residues A17-131, 115 residues total. To pa
 ```
 monomer_partialdiff {
     params {
-        rfd_mode = 'monomer_partialdiff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_partialdiff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[115-115]"
         rfd_partial_diffusion_timesteps = 20
     }
@@ -162,8 +162,8 @@ To partially diffuse the last 20 residues only, we provide the residue range of 
 ```
 monomer_partialdiff {
     params {
-        rfd_mode = 'monomer_partialdiff'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'monomer_partialdiff'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-111/20]"
         rfd_partial_diffusion_timesteps = 20
     }
@@ -191,15 +191,15 @@ Binder de novo mode can be used to diffuse highly diverse binders to a target pr
 
 In this example, we are designing de novo binders against a target protein (PD-L1). We first need to decide on our target protein boundaries. It is important to keep the target protein minimal for computational efficiency without exposing hydrophobic patches. In this case, we will use the residues 17-131 from chain A and diffuse binders of variable length between 60-100 residues (`rfd_contigs = "[A17-131/0 60-100]"`). Note the '/0' after the chain A residues that tells RFdiffusion to insert a new chain for the following residue range (the binder).
 
-We will also specify three hotspot residues to guide binder positioning (`rfd_hotspots = "[A56,A115,A123]"`).
+We will also specify three hotspot residues to guide binder positioning (`hotspot_residues = "A56,A115,A123"`).
 
 ```
 binder_denovo {
     params {
-        rfd_mode = 'binder_denovo'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'binder_denovo'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-131/0 60-100]"
-        rfd_hotspots = "[A56,A115,A123]"
+        hotspot_residues = "A56,A115,A123"
     }
 }
 ```
@@ -209,10 +209,10 @@ We can also lower the noise scale used during diffusion (`rfd_noise_scale = 0`) 
 ```
 binder_denovo {
     params {
-        rfd_mode = 'binder_denovo'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'binder_denovo'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-131/0 60-100]"
-        rfd_hotspots = "[A56,A115,A123]"
+        hotspot_residues = "A56,A115,A123"
         rfd_noise_scale = 0
         mpnn_temperature = 0.0001
     }
@@ -224,10 +224,10 @@ Since RFdiffusion tends to produce alpha-helical rich binders, we can override t
 ```
 binder_denovo {
     params {
-        rfd_mode = 'binder_denovo'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        design_mode = 'binder_denovo'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
         rfd_contigs = "[A17-131/0 60-100]"
-        rfd_hotspots = "[A56,A115,A123]"
+        hotspot_residues = "A56,A115,A123"
         rfd_ckpt_override = 'complex_beta'
         rfd_noise_scale = 0
         mpnn_temperature = 0.0001
@@ -262,9 +262,9 @@ The RFdiffusion GitHub also recommends setting `rfd_mask_loops = false` when usi
 ```
 binder_foldcond {
     params {
-        rfd_mode = 'binder_foldcond'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
-        rfd_hotspots = "[A56,A115,A123]"
+        design_mode = 'binder_foldcond'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        hotspot_residues = "A56,A115,A123"
         rfd_scaffold_dir = "./binderscaffolds/scaffolds_assorted"
         rfd_target_ss = "./benchmarkdata/5o45_pd-l1_ss.pt"
         rfd_target_adj = "./benchmarkdata/5o45_pd-l1_adj.pt"
@@ -278,9 +278,9 @@ We can also lower the noise used during diffusion (`rfd_noise_scale = 0`) and th
 ```
 binder_foldcond {
     params {
-        rfd_mode = 'binder_foldcond'
-        rfd_input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
-        rfd_hotspots = "[A56,A115,A123]"
+        design_mode = 'binder_foldcond'
+        input_pdb = "./benchmarkdata/5o45_pd-l1.pdb"
+        hotspot_residues = "A56,A115,A123"
         rfd_scaffold_dir = "./binderscaffolds/scaffolds_assorted"
         rfd_target_ss = "./benchmarkdata/5o45_pd-l1_ss.pt"
         rfd_target_adj = "./benchmarkdata/5o45_pd-l1_adj.pt"
@@ -306,8 +306,8 @@ By default, RFdiffusion will use the 'base' diffusion model checkpoint, but the 
 ```
     binder_motifscaff {
         params {
-            rfd_mode = 'binder_motifscaff'
-            rfd_input_pdb = "./lib/examplebinder.pdb"
+            design_mode = 'binder_motifscaff'
+            input_pdb = "./lib/examplebinder.pdb"
             rfd_contigs = "[5-10/A1-88/10-20/0 B89-203]"
             rfd_ckpt_override = 'complex_base'
         }
@@ -319,8 +319,8 @@ Our insertions length will be randomly chosen from the ranges provided, but we c
 ```
     binder_motifscaff {
         params {
-            rfd_mode = 'binder_motifscaff'
-            rfd_input_pdb = "./lib/examplebinder.pdb"
+            design_mode = 'binder_motifscaff'
+            input_pdb = "./lib/examplebinder.pdb"
             rfd_contigs = "[5-10/A1-88/10-20/0 B89-203]"
             rfd_ckpt_override = 'complex_base'
             rfd_length = '110-110'
@@ -341,8 +341,8 @@ We need to provide an input PDB containing the binder and target chains. The con
 ```
 binder_partialdiff {
     params {
-        rfd_mode = 'binder_partialdiff'
-        rfd_input_pdb = "./lib/examplebinder.pdb"
+        design_mode = 'binder_partialdiff'
+        input_pdb = "./lib/examplebinder.pdb"
         rfd_contigs = "[88-88/0 B89-203]"
         rfd_partial_diffusion_timesteps = 20
     }

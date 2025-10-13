@@ -5,18 +5,18 @@ profile: milton
 # Fixed parameters that override nextflow.config defaults
 fixed_params:
   rfd_contigs: "[A17-131/0 50-100]"
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   mpnn_temperature: 0.0001
-  rfd_num_designs: 8
+  num_designs: 8
   seqs_per_design: 8
 
 # Parameters to sweep - full cartesian product will be generated
 sweep_params:
   # Hotspots for binder design
-  rfd_hotspots:
+  hotspot_residues:
     values:
       - null
-      - "[A56,A115,A123]"
+      - "A56,A115,A123"
   
   # Noise scale sweep
   rfd_noise_scale:

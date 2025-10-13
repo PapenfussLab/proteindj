@@ -97,7 +97,7 @@ process AlignBoltz {
     eval "\$(micromamba shell hook --shell bash)"
     micromamba activate pyrosetta
 
-    # Script to align predictions to RFdiffusion designs and calculate RMSD
+    # Script to align predictions to designs and calculate RMSD
     # Also, extracts and renames metadata from json files
     python /scripts/align_boltz.py \
         --design_dir ./ \
