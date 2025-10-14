@@ -104,7 +104,7 @@ workflow {
             }
 
             // Get path of filter settings json file
-            def bc_filters_json = file("lib/bindcraft/settings_filters/no_filters.json")
+            def bc_filters_json = file("${projectDir}/lib/bindcraft/settings_filters/no_filters.json")
 
             // Collect input files
             def inputFiles = collectInputFiles(params)
@@ -704,7 +704,7 @@ def getAdvancedSettingsPath(bc_design_protocol, bc_template_protocol) {
     }
 
     // Compose the path
-    def advancedSettingsPath = file("lib/bindcraft/settings_advanced/" +
+    def advancedSettingsPath = file("${projectDir}/lib/bindcraft/settings_advanced/" +
         designProtocolTag +
         templateProtocolTag +
         ".json"
