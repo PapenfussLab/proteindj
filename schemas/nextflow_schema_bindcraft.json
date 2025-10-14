@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com//master/nextflow_schema_binder_denovo.json",
-  "title": "binder_denovo pipeline parameters",
-  "description": "Parameters for binder_denovo mode",
+  "$id": "https://raw.githubusercontent.com//master/nextflow_schema_bindcraft.json",
+  "title": "bindcraft pipeline parameters",
+  "description": "Parameters for bindcraft mode",
   "type": "object",
   "definitions": {
     "essential_parameters": {
@@ -14,9 +14,9 @@
         "design_mode": {
           "type": "string",
           "description": "Pipeline mode.",
-          "default": "binder_denovo",
+          "default": "bindcraft",
           "enum": [
-            "binder_denovo"
+            "bindcraft"
           ]
         },
         "num_designs": {
@@ -31,7 +31,7 @@
         },
         "out_dir": {
           "type": "string",
-          "default": "${projectDir}/pdj_binder_denovo",
+          "default": "${projectDir}/pdj_monomer_partialdiff",
           "description": "Output directory for results.",
           "format": "directory-path"
         }
@@ -59,19 +59,25 @@
         "hotspot_residues": {
           "type": "string",
           "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
-          "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$",
-          "default": "A56,A115,A123"
+          "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$"
         },
-        "rfd_contigs": {
+        "bc_chains": {
           "type": "string",
-          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
-          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[A17-131/0 60-100]"
+          "description": "Input PDB chains to target. Can be one or multiple, in a comma-separated format e.g. 'A,C'. Other chains will be ignored during design.",
+          "pattern": "^[A-Z](,[A-Z])*$",
+          "default": "A"
+        },
+        "bc_design_length": {
+          "type": "string",
+          "description": "Design length. One or two comma separated values for min,max design length e.g. '60,70' or '60'. Pipeline will randomly sample different sizes between these values.",
+          "pattern": "^\\d+(,\\d+)?$",
+          "default": "60,100"
         }
       },
       "required": [
         "input_pdb",
-        "rfd_contigs"
+        "bc_chains",
+        "bc_design_length"
       ]
     },
     "workflow_advanced_parameters": {
@@ -137,42 +143,57 @@
       "type": "object",
       "description": "Advanced parameters to control the behaviour of BindCraft.",
       "default": "",
-      "properties": {}
+      "properties": {
+        "bc_design_protocol": {
+          "type": "string",
+          "description": "Which binder design protocol to run? 'default' is recommended. 'betasheet' promotes the design of more beta sheeted proteins, but requires more sampling. 'peptide' is optimised for helical peptide binders.",
+          "enum": [
+            "default",
+            "betasheet",
+            "peptide"
+          ],
+          "default": "default",
+          "hidden": true
+        },
+        "bc_template_protocol": {
+          "type": "string",
+          "description": "What target template protocol to use? 'default' allows for limited amount of flexibility. 'flexible' allows for greater target flexibility on both sidechain and backbone level.",
+          "enum": [
+            "default",
+            "flexible"
+          ],
+          "default": "default",
+          "hidden": true
+        },
+        "bc_omit_AAs": {
+          "type": "string",
+          "description": "Residue types to avoid during sequence design (comma separated list, one letter case-insensitive) (default: 'C') e.g. 'C,H'. These residue types can still occur if no other options are possible in the position.",
+          "pattern": "^[A-Z](,[A-Z])*$",
+          "default": "C",
+          "hidden": true
+        },
+        "bc_fix_interface_residues": {
+          "type": "boolean",
+          "description": "Whether to preserve/fix the interface residues of the binder designed by BindCraft during the subsequent sequence design stage (Recommended to leave as true).",
+          "hidden": true,
+          "default": true
+        },
+        "bc_advanced_json": {
+          "type": "string",
+          "description": "Path to a custom advanced settings json file. Not recommended unless you know what you are doing. Some parameters will be ignored as they apply to BindCraft routines downstream of fold design that are not implemented here e.g. MPNN parameters.",
+          "hidden": true,
+          "format": "file-path",
+          "pattern": "\\.json$",
+          "default": null
+        }
+      }
     },
     "rfdiffusion_advanced_parameters": {
       "title": "RFdiffusion Advanced Parameters",
       "type": "object",
       "description": "Advanced parameters to control the behaviour of RFdiffusion.",
       "default": "",
-      "properties": {
-        "rfd_ckpt_override": {
-          "type": "string",
-          "description": "Override the diffusion model checkpoint used by RFdiffusion. Choose from: 'active_site', 'base', 'base_epoch8', 'complex_base', 'complex_beta', 'complex_fold_base', 'inpaint_seq', 'inpaint_seq_fold'. RFdiffusion will automatically select a checkpoint. Not recommended to override except for 'binder_denovo' mode i.e. 'complex_beta'",
-          "enum": [
-            "active_site",
-            "base",
-            "base_epoch8",
-            "complex_base",
-            "complex_beta",
-            "complex_fold_base",
-            "inpaint_seq",
-            "inpaint_seq_fold"
-          ],
-          "hidden": true
-        },
-        "rfd_noise_scale": {
-          "type": "number",
-          "description": "Scale of noise for RFdiffusion translations (C-alpha) and rotations (frames). 1 (default) is recommended for monomer modes to increase diversity. 0-0.5 is recommended for binder modes to increase success rates.",
-          "minimum": 0,
-          "maximum": 1,
-          "hidden": true
-        },
-        "rfd_extra_config": {
-          "type": "string",
-          "description": "Additional configuration parameters to pass to RFdiffusion. e.g. 'contigmap.inpaint_str=[B165-178]'",
-          "hidden": true
-        }
-      }
+      "properties": {}
     },
     "proteinmpnn_fastrelax_parameters": {
       "title": "ProteinMPNN-FastRelax Parameters",

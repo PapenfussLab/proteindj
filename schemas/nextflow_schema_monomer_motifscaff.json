@@ -49,18 +49,18 @@
       "description": "These parameters are used for some of the ProteinDJ modes.",
       "default": "",
       "properties": {
-        "rfd_contigs": {
-          "type": "string",
-          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
-          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[A17-43/9-15/A53-117/3-6/A121-131]"
-        },
         "input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
           "default": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
+        },
+        "rfd_contigs": {
+          "type": "string",
+          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
+          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
+          "default": "[A17-43/9-15/A53-117/3-6/A121-131]"
         },
         "rfd_inpaint_seq": {
           "type": "string",
@@ -73,7 +73,11 @@
           "description": "Length of diffused chain when performing motif scaffolding e.g. 100-120",
           "pattern": "^\\d+-\\d+$"
         }
-      }
+      },
+      "required": [
+        "input_pdb",
+        "rfd_contigs"
+      ]
     },
     "workflow_advanced_parameters": {
       "title": "Mode-Specific Parameters",
@@ -133,12 +137,18 @@
         }
       }
     },
+    "bindcraft_advanced_parameters": {
+      "title": "BindCraft Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of BindCraft.",
+      "default": "",
+      "properties": {}
+    },
     "rfdiffusion_advanced_parameters": {
       "title": "RFdiffusion Advanced Parameters",
       "type": "object",
       "description": "Advanced parameters to control the behaviour of RFdiffusion.",
       "default": "",
-      "help_text": "",
       "properties": {
         "rfd_ckpt_override": {
           "type": "string",
@@ -537,6 +547,9 @@
     },
     {
       "$ref": "#/definitions/workflow_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/bindcraft_advanced_parameters"
     },
     {
       "$ref": "#/definitions/rfdiffusion_advanced_parameters"

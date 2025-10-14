@@ -55,7 +55,10 @@
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
           "default": "[80-80]"
         }
-      }
+      },
+      "required": [
+        "rfd_contigs"
+      ]
     },
     "workflow_advanced_parameters": {
       "title": "Mode-Specific Parameters",
@@ -115,12 +118,18 @@
         }
       }
     },
+    "bindcraft_advanced_parameters": {
+      "title": "BindCraft Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of BindCraft.",
+      "default": "",
+      "properties": {}
+    },
     "rfdiffusion_advanced_parameters": {
       "title": "RFdiffusion Advanced Parameters",
       "type": "object",
       "description": "Advanced parameters to control the behaviour of RFdiffusion.",
       "default": "",
-      "help_text": "",
       "properties": {
         "rfd_ckpt_override": {
           "type": "string",
@@ -519,6 +528,9 @@
     },
     {
       "$ref": "#/definitions/workflow_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/bindcraft_advanced_parameters"
     },
     {
       "$ref": "#/definitions/rfdiffusion_advanced_parameters"

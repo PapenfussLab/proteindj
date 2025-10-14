@@ -49,12 +49,6 @@
       "description": "These parameters are used for some of the ProteinDJ modes.",
       "default": "",
       "properties": {
-        "rfd_contigs": {
-          "type": "string",
-          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
-          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[88-88/0 B89-203]"
-        },
         "input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
@@ -62,12 +56,23 @@
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
           "default": "${projectDir}/lib/examplebinder.pdb"
         },
+        "rfd_contigs": {
+          "type": "string",
+          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
+          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
+          "default": "[88-88/0 B89-203]"
+        },
         "rfd_partial_diffusion_timesteps": {
           "type": "integer",
           "description": "Number of timesteps for partial diffusion. e.g. 20",
           "default": 20
         }
-      }
+      },
+      "required": [
+        "input_pdb",
+        "rfd_contigs",
+        "rfd_partial_diffusion_timesteps"
+      ]
     },
     "workflow_advanced_parameters": {
       "title": "Mode-Specific Parameters",
@@ -127,12 +132,18 @@
         }
       }
     },
+    "bindcraft_advanced_parameters": {
+      "title": "BindCraft Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of BindCraft.",
+      "default": "",
+      "properties": {}
+    },
     "rfdiffusion_advanced_parameters": {
       "title": "RFdiffusion Advanced Parameters",
       "type": "object",
       "description": "Advanced parameters to control the behaviour of RFdiffusion.",
       "default": "",
-      "help_text": "",
       "properties": {
         "rfd_ckpt_override": {
           "type": "string",
@@ -594,6 +605,9 @@
     },
     {
       "$ref": "#/definitions/workflow_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/bindcraft_advanced_parameters"
     },
     {
       "$ref": "#/definitions/rfdiffusion_advanced_parameters"
