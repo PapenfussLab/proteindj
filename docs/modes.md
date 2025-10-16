@@ -42,7 +42,7 @@ If we wanted to vary the length, we can specify a range e.g. `'80-150'` and RFdi
 monomer_denovo {
     params {
         design_mode = 'monomer_denovo'
-        rfd_contigs = '80-150'
+        design_length = '80-150'
     }
 }
 ```
