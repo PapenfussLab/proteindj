@@ -61,10 +61,10 @@ class MetadataConverter:
             'description','fold_id', 'seq_id',
             # RFdiffusion fields
             'rfd_sampled_mask',
-            # RFD design secondary structure and RoG
-            'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # BindCraft design fields
             'bc_length','bc_plddt','bc_target_rmsd',
+            # Fold design secondary structure and RoG
+            'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # MPNN/FAMPNN fields
             'fampnn_avg_psce','mpnn_score',
             # AF2 fields

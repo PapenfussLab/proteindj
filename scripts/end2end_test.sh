@@ -22,6 +22,7 @@ declare -a MODES=(
     "monomer_foldcond" 
     "monomer_motifscaff"
     "monomer_partialdiff"
+    "bindcraft"
     "binder_denovo"
     "binder_foldcond"
     "binder_motifscaff"

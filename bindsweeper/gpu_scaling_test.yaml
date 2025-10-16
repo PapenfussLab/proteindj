@@ -8,7 +8,7 @@ sweep_params:
 
 fixed_params:
   input_pdb: './benchmarkdata/5o45_pd-l1.pdb'
-  rfd_contigs: '[A17-131/0 60-60]'
+  design_length: '60-60'
   hotspot_residues: 'A56,A115,A123'
   num_designs:  500
   seqs_per_design:  8

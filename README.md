@@ -62,7 +62,7 @@ Apptainer will automatically fetch containers as needed during the Nextflow run 
 
 The ProteinDJ consists of four stages:
 
-1. Diffusion and Fold Design - Using RFdiffusion
+1. Fold Design - Using RFdiffusion or BindCraft
 2. Sequence Design - Using ProteinMPNN or Full-Atom MPNN
 3. Structure Prediction - Using AlphaFold2 Initial Guess or Boltz-2
 4. Analysis and Reporting - Using PyRosetta and BioPython
@@ -79,6 +79,7 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - **binder_foldcond** – diffusion of new binders with fold-conditioning on scaffolds/templates
 - **binder_motifscaff** – diffusion of binding motifs in input scaffolds
 - **binder_partialdiff** – partial diffusion of a binder from an input PDB
+- **bindcraft** - hallucination of new binders using BindCraft
 
 <img src="img/modes_overview.png" height="720">
 
@@ -110,14 +111,14 @@ profile for the monomer_denovo mode looks like this. We recommend using the exis
 monomer_denovo {
     params {
         design_mode = 'monomer_denovo'
-        rfd_contigs = "[80-80]"
+        design_length = "60-80"
         seq_method = 'fampnn'
         pred_method = 'boltz'
     }
 }
 ```
 
-In this example, Nextflow will use all of the default parameter values from the params section except for `design_mode`, `rfd_contigs`, `seq_method` and `pred_method` (in this case to generate a de novo monomer 80 residues in length with RFdiffusion, Full-Atom MPNN and Boltz-2). You can use profiles by adding the `-profile` flag. e.g.
+In this example, Nextflow will use all of the default parameter values from the params section except for `design_mode`, `design_length`, `seq_method` and `pred_method` (in this case to generate a de novo monomer 60-80 residues in length with RFdiffusion, Full-Atom MPNN and Boltz-2). You can use profiles by adding the `-profile` flag. e.g.
 
 `nextflow run main.nf -profile monomer_denovo`
 

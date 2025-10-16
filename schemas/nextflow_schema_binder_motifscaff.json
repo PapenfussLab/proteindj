@@ -58,7 +58,7 @@
         },
         "rfd_contigs": {
           "type": "string",
-          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
+          "description": "Contigs specification strings for residues to include from input PDB and/or design length, e.g. `[A17-145/0 50-100]`. See docs for examples. Optional for multiple modes, required by `binder_motifscaff` and `monomer_motifscaff`. If null, contigs will be auto generated from input PDB (all residues) and/or `design_length`.",
           "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
           "default": "[5-10/A1-88/10-20/0 B89-203]"
         },
@@ -75,8 +75,7 @@
         }
       },
       "required": [
-        "input_pdb",
-        "rfd_contigs"
+        "input_pdb"
       ]
     },
     "workflow_advanced_parameters": {
@@ -109,24 +108,24 @@
           "default": true,
           "hidden": true
         },
-        "run_rfd_only": {
+        "run_fold_only": {
           "type": "boolean",
-          "description": "Whether to run RFdiffusion only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
+          "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
           "hidden": true
         },
-        "skip_rfd": {
+        "skip_fold": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
-        "skip_rfd_seq": {
+        "skip_fold_seq": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design and Sequence Design, and run Structure Prediction and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
-        "skip_rfd_seq_pred": {
+        "skip_fold_seq_pred": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design, Sequence Design, and Structure Prediction, and run Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
         "skip_input_dir": {
