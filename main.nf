@@ -1,8 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-include { RFDiffusionWorkflow } from './workflows/rfdiffusion.nf'
-include { FilterFold ; RunRFDiffusion } from './modules/rfdiffusion.nf'
+include { GenerateRFDContigs; GenerateRFDfoldcond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
 include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { PrepFAMPNN ; FilterFAMPNN; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
@@ -29,11 +28,11 @@ workflow {
     
     def outputDirectory = params.out_dir
 
-    if (params.run_rfd_only && (params.skip_rfd_seq || params.skip_rfd_seq_pred )) {
-        error("Cannot use --run_rfd_only with skip flags --skip_rfd_seq or --skip_rfd_seq_pred. These options are contradictory.")
+    if (params.run_fold_only && (params.skip_fold_seq || params.skip_fold_seq_pred )) {
+        error("Cannot use --run_fold_only with skip flags --skip_fold_seq or --skip_fold_seq_pred. These options are contradictory.")
     }
-    if (params.run_rfd_only && params.skip_rfd) {
-        error("Cannot use --run_rfd_only with --skip_rfd. These options are contradictory.")
+    if (params.run_fold_only && params.skip_fold) {
+        error("Cannot use --run_fold_only with --skip_fold. These options are contradictory.")
     }
 
     // Calculate batch size based on maximum GPUs
@@ -73,25 +72,44 @@ workflow {
     ///////////////////////
 
     // Run Fold Design if not skipped
-    if (!params.skip_rfd & !params.skip_rfd_seq & !params.skip_rfd_seq_pred) {
+    if (!params.skip_fold & !params.skip_fold_seq & !params.skip_fold_seq_pred) {
         // Check if num_designs has been provided
         if (!params.num_designs) {
             error("Please provide the number of designs to generate")
         }
+        // Validate input PDB file
+        if (params.design_mode in ['bindcraft','binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'binder_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']) {
+            if (!params.input_pdb) {
+                throw new IllegalArgumentException("Please provide input PDB file path required by $params.design_mode mode")
+            }
+            inputFile = new File(params.input_pdb)
+            if (!inputFile.exists()) {
+                throw new FileNotFoundException("Input PDB file not found at path: ${params.input_pdb}. Please ensure the file exists and the path is correct.")
+            }
+        }
+        // Validate design length
+        if (params.design_mode in ['bindcraft','binder_denovo', 'monomer_denovo']){
+            validateDesignLength(params.design_length)
+        }
+        
         
         if (params.design_mode=="bindcraft"){
             // Use Bindcraft for fold design
             validateBindCraftParams(
                 params.bc_chains,
                 params.hotspot_residues,
-                params.bc_design_length,
+                params.design_length,
                 params.num_designs,
                 params.input_pdb,
                 params.bc_advanced_json)
             log.info("Using BindCraft to hallucinate binders with the following design parameters:")
-            log.info("* Design length = ${params.bc_design_length}")
-            log.info("* Target chains = ${params.bc_chains}")
-            log.info("* Target hotspots = ${params.hotspot_residues}")
+            log.info("* Design length = ${params.design_length}")
+            if (params.bc_chains){
+                log.info("* Target chains = ${params.bc_chains}")
+            }
+            if (params.hotspot_residues){
+                log.info("* Target hotspots = ${params.hotspot_residues}")
+            }
             // Select advanced settings json file    
             def bc_advanced_json 
             if(!params.bc_advanced_json){
@@ -118,7 +136,7 @@ workflow {
             bc_ch = Channel
                 .fromList((0..<num_batches))
 
-            PrepBC(bc_ch,batch_size,bc_advanced_json)
+            PrepBC(bc_ch,batch_size,file(params.input_pdb),bc_advanced_json)
 
             // Run BindCraft for each batch
             RunBC(PrepBC.out, bc_filters_json, file(params.input_pdb))
@@ -135,12 +153,36 @@ workflow {
                 .rebatchTuples(bc_pdbs_jsons, 200)
                 .set { fold_tuples }
 
-        } else {
-            // Use RFdiffusion for fold design
-            def rfdParams = new RFDiffusionParams(params)
-            // Generate the command string
-            def rfdCommand = rfdParams.generateCommandString()
-            log.info("RFdiffusion command: ${rfdCommand} inference.num_designs=${batch_size}")
+        } else { // Use RFdiffusion for fold design
+            validateRFDParameters(params)
+            // Check for user-provided contigs or whether to automatically generate them
+            if (params.design_mode in ['binder_foldcond', 'monomer_foldcond']){
+               Channel.value('NoContigsNeededForFoldConditioning').set{rfdContigs}
+            } else if (params.rfd_contigs && params.design_mode in ['binder_denovo', 'binder_partialdiff', 'binder_motifscaff', 'monomer_denovo','monomer_motifscaff', 'monomer_partialdiff']){
+               // Use provided value
+               description=generateContigDescription("$params.rfd_contigs")
+               println description
+               Channel.value(params.rfd_contigs).set{rfdContigs}
+            } else if (!params.rfd_contigs && params.design_mode in ['binder_motifscaff', 'monomer_motifscaff']){
+                error("rfd_contigs is required for $params.design_mode mode.")
+            } else if (!params.rfd_contigs && params.design_mode in ['binder_denovo', 'binder_partialdiff', 'monomer_partialdiff']){
+                // Auto-generate contigs for RFdiffusion if not provided
+                println("Automatically generating RFdiffusion contigs from input PDB. Will include all residues.")
+                GenerateRFDContigs(file(params.input_pdb),params.design_mode)
+                GenerateRFDContigs.out.view({ contigs -> "Generated the RFdiffusion contigs: $contigs" }).set{rfdContigs}
+            } else if (!params.rfd_contigs && params.design_mode == 'monomer_denovo'){
+                // Contigs for monomer_denovo are equivalent to design_length
+                Channel.value("[$params.design_length]").set{rfdContigs}
+            }
+
+            if(params.design_mode == 'binder_foldcond'){
+                GenerateRFDfoldcond(file(params.input_pdb))
+                GenerateRFDfoldcond.out.target_adj.set{target_adj}
+                GenerateRFDfoldcond.out.target_ss.set{target_ss}
+            } else {
+                Channel.value(file('NO_FILE')).set{target_adj}
+                Channel.value(file('NO_FILE1')).set{target_ss}
+            }
 
             // Collect input files
             def inputFiles = collectInputFiles(params)
@@ -149,17 +191,28 @@ workflow {
             inputFiles.each { inputFile ->
                 "rsync -r ${inputFile} ${inputsDir}/.".execute()
             }
+            // Create the channel for RFdiffusion
+            rf_ch = Channel
+                .fromList((0..<num_batches).collate(batch_size))
+                .map { batch ->
+                    def batchId = batch.isEmpty() ? 0 : (batch[0] / batch_size).intValue()
+                    def designStartnum = batch.min()
+                    tuple(
+                        batchId,
+                        batch_size,
+                        designStartnum,
+                        params.design_mode,
+                        inputFiles,
+                    )
+                }
+                .combine(rfdContigs)
+                .combine(target_adj)
+                .combine(target_ss)
+            
+            // Run RFdiffusion with the generated channel
+            RunRFD(rf_ch)
 
-            // Launch RFDiffusion Workflow
-            RFDiffusionWorkflow(
-                rfdCommand,
-                params.num_designs,
-                batch_size,
-                params.design_mode,
-                inputFiles,
-            )
-
-            RFDiffusionWorkflow.out.pdbs_jsons.set { rfd_pdbs_jsons }
+            RunRFD.out.pdbs_jsons.set { rfd_pdbs_jsons }
             // Compress output files
             CompressRFD("rfd", rfd_pdbs_jsons.flatten().collect())
 
@@ -172,8 +225,8 @@ workflow {
         // Fold filtering - secondary structure and radius of gyration
         FilterFold(fold_tuples)
 
-        // If Running RFD only these are the final pdbs
-        if (params.run_rfd_only) {
+        // If Running Fold Design only these are the final pdbs
+        if (params.run_fold_only) {
             FilterFold.out.pdbs_jsons
                 .flatten()
                 .collect()
@@ -184,9 +237,9 @@ workflow {
             FilterFold.out.pdbs_jsons.set { filt_fold_pdbs_jsons }
         }
     }
-    else if (params.skip_rfd & !params.skip_rfd_seq & !params.skip_rfd_seq_pred) {
-        // Skip RFDiffusion and use existing PDBs and JSONs from specified directory
-        println("Skipping RFDiffusion stage as skip_rfd=true.")
+    else if (params.skip_fold & !params.skip_fold_seq & !params.skip_fold_seq_pred) {
+        // Skip Fold Design and use existing PDBs and JSONs from specified directory
+        println("Skipping Fold Design stage as skip_fold=true.")
         println("Running Sequence Design, Prediction, and Analysis stages only.")
         println("Looking for PDBs and JSONs in: ${params.skip_input_dir}")
         // Check if directory exists
@@ -223,13 +276,13 @@ workflow {
             .set { filt_fold_pdbs_jsons }
     }
     else {
-        println("Skipping RFDiffusion stage as skip_rfd_seq=true or skip_rfd_seq_pred=true.")
+        println("Skipping Fold Design stage as skip_fold_seq=true or skip_fold_seq_pred=true.")
     }
     ///////////////////////////
     // SEQUENCE DESIGN STAGE //
     ///////////////////////////
     // Run Sequence Design if not skipped
-    if (!params.skip_rfd_seq & !params.skip_rfd_seq_pred & !params.run_rfd_only) {
+    if (!params.skip_fold_seq & !params.skip_fold_seq_pred & !params.run_fold_only) {
         // Sequence design (either MPNN or FAMPNN)
         if (params.seq_method == "mpnn") {
             // Add FIXED labels to PDBs for target residues so the sequence does not change
@@ -294,7 +347,7 @@ workflow {
                 .combine(mega_csv)
                 .set { fampnn_input }
 
-            if (params.design_mode in ['binder_denovo', 'binder_foldconditioning', 'binder_motifscaffolding', 'binder_partialdiffusion']) {
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 // Perform design and scoring on binder (chain A)
                 RunFAMPNN(fampnn_input, 'A')
             }
@@ -322,9 +375,9 @@ workflow {
             error("Not a valid sequence assignment method")
         }
     }
-    else if (!params.skip_rfd_seq_pred & !params.run_rfd_only) {
+    else if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Skip sequence design and run prediction using existing PDBs from specified directory
-        println("Skipping Sequence Design stage as skip_rfd_seq=true.")
+        println("Skipping Sequence Design stage as skip_fold_seq=true.")
         println("Running Prediction and Analysis stages only.")
         println("Looking for PDBs in: ${params.skip_input_dir}")
         // Check if directory exists
@@ -347,19 +400,19 @@ workflow {
             .of(pdbs_for_pred)
             .set { filt_seq_pdbs }
     }
-    else if (params.skip_rfd_seq_pred) {
-        println("Skipping Sequence Design stage as skip_rfd_seq_pred=true.")
+    else if (params.skip_fold_seq_pred) {
+        println("Skipping Sequence Design stage as skip_fold_seq_pred=true.")
     }
     else {
-        println("Skipping Sequence Design stage as run_rfd_only=true.")
+        println("Skipping Sequence Design stage as run_fold_only=true.")
     }
     ////////////////////////////////
     // STRUCTURE PREDICTION STAGE //
     ////////////////////////////////
     // Run Structure Prediction if not skipped
-    if (!params.skip_rfd_seq_pred & !params.run_rfd_only) {
+    if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Optional uncropped target PDB merge for binder design
-        if (params.design_mode in ['binder_denovo', 'binder_foldconditioning', 'binder_motifscaffolding', 'binder_partialdiffusion']) {
+        if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
             // if uncropped target PDB file is provided, merge with designs
             if (params.uncropped_target_pdb) {
                 def uncroppedPDBfile = file(params.uncropped_target_pdb)
@@ -396,7 +449,7 @@ workflow {
             // Filtering of AF2 results
             FilterAF2(af2_tuple)
 
-            if (params.design_mode in ['binder_denovo', 'binder_foldconditioning', 'binder_motifscaffolding', 'binder_partialdiffusion']) {
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 // Alignment of PDBs to target chain(s). Only need one reference file
                 AlignAF2(FilterAF2.out.pdbs.flatten().collect(), pred_input_pdbs.flatten().last())
                 AlignAF2.out.pdbs
@@ -428,7 +481,7 @@ workflow {
                 .set { boltz_tuple }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
-            if (params.design_mode in ['binder_denovo', 'binder_foldconditioning', 'binder_motifscaffolding', 'binder_partialdiffusion']) {
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 AlignBoltz(boltz_tuple, filt_seq_pdbs, 'binder')
             }
             else {
@@ -448,9 +501,9 @@ workflow {
             error("Not a valid structure prediction method")
         }
     }
-    else if (!params.run_rfd_only) {
+    else if (!params.run_fold_only) {
         // Skip prediction and run analysis only using existing PDBs from specified directory
-        println("Skipping Structure Prediction stage as skip_rfd_seq_pred=true.")
+        println("Skipping Structure Prediction stage as skip_fold_seq_pred=true.")
         println("Running Analysis Stage only")
         println("Looking for PDBs in: ${params.skip_input_dir}")
         if (!file(params.skip_input_dir).exists()) {
@@ -473,12 +526,12 @@ workflow {
             .set { analysis_input_pdbs }
     }
     else {
-        println("Skipping Structure Prediction stage as run_rfd_only=true.")
+        println("Skipping Structure Prediction stage as run_fold_only=true.")
     }
     ////////////////////
     // ANALYSIS STAGE //
     ////////////////////
-    if (!params.run_rfd_only) {
+    if (!params.run_fold_only) {
         // Analysis of PDBs to generate additional metrics 
         AnalyseBestDesigns(analysis_input_pdbs)
         // Use placeholder PDB file if no designs survive filtering
@@ -489,7 +542,7 @@ workflow {
             .set { final_pdbs }
     }
     else {
-        println("Skipping Analysis stage as run_rfd_only=true.")
+        println("Skipping Analysis stage as run_fold_only=true.")
     }
 
     // Open topic channels to collect metadata for all designs. 
@@ -512,37 +565,37 @@ workflow {
     CombineMetadata(metadata_fold, metadata_fold_seq).csv.collectFile(name: "all_designs.csv").set { all_designs_metadata }
 
     // Count outputs
-    if (params.run_rfd_only) {
-        Utils.countPdbFiles(fold_tuples).set { rfd_count }
-        Utils.countPdbFiles(final_pdbs).set { filter_rfd_count }
+    if (params.run_fold_only) {
+        Utils.countPdbFiles(fold_tuples).set { fold_count }
+        Utils.countPdbFiles(final_pdbs).set { filter_fold_count }
         seq_count = 0
         filter_seq_count = 0
         filter_pred_count = 0
     }
-    else if (params.skip_rfd_seq_pred) {
-        rfd_count = 0
-        filter_rfd_count = 0
+    else if (params.skip_fold_seq_pred) {
+        fold_count = 0
+        filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
         filter_pred_count = 0
     }
-    else if (params.skip_rfd_seq) {
-        rfd_count = 0
-        filter_rfd_count = 0
+    else if (params.skip_fold_seq) {
+        fold_count = 0
+        filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
     }
-    else if (params.skip_rfd) {
-        rfd_count = 0
-        filter_rfd_count = 0
+    else if (params.skip_fold) {
+        fold_count = 0
+        filter_fold_count = 0
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
     }
     else {
-        Utils.countPdbFiles(fold_tuples).set { rfd_count }
-        Utils.countPdbFiles(filt_fold_pdbs_jsons).set { filter_rfd_count }
+        Utils.countPdbFiles(fold_tuples).set { fold_count }
+        Utils.countPdbFiles(filt_fold_pdbs_jsons).set { filter_fold_count }
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
@@ -552,8 +605,8 @@ workflow {
     PublishResults(
         final_pdbs,
         all_designs_metadata,
-        rfd_count,
-        filter_rfd_count,
+        fold_count,
+        filter_fold_count,
         seq_count,
         filter_seq_count,
         filter_pred_count
@@ -568,8 +621,81 @@ workflow {
         }
     }
 }
+///////////////////////
+// HELPER FUNCTIONS //
+//////////////////////
+def validateDesignLength(design_length){
+    // Validate design length (required, one or two comma-separated integers, min<=max)
+    if (!design_length) {
+        throw new IllegalArgumentException("Please provide a value for design_length, e.g. '65', '65-150'.")
+    }
+    def designLengthVals = design_length.split('-')
+    if (designLengthVals.size() > 2 || !designLengthVals.every { it.isInteger() }) {
+        throw new IllegalArgumentException("design_length parameter must contain one or two integers (dash-separated) e.g. '65' '65-150'.")
+    }
+    if (designLengthVals.size() == 2){
+        def minLength = Integer.parseInt(designLengthVals[0])
+        def maxLength = Integer.parseInt(designLengthVals[1])
+        if (minLength > maxLength || minLength < 1) {
+            throw new IllegalArgumentException("design_length values must be valid: min ≤ max and min ≥ 1.")
+        }
+    }
+}
 
-// Collect required input files for RFdiffusion
+def validateRFDParameters(params) {
+    // Validate Parameters for RFdiffusion including design_mode and mode required parameters
+    VALID_MODES = ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
+    if (!(params.design_mode in VALID_MODES)) {
+        throw new IllegalArgumentException("Invalid design mode: ${params.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
+    }
+
+    switch (params.design_mode) {
+        case 'binder_partialdiff':
+            if (!params.rfd_partial_diffusion_timesteps) {
+                throw new IllegalArgumentException("rfd_partial_diffusion_timesteps is required when mode is 'binder_partialdiff'")
+            }
+            break            
+        case 'binder_foldcond':
+            // Validate scaffold directory and contents
+            if (!params.rfd_scaffold_dir) {
+                throw new IllegalArgumentException("Please provide path to directory containing scaffold files for fold conditioning (rfd_scaffold_dir)")
+            }
+            def scaffoldsDir = new File(params.rfd_scaffold_dir)
+            if (!scaffoldsDir.exists() || !scaffoldsDir.isDirectory()) {
+                throw new IllegalArgumentException("rfd_scaffold_dir does not exist or is not a directory")
+            }
+            
+            def ss_files = scaffoldsDir.listFiles().findAll { it.name.endsWith('_ss.pt') }
+            def adj_files = scaffoldsDir.listFiles().findAll { it.name.endsWith('_adj.pt') }
+            if (!ss_files || !adj_files) {
+                throw new IllegalArgumentException("rfd_scaffold_dir does not contain required _ss.pt and _adj.pt files")
+            }
+            break
+        case 'monomer_foldcond':
+            if (!params.rfd_scaffold_dir) {
+                throw new IllegalArgumentException("Please provide path to directory containing scaffold files for fold conditioning (rfd_scaffold_dir)")
+            }
+
+            def scaffoldsDir = new File(params.rfd_scaffold_dir)
+            if (!scaffoldsDir.exists() || !scaffoldsDir.isDirectory()) {
+                throw new IllegalArgumentException("rfd_scaffold_dir does not exist or is not a directory")
+            }
+            
+            def ss_files = scaffoldsDir.listFiles().findAll { it.name.endsWith('_ss.pt') }
+            def adj_files = scaffoldsDir.listFiles().findAll { it.name.endsWith('_adj.pt') }
+            if (!ss_files || !adj_files) {
+                throw new IllegalArgumentException("rfd_scaffold_dir does not contain required _ss.pt and _adj.pt files")
+            }
+            break                
+        case 'monomer_partialdiff':
+            if (!params.rfd_partial_diffusion_timesteps) {
+                throw new IllegalArgumentException("rfd_partial_diffusion_timesteps is required when mode is 'monomer_partialdiff'")
+            }
+            break                
+    }
+}
+
+// Collect required input files
 def collectInputFiles(params) {
     def inputs = []
 
@@ -602,62 +728,71 @@ def collectInputFiles(params) {
             inputs << file(params.rfd_scaffold_dir)
         }
     }
-    if (params.design_mode == 'binder_foldcond') {
-        if (params.rfd_target_ss) {
-            inputs << file(params.rfd_target_ss)
-        }
-        if (params.rfd_target_adj) {
-            inputs << file(params.rfd_target_adj)
-        }
-    }
 
     return inputs
 }
-def validateBindCraftParams(bc_chains,hotspot_residues,bc_design_length,num_designs,input_pdb,bc_advanced_json) {
+
+def generateContigDescription(String contigs) {
+    // Function to generate human-readable contig descriptions
+    def cleaned = contigs.replaceAll(/[\[\]]/, '').trim()
+    def chainParts = cleaned.split(/\s+/).findAll { it }
+    def description = ["The contigs for RFdiffusion ${contigs} include ${chainParts.size()} chain${chainParts.size() > 1 ? 's' : ''}. RFdiffusion will:"]
+    
+    chainParts.each { part ->
+        def segments = part.split('/')
+        def chainId = null
+        
+        // Determine chain ID from first segment with chain designation
+        segments.find { seg ->
+            def matcher = seg =~ /^([A-Za-z])?(\d+)-(\d+)$/
+            if (matcher.matches() && matcher.group(1)) {
+                chainId = matcher.group(1)
+                return true
+            }
+            return false
+        }
+        
+        segments.each { seg ->
+            switch (seg) {
+                case '0':
+                    description << "* Insert a chainbreak ${chainId ? "after chain ${chainId}" : ""}"
+                    break
+                default:
+                    def matcher = seg =~ /^([A-Za-z])?(\d+)-(\d+)$/
+                    if (matcher.matches()) {
+                        def (segChain, start, end) = [matcher.group(1), matcher.group(2), matcher.group(3)]
+                        if (segChain) {
+                            description << "* Keep residues ${start}-${end} of chain ${segChain}"
+                        } else {
+                            // No chain ID - this is a partial diffusion or motifscaffolding mode
+                            def count = end.toInteger() - start.toInteger() + 1
+                            if (start == end) {
+                                description << "* Diffuse ${start} residues${chainId ? " for chain ${chainId}" : " for a new chain"}"
+                            } else {
+                                description << "* Diffuse ${start}-${end} residues${chainId ? " for chain ${chainId}" : " for a new chain"}"
+                            }
+                        }
+                    }
+            }
+        }
+    }
+    
+    return description.join('\n')
+}
+
+def validateBindCraftParams(bc_chains,hotspot_residues,design_length,num_designs,input_pdb,bc_advanced_json) {
 
     // Validate PDB chains to target (required, comma-separated, only letters)
-    if (!bc_chains) {
-        throw new IllegalArgumentException("Please provide one or more PDB chains to target in bc_chains, e.g. 'A,C'.")
-    }
-    if (!bc_chains.matches(/^([A-Za-z]+)(,[A-Za-z]+)*$/)) {
-        throw new IllegalArgumentException("bc_chains parameter must be a comma-separated list of chain identifiers, e.g. 'A,B' or 'A'.")
+    if (bc_chains) {
+        if (!bc_chains.matches(/^([A-Za-z]+)(,[A-Za-z]+)*$/)) {
+            throw new IllegalArgumentException("bc_chains parameter must be a comma-separated list of chain identifiers, e.g. 'A,B' or 'A'.")
+        }
     }
 
     // Validate hotspot residues (optional, allow null, otherwise enforce expected format)
     def hotspot = hotspot_residues
     if (hotspot && !hotspot.matches(/^([A-Za-z]*[0-9]+([\-][0-9]+)?)(,[A-Za-z]*[0-9]+([\-][0-9]+)?)*$|^([A-Za-z]+,?)*$/)) {
-        throw new IllegalArgumentException("hotspot_residues format invalid. Acceptable: '1,2-10', 'A1-10,B1-20', or chains 'A,B'.")
-    }
-
-    // Validate design length (required, two comma-separated integers, min<=max)
-    if (!bc_design_length) {
-        throw new IllegalArgumentException("Please provide a min,max design length in bc_design_length, e.g. '65,150'.")
-    }
-    def designLengthVals = bc_design_length.split(',')
-    if (designLengthVals.size() != 2 || !designLengthVals.every { it.isInteger() }) {
-        throw new IllegalArgumentException("bc_design_length parameter must contain two comma-separated integers, e.g. '65,150'.")
-    }
-    def minLength = Integer.parseInt(designLengthVals[0])
-    def maxLength = Integer.parseInt(designLengthVals[1])
-    if (minLength > maxLength || minLength < 1) {
-        throw new IllegalArgumentException("bc_design_length values must be valid: min ≤ max and min ≥ 1.")
-    }
-
-    // Validate number of final designs (required, positive integer)
-    if (!num_designs) {
-        throw new IllegalArgumentException("Please specify the number of final designs required in num_designs.")
-    }
-    if (!(num_designs instanceof Integer) || num_designs < 1) {
-        throw new IllegalArgumentException("num_designs must be a positive integer.")
-    }
-
-    // Validate BindCraft input PDB
-    if (!input_pdb) {
-        throw new IllegalArgumentException("Please provide input PDB file path for BindCraft")
-    }
-    def inputFile = new File(input_pdb)
-    if (!inputFile.exists()) {
-        throw new FileNotFoundException("Input PDB file not found at path: ${input_pdb}. Please ensure the file exists and the path is correct.")
+        throw new IllegalArgumentException("hotspot_residues format invalid. Acceptable: '1,2-10', 'A10,A12,B2-10', or chains 'A,B'.")
     }
 
     // Validate optional BindCraft advanced settings JSON
@@ -669,11 +804,8 @@ def validateBindCraftParams(bc_chains,hotspot_residues,bc_design_length,num_desi
     }
 }
 
-/**
- * Generate the advanced settings path for BindCraft according to protocol parameters.
- * Throws an exception if any protocol is unsupported.
- */
 def getAdvancedSettingsPath(bc_design_protocol, bc_template_protocol) {
+    // Generate the advanced settings path for BindCraft according to protocol parameters.
     // Design protocol tag
     def designProtocolTag
     switch(bc_design_protocol) {

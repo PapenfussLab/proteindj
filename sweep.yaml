@@ -4,7 +4,7 @@ profile: milton
 
 # Fixed parameters that override nextflow.config defaults
 fixed_params:
-  rfd_contigs: "[A17-131/0 50-100]"
+  design_length: "60-100"
   input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   mpnn_temperature: 0.0001
   num_designs: 8

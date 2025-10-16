@@ -20,7 +20,7 @@ def sample_sweep_yaml():
 mode: binder_denovo
 
 fixed_params:
-  rfd_contigs: "[A17-145/0 50-100]"
+  design_length: "50-100"
   input_pdb: "/path/to/target.pdb"
   mpnn_temperature: 0.0001
   num_designs: 4
@@ -67,7 +67,7 @@ params {
     out_dir = "/vast/scratch/users/$USER/pdj"
 
     // Mode-specific parameters
-    rfd_contigs = null
+    design_length = null
     input_pdb = null
     hotspot_residues = null
     rfd_noise_scale = null

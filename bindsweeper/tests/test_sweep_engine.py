@@ -71,7 +71,7 @@ class TestSweepEngine:
         """Mock sweep configuration."""
         config = Mock(spec=SweepConfig)
         config.mode = "binder_denovo"
-        config.fixed_params = {"rfd_contigs": "A17-145/0 50-100", "num_designs": 4}
+        config.fixed_params = {"design_length": "50-100", "num_designs": 4}
 
         # Mock sweep parameters
         noise_sweep = Mock()

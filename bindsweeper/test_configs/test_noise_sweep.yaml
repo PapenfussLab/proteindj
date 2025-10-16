@@ -2,7 +2,7 @@ mode: binder_denovo
 profile: milton
 
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
+  design_length: "60-100"
   input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   hotspot_residues: "A56,A115,A123"
   rfd_ckpt_override: "complex_beta"

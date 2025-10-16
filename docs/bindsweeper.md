@@ -171,7 +171,7 @@ mode: binder_denovo
 profile: milton
 
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
+  design_length: "60-100"
   input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   rfd_noise_scale: 1.0
   rfd_ckpt_override: "complex_beta"
@@ -196,7 +196,7 @@ mode: binder_denovo
 profile: milton
 
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
+  design_length: "60-100"
   input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   hotspot_residues: "A56,A115,A123"
   rfd_ckpt_override: "complex_beta"
@@ -220,8 +220,6 @@ fixed_params:
   input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   hotspot_residues: "A56,A115,A123"
   rfd_noise_scale: 0.0
-  rfd_target_ss: "./benchmarkdata/5o45_pd-l1_ss.pt"
-  rfd_target_adj:  "./benchmarkdata/5o45_pd-l1_adj.pt"
 
 sweep_params:
   rfd_scaffold_dir:

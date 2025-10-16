@@ -18,13 +18,16 @@ ID tags used to track designs in the pipeline
 
 ---
 
-## RFdiffusion Metrics
+## Fold Generation Metrics
 
-Metrics calculated on the RFdiffusion-generated folds.
+Metrics calculated on the BindCraft or RFdiffusion generated folds.
 
 | Metric             | Description                                                                        |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `rfd_sampled_mask` | Contigs used by RFdiffusion to produce the fold. (e.g., `['E6-155/0', '100-100']`) |
+| `bc_length` | Length of binder selected by BindCraft |
+| `bc_plddt` | Average per-residue confidence score (0-100) for the complex calculated by BindCraft. |
+| `bc_target_rmsd` | The RMSD between the input target structure and the target structure after binder design |
 | `fold_helices`      | Number of alpha-helices in the designed fold (calculated by PyRosetta).         |
 | `fold_strands`      | Number of beta-strands in the designed fold (calculated by PyRosetta).          |
 | `fold_total_ss`     | Total secondary structures (helices + strands) in the designed fold.            |
