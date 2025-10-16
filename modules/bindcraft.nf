@@ -1,10 +1,10 @@
 process PrepBC {
-    cpus 1
-    memory '1 GB'
+    label 'pyrosetta_tools'
 
     input:
     val(batch_id)
     val(batch_size)
+    path(input_pdb)
     path(advanced_json)
     
     output:
@@ -16,31 +16,82 @@ process PrepBC {
     
     import os
     import json
+    from Bio.PDB import PDBParser
     
-    starting_pdb = os.path.basename("${params.input_pdb}")
+    starting_pdb = os.path.basename("${input_pdb}")
     design_path = "designs"
     binder_name = "batch_${batch_id}"
 
-    # Properly convert comma-separated parameters to Python lists
-    chains = ",".join([c.strip() for c in "${params.bc_chains}".split(',')]) if "${params.bc_chains}" else ""
-    hotspots = ",".join([h.strip() for h in "${params.hotspot_residues}".split(',')]) if "${params.hotspot_residues}" else ""
-    lengths = [int(x.strip()) for x in "${params.bc_design_length}".split(',')]
+    # Function to extract protein chains from PDB
+    def get_protein_chains(pdb_file):
+        # Extract protein chain IDs from PDB file.
+        parser = PDBParser(QUIET=True)
+        structure = parser.get_structure('protein', pdb_file)
+        
+        protein_chains = []
+        for model in structure:
+            for chain in model:
+                # Check if chain has at least one standard amino acid residue
+                has_protein = False
+                for residue in chain:
+                    if residue.id[0] == ' ':  # Standard amino acid (not hetero)
+                        has_protein = True
+                        break
+                
+                if has_protein and chain.id not in protein_chains:
+                    protein_chains.append(chain.id)
+        
+        return sorted(protein_chains)
 
-    # Number of final designs is irrelevant as we skip MPNN-AF2 validation
+    # Get chains - either from parameter or auto-detect
+    # Check for both empty string and literal "null" from Nextflow
+    bc_chains_param = "${params.bc_chains}".strip()
+    if bc_chains_param and bc_chains_param != "null":
+        # Use provided chains
+        chains_list = [c.strip() for c in "${params.bc_chains}".split(',')]
+        print(f"Using provided chains: {chains_list}")
+    else:
+        # Auto-detect chains from PDB
+        chains_list = get_protein_chains("${input_pdb}")
+        print(f"Auto-detected chains from PDB: {chains_list}")
+        if not chains_list:
+            raise ValueError("No protein chains found in PDB file. Please provide chains explicitly with bc_chains parameter.")
+    
+    # Convert to comma-separated string for BindCraft
+    chains = ",".join(chains_list)
+    
+    # Parse hotspots - convert to comma-separated string for BindCraft
+    hotspots_param = "${params.hotspot_residues}".strip()
+    hotspots = ",".join([h.strip() for h in hotspots_param.split(',') if h.strip()]) if hotspots_param else ""
+    
+    # Parse lengths - handle single value or range, store as list for JSON array
+    length_str = "${params.design_length}".strip()
+    if '-' in length_str:
+        lengths = [int(x.strip()) for x in length_str.split('-')]
+    else:
+        lengths = [int(length_str)]
+
+    # Create settings dictionary
+    # BindCraft expects chains and hotspots as comma-separated strings
+    # but lengths as an array
     settings = {
         "design_path": design_path,
         "binder_name": binder_name,
         "starting_pdb": starting_pdb,
-        "chains": chains,
-        "target_hotspot_residues": hotspots,
-        "lengths": lengths,
+        "chains": chains,  # String: "A,B"
+        "target_hotspot_residues": hotspots,  # String: "A50,B75"
+        "lengths": lengths,  # List: [60, 80]
         "number_of_final_designs": ${batch_size}
     }
 
-    target_settings_path = os.path.join(binder_name+".json")
+    # Write settings JSON file
+    target_settings_path = os.path.join(binder_name + ".json")
     with open(target_settings_path, 'w') as f:
         json.dump(settings, f, indent=4)
-    print("Wrote settings JSON file")
+    print(f"Wrote settings JSON file: {target_settings_path}")
+    print(f"  Chains: {chains}")
+    print(f"  Hotspots: {hotspots}")
+    print(f"  Lengths: {lengths}")
 
     # Load and modify advanced settings JSON
     advanced_json_path = "${advanced_json}"
@@ -48,12 +99,17 @@ process PrepBC {
         advanced_settings = json.load(f)
     
     # Update amino acid types to avoid during design
-    omit_AAs = ",".join([aa.strip() for aa in "${params.bc_omit_AAs}".split(',')]) if "${params.bc_omit_AAs}" else ""
-    advanced_settings["omit_AAs"] = omit_AAs
+    # BindCraft expects this as a comma-separated string
+    omit_AAs_param = "${params.bc_omit_AAs}".strip()
+    omit_AAs = ",".join([aa.strip() for aa in omit_AAs_param.split(',') if aa.strip()]) if omit_AAs_param else ""
+    advanced_settings["omit_AAs"] = omit_AAs  # String: "C,M"
+    
     # Disable BindCraft's internal MPNN routine as we will perform this in ProteinDJ
     advanced_settings["enable_mpnn"] = False
+    
     # Set max trajectories to batch size. BindCraft will run until it achieves this many designs.
     advanced_settings["max_trajectories"] = ${batch_size}
+    
     # Set path to AF2 params directory to bind location in container
     advanced_settings["af_params_dir"] = "/af2params"
     
@@ -61,7 +117,7 @@ process PrepBC {
     modified_advanced_path = "advanced_settings.json"
     with open(modified_advanced_path, 'w') as f:
         json.dump(advanced_settings, f, indent=4)
-    print("Modified advanced settings JSON file")
+    print(f"Modified advanced settings JSON file: {modified_advanced_path}")
     """
 }
 
