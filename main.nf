@@ -180,8 +180,8 @@ workflow {
                 GenerateRFDfoldcond.out.target_adj.set{target_adj}
                 GenerateRFDfoldcond.out.target_ss.set{target_ss}
             } else {
-                Channel.value(file('NO_FILE')).set{target_adj}
-                Channel.value(file('NO_FILE1')).set{target_ss}
+                Channel.value(file("${projectDir}/lib/NO_FILE")).set{target_adj}
+                Channel.value(file("${projectDir}/lib/NO_FILE1")).set{target_ss}
             }
 
             // Collect input files
@@ -193,7 +193,7 @@ workflow {
             }
             // Create the channel for RFdiffusion
             rf_ch = Channel
-                .fromList((0..<num_batches).collate(batch_size))
+                .fromList((0..<num_designs).collate(batch_size))
                 .map { batch ->
                     def batchId = batch.isEmpty() ? 0 : (batch[0] / batch_size).intValue()
                     def designStartnum = batch.min()
