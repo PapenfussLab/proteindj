@@ -70,7 +70,10 @@
           "default": null
         },
         "hotspot_residues": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
           "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$",
           "default": null
@@ -190,8 +193,8 @@
           "type": "string",
           "description": "Input PDB chains to target. Can be one or multiple, in a comma-separated format e.g. 'A,C'. Other chains will be ignored during design.",
           "pattern": "^[A-Z](,[A-Z])*$",
-          "default": null,
-          "hidden": true
+          "hidden": true,
+          "default": null
         },
         "bc_design_protocol": {
           "type": "string",

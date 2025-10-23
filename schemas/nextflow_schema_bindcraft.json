@@ -63,7 +63,10 @@
           "default": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
         },
         "hotspot_residues": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
           "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$"
         }
@@ -141,7 +144,6 @@
           "type": "string",
           "description": "Input PDB chains to target. Can be one or multiple, in a comma-separated format e.g. 'A,C'. Other chains will be ignored during design.",
           "pattern": "^[A-Z](,[A-Z])*$",
-          "default": "A",
           "hidden": true
         },
         "bc_design_protocol": {

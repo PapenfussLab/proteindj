@@ -62,7 +62,10 @@ process PrepBC {
     
     # Parse hotspots - convert to comma-separated string for BindCraft
     hotspots_param = "${params.hotspot_residues}".strip()
-    hotspots = ",".join([h.strip() for h in hotspots_param.split(',') if h.strip()]) if hotspots_param else ""
+    if hotspots_param and hotspots_param != "null":
+        hotspots = ",".join([h.strip() for h in hotspots_param.split(',') if h.strip()])
+    else:
+        hotspots = ""
     
     # Parse lengths - handle single value or range, store as list for JSON array
     length_str = "${params.design_length}".strip()
@@ -99,10 +102,12 @@ process PrepBC {
         advanced_settings = json.load(f)
     
     # Update amino acid types to avoid during design
-    # BindCraft expects this as a comma-separated string
     omit_AAs_param = "${params.bc_omit_AAs}".strip()
-    omit_AAs = ",".join([aa.strip() for aa in omit_AAs_param.split(',') if aa.strip()]) if omit_AAs_param else ""
-    advanced_settings["omit_AAs"] = omit_AAs  # String: "C,M"
+    if omit_AAs_param and omit_AAs_param != "null":
+        omit_AAs = ",".join([aa.strip() for aa in omit_AAs_param.split(',') if aa.strip()])
+    else:
+        omit_AAs = ""
+    advanced_settings["omit_AAs"] = omit_AAs
     
     # Disable BindCraft's internal MPNN routine as we will perform this in ProteinDJ
     advanced_settings["enable_mpnn"] = False
