@@ -22,7 +22,7 @@ def parse_arguments():
                     help='Minimum confidence score')
     parser.add_argument('--boltz-min-ptm', type=float, 
                     help='Minimum pTM score')
-    parser.add_argument('--boltz-min-ptm_interface', type=float,
+    parser.add_argument('--boltz-min-ptm-interface', type=float,
                     help='Minimum interface pTM score')
     parser.add_argument('--boltz-min-plddt', type=float,
                     help='Minimum complex pLDDT score')
