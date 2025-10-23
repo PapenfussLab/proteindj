@@ -63,7 +63,10 @@
           "default": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
         },
         "hotspot_residues": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
           "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$",
           "default": "A56,A115,A123"
