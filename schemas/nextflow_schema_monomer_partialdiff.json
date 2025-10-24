@@ -59,8 +59,7 @@
         "rfd_contigs": {
           "type": "string",
           "description": "Contigs specification strings for residues to include from input PDB and/or design length, e.g. `[A17-145/0 50-100]`. See docs for examples. Optional for multiple modes, required by `binder_motifscaff` and `monomer_motifscaff`. If null, contigs will be auto generated from input PDB (all residues) and/or `design_length`.",
-          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[A17-111/20]"
+          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$"
         },
         "rfd_partial_diffusion_timesteps": {
           "type": "integer",
