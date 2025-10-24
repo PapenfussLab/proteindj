@@ -141,7 +141,6 @@
           "type": "string",
           "description": "Input PDB chains to target. Can be one or multiple, in a comma-separated format e.g. 'A,C'. Other chains will be ignored during design.",
           "pattern": "^[A-Z](,[A-Z])*$",
-          "default": "A",
           "hidden": true
         },
         "bc_design_protocol": {

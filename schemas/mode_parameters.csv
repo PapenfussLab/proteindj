@@ -6,7 +6,7 @@ out_dir,${projectDir}/pdj_results,out_dir,${projectDir}/pdj_denovo,out_dir,${pro
 design_length,null,design_length,60-80,,,,,,,design_length,60-100,design_length,60-80,,,,,,
 input_pdb,null,,,,,input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,input_pdb,${projectDir}/benchmarkdata/5o45_pd-l1.pdb,input_pdb,${projectDir}/lib/examplebinder.pdb,input_pdb,${projectDir}/lib/examplebinder.pdb
 hotspot_residues,null,,,,,,,,,hotspot_residues,,hotspot_residues,"A56,A115,A123",hotspot_residues,"A56,A115,A123",,,,
-rfd_contigs,null,rfd_contigs,,,,rfd_contigs,[A17-43/9-15/A53-117/3-6/A121-131],rfd_contigs,[A17-111/20],,,rfd_contigs,,,,rfd_contigs,[5-10/A1-88/10-20/0 B89-203],rfd_contigs,[88-88/0 B89-203]
+rfd_contigs,null,rfd_contigs,,,,rfd_contigs,[A17-43/9-15/A53-117/3-6/A121-131],rfd_contigs,,,,rfd_contigs,,,,rfd_contigs,[5-10/A1-88/10-20/0 B89-203],rfd_contigs,
 rfd_scaffold_dir,null,,,rfd_scaffold_dir,${projectDir}/binderscaffolds/scaffolds_assorted,,,,,,,,,rfd_scaffold_dir,${projectDir}/binderscaffolds/scaffolds_assorted,,,,
 rfd_mask_loops,TRUE,,,rfd_mask_loops,,,,,,,,,,rfd_mask_loops,FALSE,,,,
 rfd_inpaint_seq,null,,,,,rfd_inpaint_seq,[A17-19/A129-131],,,,,,,,,rfd_inpaint_seq,,,
