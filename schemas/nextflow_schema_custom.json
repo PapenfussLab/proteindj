@@ -70,10 +70,7 @@
           "default": null
         },
         "hotspot_residues": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": "string",
           "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
           "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$",
           "default": null
