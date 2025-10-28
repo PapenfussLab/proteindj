@@ -28,6 +28,11 @@ workflow {
     
     def outputDirectory = params.out_dir
 
+    VALID_MODES = ['bindcraft', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
+    if (!(params.design_mode in VALID_MODES)) {
+        throw new IllegalArgumentException("Invalid design mode: ${params.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
+    }
+
     if (params.run_fold_only && (params.skip_fold_seq || params.skip_fold_seq_pred )) {
         error("Cannot use --run_fold_only with skip flags --skip_fold_seq or --skip_fold_seq_pred. These options are contradictory.")
     }
@@ -643,12 +648,7 @@ def validateDesignLength(design_length){
 }
 
 def validateRFDParameters(params) {
-    // Validate Parameters for RFdiffusion including design_mode and mode required parameters
-    VALID_MODES = ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
-    if (!(params.design_mode in VALID_MODES)) {
-        throw new IllegalArgumentException("Invalid design mode: ${params.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
-    }
-
+    // Validate Parameters for RFdiffusion including  mode required parameters
     switch (params.design_mode) {
         case 'binder_partialdiff':
             if (!params.rfd_partial_diffusion_timesteps) {
