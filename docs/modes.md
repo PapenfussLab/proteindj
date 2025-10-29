@@ -376,7 +376,7 @@ bindcraft {
         }
 }
 ```
-As with RFdiffusion modes, there are optional parameters we can use to guide BindCraft. You can provide hotspot residues (comma-separated with chain IDs e.g. `hotspot_residues = 'A56,A123'`). BindCraft does not utilise contigs but you can optionally provide chain IDs to include from the input PDB e.g. `bc_chains = 'A,B'` If `bc_chains` is not provided, BindCraft will automatically include all protein chains from the input PDB.
+As with RFdiffusion modes, there are optional parameters we can use to guide BindCraft. You can provide hotspot residues (comma-separated with chain IDs e.g. `hotspot_residues = 'A56,A123'`). Hotspot residues may be ignored if BindCraft identifies a better binding site (as hotspots are only part of a larger composite loss function, see more details [here](https://github.com/martinpacesa/BindCraft/wiki/De-novo-binder-design-with-BindCraft#target-preparation--hotspot-selection)). BindCraft does not utilise contigs but you can optionally provide chain IDs to include from the input PDB e.g. `bc_chains = 'A,B'` If `bc_chains` is not provided, BindCraft will automatically include all protein chains from the input PDB.
 ```
 bindcraft {
         params {
