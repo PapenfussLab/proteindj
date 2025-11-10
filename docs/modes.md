@@ -15,7 +15,7 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - [**binder_foldcond**](#mode-bindfoldcond) – diffusion of new binders with fold-conditioning on scaffolds/templates
 - [**binder_motifscaff**](#mode-bindmotifscaff) – diffusion of binding motifs in input scaffolds
 - [**binder_partialdiff**](#mode-bindpartdiff) – partial diffusion of a binder from an input PDB
-- [**bindcraft**](#mode-bindcraft) - hallucination of a binder using BindCraft
+- [**bindcraft_denovo**](#mode-bindcraft) - hallucination of a binder using BindCraft
 
 ## Monomer Design <a name="monomerdesign"></a>
 
@@ -361,16 +361,16 @@ binder_partialdiff {
 
 For more details on Partial Diffusion, see the official [RFdiffusion GitHub](https://github.com/RosettaCommons/RFdiffusion/tree/main?tab=readme-ov-file#partial-diffusion)
 
-### BindCraft Mode (bindcraft) <a name="mode-bindcraft"></a>
+### BindCraft Mode (bindcraft_denovo) <a name="mode-bindcraft"></a>
 
 The above modes utilise RFdiffusion for fold design, but we have also integrated [BindCraft](https://github.com/martinpacesa/BindCraft) as an alternative software for binder generation. BindCraft is specialised for de novo binder design and uses a hallucination approach to iteratively optimise a random sequence using AlphaFold2 Multimer. Note that BindCraft was built as a complete binder design pipeline, including internal sequence design and structure prediction steps, but in ProteinDJ we are only using the first hallucination stage of the BindCraft pipeline and are passing these designs to our own sequence design and structure prediction processes.
 
 BindCraft requires an input PDB and a design length from which it will randomnly sample. For example, to design binders of length 60-100 for PDL1 you can use this profile:
 
 ```
-bindcraft {
+bindcraft_denovo {
         params {
-            design_mode = 'bindcraft'
+            design_mode = 'bindcraft_denovo'
             design_length = '60-100'
             input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
         }
@@ -378,9 +378,9 @@ bindcraft {
 ```
 As with RFdiffusion modes, there are optional parameters we can use to guide BindCraft. You can provide hotspot residues (comma-separated with chain IDs e.g. `hotspot_residues = 'A56,A123'`). Hotspot residues may be ignored if BindCraft identifies a better binding site (as hotspots are only part of a larger composite loss function, see more details [here](https://github.com/martinpacesa/BindCraft/wiki/De-novo-binder-design-with-BindCraft#target-preparation--hotspot-selection)). BindCraft does not utilise contigs but you can optionally provide chain IDs to include from the input PDB e.g. `bc_chains = 'A,B'` If `bc_chains` is not provided, BindCraft will automatically include all protein chains from the input PDB.
 ```
-bindcraft {
+bindcraft_denovo {
         params {
-            design_mode = 'bindcraft'
+            design_mode = 'bindcraft_denovo'
             design_length = '60-100'
             input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
             hotspot_residues = 'A56,A115,A123'
@@ -392,9 +392,9 @@ bindcraft {
 As with binder design modes, it is useful to include structure prediction filters to identify the best binder designs.
 
 ```
-bindcraft {
+bindcraft_denovo {
         params {
-            design_mode = 'bindcraft'
+            design_mode = 'bindcraft_denovo'
             design_length = '60-100'
             input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
             hotspot_residues = 'A56,A115,A123'

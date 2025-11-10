@@ -13,7 +13,7 @@
             "properties": {
                 "design_mode": {
                     "type": "string",
-                    "description": "Pipeline mode. Choose from 'bindcraft' to use BindCraft or 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', or 'monomer_partialdiff' to use RFdiffusion."
+                    "description": "Pipeline mode. Choose from 'bindcraft_denovo' to use BindCraft or 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', or 'monomer_partialdiff' to use RFdiffusion."
                 },
                 "num_designs": {
                     "type": "integer",

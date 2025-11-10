@@ -28,7 +28,7 @@ workflow {
     
     def outputDirectory = params.out_dir
 
-    VALID_MODES = ['bindcraft', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
+    VALID_MODES = ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
     if (!(params.design_mode in VALID_MODES)) {
         throw new IllegalArgumentException("Invalid design mode: ${params.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
     }
@@ -83,7 +83,7 @@ workflow {
             error("Please provide the number of designs to generate")
         }
         // Validate input PDB file
-        if (params.design_mode in ['bindcraft','binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'binder_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']) {
+        if (params.design_mode in ['bindcraft_denovo','binder_denovo', 'binder_motifscaff', 'binder_partialdiff', 'binder_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']) {
             if (!params.input_pdb) {
                 throw new IllegalArgumentException("Please provide input PDB file path required by $params.design_mode mode")
             }
@@ -93,12 +93,12 @@ workflow {
             }
         }
         // Validate design length
-        if (params.design_mode in ['bindcraft','binder_denovo', 'monomer_denovo']){
+        if (params.design_mode in ['bindcraft_denovo','binder_denovo', 'monomer_denovo']){
             validateDesignLength(params.design_length)
         }
         
         
-        if (params.design_mode=="bindcraft"){
+        if (params.design_mode=="bindcraft_denovo"){
             // Use Bindcraft for fold design
             validateBindCraftParams(
                 params.bc_chains,
@@ -417,7 +417,7 @@ workflow {
     // Run Structure Prediction if not skipped
     if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Optional uncropped target PDB merge for binder design
-        if (params.design_mode in ['bindcraft', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+        if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
             // if uncropped target PDB file is provided, merge with designs
             if (params.uncropped_target_pdb) {
                 def uncroppedPDBfile = file(params.uncropped_target_pdb)
@@ -706,7 +706,7 @@ def collectInputFiles(params) {
 
     // Add required input files
     if (params.design_mode in [
-        'bindcraft',
+        'bindcraft_denovo',
         'binder_denovo',
         'binder_foldcond',
         'binder_motifscaff',
@@ -719,7 +719,7 @@ def collectInputFiles(params) {
         }
     }
 
-    if(params.design_mode == 'bindcraft' & params.bc_advanced_json){
+    if(params.design_mode == 'bindcraft_denovo' & params.bc_advanced_json){
         inputs << file(params.bc_advanced_json)
     }
 

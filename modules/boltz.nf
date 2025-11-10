@@ -10,7 +10,7 @@ process PrepBoltz {
 
     script:
     // Determine template chain based on design mode
-    def templateChain = params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'bindcraft'] ? 'B' : 'A'
+    def templateChain = params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'bindcraft_denovo'] ? 'B' : 'A'
     
     // Build template parameters if enabled
     def templateParams = params.boltz_use_templates ? "--use-template --template-chain ${templateChain}" : ""

@@ -92,7 +92,7 @@ def build_mode_schema(main_schema, mode, overrides):
             if mode == 'custom':
                 # Set full enum list for custom mode
                 prop['enum'] = [
-                    "bindcraft",
+                    "bindcraft_denovo",
                     "binder_denovo",
                     "binder_foldcond",
                     "binder_motifscaff",

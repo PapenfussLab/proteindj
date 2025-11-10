@@ -15,7 +15,7 @@
           "type": "string",
           "description": "Pipeline mode.",
           "enum": [
-            "bindcraft",
+            "bindcraft_denovo",
             "binder_denovo",
             "binder_foldcond",
             "binder_motifscaff",

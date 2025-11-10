@@ -79,7 +79,7 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - **binder_foldcond** – diffusion of new binders with fold-conditioning on scaffolds/templates
 - **binder_motifscaff** – diffusion of binding motifs in input scaffolds
 - **binder_partialdiff** – partial diffusion of a binder from an input PDB
-- **bindcraft** - hallucination of new binders using BindCraft
+- **bindcraft_denovo** - hallucination of new binders using BindCraft
 
 <img src="img/modes_overview.png" height="720">
 
@@ -87,7 +87,7 @@ All the settings and parameters for ProteinDJ can be found in the `nextflow.conf
 
 | Parameter         | Example Value      | Description                                                                                                                                                                                     |
 | ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `design_mode`        | `'monomer_denovo'` | Pipeline mode. Choose from 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', or 'bindcraft'. |
+| `design_mode`        | `'monomer_denovo'` | Pipeline mode. Choose from 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', or 'bindcraft_denovo'. |
 | `num_designs` | `8`                | Number of designs to generate using RFdiffusion or Bindcraft.                                                                                                                                                |
 | `seqs_per_design` | `8`                | Number of sequences to generate per design.                                                                                                                                         |
 | `out_dir`         | `'./pdj_results'`  | Output directory for results. Existing results in this directory will be overwritten.                                                                                                           |

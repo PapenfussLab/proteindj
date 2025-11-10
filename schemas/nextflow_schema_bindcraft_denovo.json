@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com//master/nextflow_schema_bindcraft.json",
-  "title": "bindcraft pipeline parameters",
-  "description": "Parameters for bindcraft mode",
+  "$id": "https://raw.githubusercontent.com//master/nextflow_schema_bindcraft_denovo.json",
+  "title": "bindcraft_denovo pipeline parameters",
+  "description": "Parameters for bindcraft_denovo mode",
   "type": "object",
   "definitions": {
     "essential_parameters": {
@@ -14,9 +14,9 @@
         "design_mode": {
           "type": "string",
           "description": "Pipeline mode.",
-          "default": "bindcraft",
+          "default": "bindcraft_denovo",
           "enum": [
-            "bindcraft"
+            "bindcraft_denovo"
           ]
         },
         "num_designs": {
