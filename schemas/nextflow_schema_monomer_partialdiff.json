@@ -350,7 +350,7 @@
           "hidden": true
         },
         "boltz_template_threshold": {
-          "type": "boolean",
+          "type": "number",
           "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied.",
           "hidden": true
         },
