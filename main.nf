@@ -417,7 +417,7 @@ workflow {
     // Run Structure Prediction if not skipped
     if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Optional uncropped target PDB merge for binder design
-        if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+        if (params.design_mode in ['bindcraft', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
             // if uncropped target PDB file is provided, merge with designs
             if (params.uncropped_target_pdb) {
                 def uncroppedPDBfile = file(params.uncropped_target_pdb)
@@ -477,8 +477,13 @@ workflow {
                 .rebatchGPU(PrepBoltz.out.yamls, params.gpus)
                 .set { pred_input_tuple }
             
+            // Handle templates - use empty channel if not present
+            PrepBoltz.out.templates
+                .ifEmpty(file("${projectDir}/lib/NO_FILE"))
+                .set { templates_ch }
+
             // Perform prediction of designs using Boltz-2
-            RunBoltz(pred_input_tuple)
+            RunBoltz(pred_input_tuple, templates_ch)
 
             // Batch files for CPUs
             Utils

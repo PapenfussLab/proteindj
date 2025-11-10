@@ -330,6 +330,23 @@
           "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
           "hidden": true
         },
+        "boltz_use_templates": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to use template structures to guide Boltz-2 predictions. Template is generated from input design structure. For monomer modes: uses chain A as template. For binder modes: uses chain B (target) as template only, similar to AlphaFold2 Initial-Guess.",
+          "hidden": true
+        },
+        "boltz_template_force": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enforce template structure using a potential (force constraint). Only applies if boltz_use_templates=true.",
+          "hidden": true
+        },
+        "boltz_template_threshold": {
+          "type": "number",
+          "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied.",
+          "hidden": true
+        },
         "boltz_extra_config": {
           "type": "string",
           "hidden": true,
