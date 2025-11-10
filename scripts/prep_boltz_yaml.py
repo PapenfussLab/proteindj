@@ -1,5 +1,4 @@
 import os
-import shutil
 import argparse
 from Bio import SeqIO
 from Bio.PDB import PDBParser, PDBIO, Select
