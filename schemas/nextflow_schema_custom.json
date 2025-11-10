@@ -465,8 +465,8 @@
           "hidden": true
         },
         "boltz_template_force": {
-          "type": "number",
-          "default": "FALSE",
+          "type": "boolean",
+          "default": false,
           "description": "Whether to enforce template structure using a potential (force constraint). Only applies if boltz_use_templates=true.",
           "hidden": true
         },
