@@ -143,8 +143,8 @@ Advanced parameters to control the behaviour of Full-Atom MPNN
 | `boltz_diffusion_samples` | 1       | Number of diffusion samples in Boltz-2 predictions.                                                                                                |
 | `boltz_sampling_steps`    | 200     | Number of sampling steps in Boltz-2 predictions.                                                                                                   |
 | `boltz_use_potentials`    | false   | Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. |
-| `boltz_use_template`      | false   | Enable template-guided structure prediction. In binder modes, the target (chain B) is used as template, similar to AlphaFold2 Initial-Guess. In monomer modes, chain A is templated.   |
-| `boltz_template_force`    | false   | Enforce template structure with potential during prediction. Requires `boltz_use_template = true`.                                                 |
+| `boltz_use_templates`      | false   | Enable template-guided structure prediction. In binder modes, the target (chain B) is used as template, similar to AlphaFold2 Initial-Guess. In monomer modes, chain A is templated.   |
+| `boltz_template_force`    | false   | Enforce template structure with potential during prediction. Requires `boltz_use_templates = true`.                                                 |
 | `boltz_template_threshold`| null    | Distance threshold in Angstroms for template deviation. If specified with `boltz_template_force = true`, constrains prediction near template.     |
 | `boltz_extra_config`      | null    | Additional raw parameters for Boltz-2 predictions. e.g. '--msa_pairing_strategy complete'                                                          |
 

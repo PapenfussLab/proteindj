@@ -13,9 +13,9 @@ process PrepBoltz {
     def templateChain = params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'bindcraft'] ? 'B' : 'A'
     
     // Build template parameters if enabled
-    def templateParams = params.boltz_use_template ? "--use-template --template-chain ${templateChain}" : ""
-    def templateForceParam = params.boltz_use_template && params.boltz_template_force ? "--template-force" : ""
-    def templateThresholdParam = params.boltz_use_template && params.boltz_template_threshold ? "--template-threshold ${params.boltz_template_threshold}" : ""
+    def templateParams = params.boltz_use_templates ? "--use-template --template-chain ${templateChain}" : ""
+    def templateForceParam = params.boltz_use_templates && params.boltz_template_force ? "--template-force" : ""
+    def templateThresholdParam = params.boltz_use_templates && params.boltz_template_threshold ? "--template-threshold ${params.boltz_template_threshold}" : ""
     
     """
     eval "\$(micromamba shell hook --shell bash)"
