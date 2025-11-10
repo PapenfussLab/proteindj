@@ -47,13 +47,13 @@ def add_seqres_to_pdb(input_pdb, output_pdb):
                 out_file.write(f"SEQRES {line_num:>3} {chain_id} {num_residues:>4}  {residues}\n")
         
         # Write the structure using BioPython (this includes ATOM records)
-        io = PDBIO()
-        io.set_structure(structure)
+        pdb_io = PDBIO()
+        pdb_io.set_structure(structure)
         
         # Save to a temporary string buffer
-        import io as io_module
-        buffer = io_module.StringIO()
-        io.save(buffer, ChainSelect())
+        import io
+        buffer = io.StringIO()
+        pdb_io.save(buffer, ChainSelect())
         
         # Get the content and write it (skip the END record from BioPython)
         buffer.seek(0)
