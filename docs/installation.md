@@ -9,7 +9,7 @@ This guide will walk you through installing ProteinDJ and all its dependencies a
 Before starting, ensure you have:
 
 - **Linux/Unix system** with internet access
-- **Sufficient storage space**: ~10 GB for downloading models and ~40 GB for containers
+- **Sufficient storage space**: ~11 GB for downloading models and ~50 GB for containers
 - **Administrative access** or ability to install software
 - **SLURM cluster** (if using HPC environment)
 
@@ -17,7 +17,7 @@ Before starting, ensure you have:
 
 | Component   | Minimum                    | Recommended     |
 | ----------- | -------------------------- | --------------- |
-| **Storage** | 50 GB                      | 100 GB          |
+| **Storage** | 60 GB                      | 100 GB          |
 | **RAM**     | 32 GB                      | 48 GB+          |
 | **GPU**     | NVIDIA GPU with 16GB+ VRAM | NVIDIA A30/A100 |
 | **CPU**     | 8 cores                    | 24+ cores       |
@@ -83,7 +83,7 @@ nextflow -version
 
 ## Step 3: Download Required Models
 
-> **💡 Tip:** This step downloads ~15 GB of model files (final size ~6.8 GB). Consider doing this in a shared location so that other users can access the files.
+> **💡 Tip:** This step downloads ~11 GB of model files. Consider doing this in a shared location so that other users can access the files.
 
 ### RFdiffusion Models (~3.7 GB)
 
@@ -105,16 +105,16 @@ wget http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Co
 cd ../..
 ```
 
-### AlphaFold2 Models (~1.1 GB)
+### AlphaFold2 Models (~5.3 GB)
 
-To perform AlphaFold2 predictions, you will need to download the AF2 models from DeepMind's repository (download ~5.2GB, final size ~1.1 GB). If you have not already downloaded the models, use the commands below, and update the `af2_models` variable in `nextflow.config` to the location of the model directory (e.g. './models/af2'):
+To perform AlphaFold2 predictions, you will need to download the AF2 models from DeepMind's repository. If you have not already downloaded the models, use the commands below, and update the `af2_models` variable in `nextflow.config` to the location of the model directory (e.g. './models/af2'):
 
 ```bash
 mkdir -p models/af2 && cd models/af2
 
 # Download and extract AF2 parameters (only need the first model for AlphaFold2 Initial-Guess)
 wget https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar
-tar -xf alphafold_params_2022-12-06.tar params_model_1.npz params_model_1_multimer_v3.npz params_model_1_ptm.npz LICENSE
+tar -xf alphafold_params_2022-12-06.tar 
 rm -f alphafold_params_2022-12-06.tar
 
 cd ../..

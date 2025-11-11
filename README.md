@@ -2,14 +2,16 @@
 
 <img height="240" src="img/logo.png"><img height="240" alt="bindsweeper_logo" src="img/bindsweeper_logo.png" />
 
-[BioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
+[bioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
 
 ProteinDJ is a Nextflow pipeline for protein design that installs and utilises multiple external software packages, including:
 
 - AlphaFold2 Initial Guess (from https://github.com/nrbennet/dl_binder_design)
+- BindCraft (from https://github.com/martinpacesa/BindCraft)
 - BioPython (from https://biopython.org/)
 - Boltz-2 (from https://github.com/jwohlwend/boltz)
 - Full-Atom MPNN (from https://github.com/richardshuai/fampnn)
+- HyperMPNN (from https://github.com/meilerlab/HyperMPNN)
 - ProteinMPNN-FastRelax (from https://github.com/nrbennet/dl_binder_design)
 - RFdiffusion (from https://github.com/RosettaCommons/RFdiffusion)
 - PyRosetta (from https://www.pyrosetta.org/)
@@ -48,7 +50,7 @@ git clone https://github.com/PapenfussLab/proteindj
 cd proteindj
 ```
 
-Next, download the models for AF2, Boltz, and RFdiffusion (~15 GB) using the download script . This may take a while depending on your internet connection. Note that this only needs to be done once on a cluster as long as the files and containers are in a location that can be accessed by all users (see [Installation Guide](docs/installation.md) for more details):
+Next, download the models for AF2, Boltz, and RFdiffusion (~11 GB) using the download script . This may take a while depending on your internet connection. Note that this only needs to be done once on a cluster as long as the files and containers are in a location that can be accessed by all users (see [Installation Guide](docs/installation.md) for more details):
 
 ```
 bash scripts/download_models.sh
@@ -60,14 +62,14 @@ Apptainer will automatically fetch containers as needed during the Nextflow run 
 
 The ProteinDJ consists of four stages:
 
-1. Diffusion and Fold Design - Using RFdiffusion
+1. Fold Design - Using RFdiffusion or BindCraft
 2. Sequence Design - Using ProteinMPNN or Full-Atom MPNN
 3. Structure Prediction - Using AlphaFold2 Initial Guess or Boltz-2
 4. Analysis and Reporting - Using PyRosetta and BioPython
 
 <img src="img/pipelineoverview.png" height="200">
 
-Due to the creative nature of protein design and the complexity of RFdiffusion there are many ways you can use ProteinDJ. To help with delineating this, we have created eight RFdiffusion modes for ProteinDJ. Each mode is described in detail in our [Guide to Design Modes](docs/modes.md), but for now, here's a quick summary of each one with a simple illustration of each mode in action:
+Due to the creative nature of protein design and the complexity of RFdiffusion there are many ways you can use ProteinDJ. To help with delineating this, we have created design modes for ProteinDJ. Each mode is described in detail in our [Guide to Design Modes](docs/modes.md), but for now, here's a quick summary of each one with a simple illustration of each mode in action:
 
 - **monomer_denovo** – diffusion of new monomers from noise
 - **monomer_foldcond** – diffusion of new monomers with fold-conditioning on scaffolds/templates
@@ -77,19 +79,20 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - **binder_foldcond** – diffusion of new binders with fold-conditioning on scaffolds/templates
 - **binder_motifscaff** – diffusion of binding motifs in input scaffolds
 - **binder_partialdiff** – partial diffusion of a binder from an input PDB
+- **bindcraft_denovo** - hallucination of new binders using BindCraft
 
 <img src="img/modes_overview.png" height="720">
 
-All the settings and parameters for ProteinDJ can be found in the `nextflow.config` file. It contains a lot of optional parameters, but there are 4 essential parameters to pay attention to: the protein design mode (`rfd_mode`), the number of designs (`rfd_num_designs`) and sequences you want to generate (`seqs_per_design`), and the output directory path (`out_dir`).
+All the settings and parameters for ProteinDJ can be found in the `nextflow.config` file. It contains a lot of optional parameters, but there are 4 essential parameters to pay attention to: the protein design mode (`design_mode`), the number of designs (`num_designs`) and sequences you want to generate (`seqs_per_design`), and the output directory path (`out_dir`).
 
 | Parameter         | Example Value      | Description                                                                                                                                                                                     |
 | ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rfd_mode`        | `'monomer_denovo'` | Pipeline mode. Choose from 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', or 'binder_partialdiff'. |
-| `rfd_num_designs` | `8`                | Number of designs to generate using RFdiffusion.                                                                                                                                                |
-| `seqs_per_design` | `8`                | Number of sequences to generate per RFdiffusion design.                                                                                                                                         |
+| `design_mode`        | `'monomer_denovo'` | Pipeline mode. Choose from 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', or 'bindcraft_denovo'. |
+| `num_designs` | `8`                | Number of designs to generate using RFdiffusion or Bindcraft.                                                                                                                                                |
+| `seqs_per_design` | `8`                | Number of sequences to generate per design.                                                                                                                                         |
 | `out_dir`         | `'./pdj_results'`  | Output directory for results. Existing results in this directory will be overwritten.                                                                                                           |
 
-The [RFdiffusion GitHub](https://github.com/RosettaCommons/RFdiffusion/) has a comprehensive explanation of the different parameters available for RFdiffusion with examples. Note that we have externalised many RFdiffusion parameters to Nextflow and added the prefix 'rfd' e.g. `rfd_num_designs`, `rfd_input_pdb` etc. You can find a detailed description of all ProteinDJ parameters [here](docs/parameters.md).
+The [RFdiffusion GitHub](https://github.com/RosettaCommons/RFdiffusion/) has a comprehensive explanation of the different parameters available for RFdiffusion with examples. Note that we have externalised many RFdiffusion parameters to Nextflow and added the prefix 'rfd' e.g. `num_designs`, `input_pdb` etc. You can find a detailed description of all ProteinDJ parameters [here](docs/parameters.md).
 
 To launch a design campaign, simply run this command from the root of the `proteindj` repository:
 
@@ -107,15 +110,15 @@ profile for the monomer_denovo mode looks like this. We recommend using the exis
 ```
 monomer_denovo {
     params {
-        rfd_mode = 'monomer_denovo'
-        rfd_contigs = "[80-80]"
+        design_mode = 'monomer_denovo'
+        design_length = "60-80"
         seq_method = 'fampnn'
         pred_method = 'boltz'
     }
 }
 ```
 
-In this example, Nextflow will use all of the default parameter values from the params section except for `rfd_mode`, `rfd_contigs`, `seq_method` and `pred_method` (in this case to generate a de novo monomer 80 residues in length with RFdiffusion, Full-Atom MPNN and Boltz-2). You can use profiles by adding the `-profile` flag. e.g.
+In this example, Nextflow will use all of the default parameter values from the params section except for `design_mode`, `design_length`, `seq_method` and `pred_method` (in this case to generate a de novo monomer 60-80 residues in length with RFdiffusion, Full-Atom MPNN and Boltz-2). You can use profiles by adding the `-profile` flag. e.g.
 
 `nextflow run main.nf -profile monomer_denovo`
 
@@ -147,7 +150,7 @@ We have aimed to provide as much functionality as possible of the underlying sof
 
 Due to the inherently stochastic nature of protein design, often we see problematic results during the pipeline. It can save computation time to discard designs mid-pipeline that fail to meet success criteria. We have implemented three filtering stages that can be used to reject poor designs:
 
-- RFD Filtering - Filters designs according to the number of secondary structure elements and radius of gyration
+- Fold Filtering - Filters designs according to the number of secondary structure elements and radius of gyration.
 - Sequence Filtering - Filters designs according to the score of the generated sequence
 - AlphaFold2/Boltz-2 Filtering - Filters designs according to the quality of the structure prediction
 
@@ -208,17 +211,21 @@ We used five structures for testing and benchmarking our pipeline.
 
 ### Citations for software packages used in ProteinDJ <a name="append-citations"></a>
 
-ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. BioRxiv. https://doi.org/10.1101/2025.09.24.678028
+ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. bioRxiv. https://doi.org/10.1101/2025.09.24.678028
 
 AlphaFold2 Initial Guess and ProteinMPNN-FastRelax - Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023). https://doi.org/10.1038/s41467-023-38328-5
 
 AlphaFold2 - Jumper, J., Evans, R., Pritzel, A. et al. Highly accurate protein structure prediction with AlphaFold. Nature 596, 583–589 (2021). https://doi.org/10.1038/s41586-021-03819-2
 
+BindCraft - Pacesa, M., Nickel, L., Schellhaas, C. et al. One-shot design of functional protein binders with BindCraft. Nature 646, 483-492 (2025). https://doi.org/10.1038/s41586-025-09429-6
+
 BioPython - Cock, P. J., Antao, T. et al. Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics 25, 1422-1423, (2009). https://doi.org/10.1093/bioinformatics/btp163
 
 Boltz-2 - Wohlwend, J., et al. Boltz-2 Democratizing Biomolecular Interaction Modeling, bioRxiv 2024.11.19.624167 (2024). https://doi.org/10.1101/2024.11.19.624167
 
-Full-Atom MPNN - Shuai, R.W., et al., Sidechain conditioning and modeling for full-atom protein sequence design with FAMPNN, bioRxiv 2025.02.13.637498 (2025). https://doi.org/10.1101/2025.02.13.637498
+Full-Atom MPNN - Shuai, R.W., et al. Sidechain conditioning and modeling for full-atom protein sequence design with FAMPNN, bioRxiv 2025.02.13.637498 (2025). https://doi.org/10.1101/2025.02.13.637498
+
+HyperMPNN - Ertelt, M., Schlegel, P., Beining, M. et al. HyperMPNN-A general strategy to design thermostable proteins learned from hyperthermophiles. bioRxiv (2024) https://doi.org/10.1101/2024.11.26.625397
 
 RFdiffusion - Watson, J.L., Juergens, D., Bennett, N.R. et al. De novo design of protein structure and function with RFdiffusion. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8
 

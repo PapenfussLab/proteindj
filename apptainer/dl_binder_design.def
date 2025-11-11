@@ -18,11 +18,18 @@ From: mambaorg/micromamba:1.5.8
     micromamba create -n mpnn -f proteinmpnn_fastrelax.yml -y
 
     cd ../mpnn_fr
-    git clone https://github.com/dauparas/ProteinMPNN.git   
+    git clone https://github.com/dauparas/ProteinMPNN.git
+    cd ProteinMPNN && git checkout 8907e66
+    
+    # Fetch HyperMPNN model weights
+    mkdir hyper_model_weights
+    cd hyper_model_weights
+    wget https://github.com/meilerlab/HyperMPNN/raw/refs/heads/main/retrained_models/v48_002_epoch240_hyper.pt -O v_48_002.pt
+    wget https://github.com/meilerlab/HyperMPNN/raw/refs/heads/main/retrained_models/v48_010_epoch300_hyper.pt -O v_48_010.pt
+    wget https://github.com/meilerlab/HyperMPNN/raw/refs/heads/main/retrained_models/v48_020_epoch300_hyper.pt -O v_48_020.pt
+    wget https://github.com/meilerlab/HyperMPNN/raw/refs/heads/main/retrained_models/v48_030_epoch300_hyper.pt -O v_48_030.pt
 
     micromamba clean --all --yes
-
-
 
 %environment
     # so we can just run it out of the box without having to set the prefix
@@ -31,3 +38,8 @@ From: mambaorg/micromamba:1.5.8
 # Entry point for the container when run.
 %runscript
     exec "$@"
+
+%labels
+    Author JoshuaHardy, DylanSilke
+    Version 1.0
+    Description "Apptainer container for dl_binder_design including SolubleMPNN and HyperMPNN weights"

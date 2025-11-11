@@ -4,10 +4,10 @@ profile: milton
 
 # Fixed parameters that override nextflow.config defaults
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  design_length: "60-100"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   mpnn_temperature: 0.0001
-  rfd_num_designs: 8
+  num_designs: 8
   seqs_per_design: 8
   # filtering parameters
   af2_max_pae_interaction: 10
@@ -15,10 +15,10 @@ fixed_params:
   af2_min_plddt_overall: 80
 
 sweep_params:
-  rfd_hotspots:
+  hotspot_residues:
     values:
-      - "[A56,A115,A123]"
-      - "[A56,A115]"
+      - "A56,A115,A123"
+      - "A56,A115"
   
   rfd_noise_scale:
     type: range

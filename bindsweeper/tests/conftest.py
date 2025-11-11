@@ -20,10 +20,10 @@ def sample_sweep_yaml():
 mode: binder_denovo
 
 fixed_params:
-  rfd_contigs: "[A17-145/0 50-100]"
-  rfd_input_pdb: "/path/to/target.pdb"
+  design_length: "50-100"
+  input_pdb: "/path/to/target.pdb"
   mpnn_temperature: 0.0001
-  rfd_num_designs: 4
+  num_designs: 4
   seqs_per_design: 2
 
 sweep_params:
@@ -38,11 +38,11 @@ sweep_params:
       - complex_base
       - complex_beta
 
-  rfd_hotspots:
+  hotspot_residues:
     values:
-      - "[B208,B232,B239]"
-      - "[B210,B234]"
-      - "[]"
+      - "B208,B232,B239"
+      - "B210,B234"
+      - null
 
 results_config:
   rank_dirname: rank
@@ -61,15 +61,15 @@ def sample_nextflow_config():
     return """
 params {
     // Essential parameters
-    rfd_mode = null
-    rfd_num_designs = 8
+    design_mode = null
+    num_designs = 8
     seqs_per_design = 8
     out_dir = "/vast/scratch/users/$USER/pdj"
 
     // Mode-specific parameters
-    rfd_contigs = null
-    rfd_input_pdb = null
-    rfd_hotspots = null
+    design_length = null
+    input_pdb = null
+    hotspot_residues = null
     rfd_noise_scale = null
 
     // Advanced parameters
@@ -81,7 +81,7 @@ params {
 profiles {
     test {
         params {
-            rfd_num_designs = 4
+            num_designs = 4
             seqs_per_design = 2
         }
     }
@@ -96,11 +96,11 @@ def sample_nextflow_schema():
         "definitions": {
             "essential_parameters": {
                 "properties": {
-                    "rfd_mode": {
+                    "design_mode": {
                         "type": "string",
                         "enum": ["denovo", "binder_denovo", "foldconditioning"],
                     },
-                    "rfd_num_designs": {
+                    "num_designs": {
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 1000,

@@ -119,7 +119,7 @@ class SweepEngine:
         # Override with quick test parameters
         quick_test_params = {
             **base_params,
-            "rfd_num_designs": 2,
+            "num_designs": 2,
             "seqs_per_design": 2,
         }
 
@@ -179,7 +179,7 @@ class SweepEngine:
             formatted_value = converter.format_value_for_name(value)
             
             # Use short parameter names for combination ID
-            if param_name in ["hotspots", "rfd_hotspots"] and formatted_value.startswith("hotspots"):
+            if param_name in ["hotspots", "hotspot_residues"] and formatted_value.startswith("hotspots"):
                 components.append(formatted_value)
             else:
                 param_short = param_name.replace("rfd_", "r").replace("fampnn_", "f").replace("mpnn_", "m").replace("af2_", "a").replace("boltz_", "b").replace("_", "")[:6]
@@ -203,7 +203,7 @@ class SweepEngine:
             formatted_value = converter.format_value_for_name(value)
 
             # For parameters with custom formatters that include the parameter name, use formatted value directly
-            if param_name in ["hotspots", "rfd_hotspots"] and formatted_value.startswith("hotspots"):
+            if param_name in ["hotspots", "hotspot_residues"] and formatted_value.startswith("hotspots"):
                 components.append(formatted_value)
             else:
                 # Use very short parameter names

@@ -1,0 +1,668 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com//master/nextflow_schema_bindcraft_denovo.json",
+  "title": "bindcraft_denovo pipeline parameters",
+  "description": "Parameters for bindcraft_denovo mode",
+  "type": "object",
+  "definitions": {
+    "essential_parameters": {
+      "title": "Essential Parameters",
+      "type": "object",
+      "description": "These parameters are required for ProteinDJ and are used by every mode.",
+      "default": "",
+      "properties": {
+        "design_mode": {
+          "type": "string",
+          "description": "Pipeline mode.",
+          "default": "bindcraft_denovo",
+          "enum": [
+            "bindcraft_denovo"
+          ]
+        },
+        "num_designs": {
+          "type": "integer",
+          "default": 8,
+          "description": "Number of designs to generate using RFdiffusion or Bindcraft."
+        },
+        "seqs_per_design": {
+          "type": "integer",
+          "default": 8,
+          "description": "Number of sequences to generate per design."
+        },
+        "out_dir": {
+          "type": "string",
+          "default": "${projectDir}/pdj_monomer_partialdiff",
+          "description": "Output directory for results.",
+          "format": "directory-path"
+        }
+      },
+      "required": [
+        "design_mode",
+        "num_designs",
+        "seqs_per_design",
+        "out_dir"
+      ]
+    },
+    "mode_specific_parameters": {
+      "title": "Mode-Specific Parameters",
+      "type": "object",
+      "description": "These parameters are used for some of the ProteinDJ modes.",
+      "default": "",
+      "properties": {
+        "design_length": {
+          "type": "string",
+          "description": "Design length. One or two dash separated values for min-max design length e.g. '60', '60-70'. Pipeline will randomly sample different sizes between these values.",
+          "pattern": "^\\d+(-\\d+)?$",
+          "default": "60-100"
+        },
+        "input_pdb": {
+          "type": "string",
+          "pattern": ".*\\.pdb$",
+          "format": "file-path",
+          "description": "Path to an input PDB file. e.g. 'target.pdb'",
+          "default": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
+        },
+        "hotspot_residues": {
+          "type": "string",
+          "description": "Specifies hotspot residues for binding. e.g. 'A56,A115,A123'",
+          "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$"
+        }
+      },
+      "required": [
+        "input_pdb",
+        "design_length"
+      ]
+    },
+    "workflow_advanced_parameters": {
+      "title": "Mode-Specific Parameters",
+      "type": "object",
+      "description": "These parameters are used for some of the ProteinDJ modes.",
+      "default": "",
+      "properties": {
+        "seq_method": {
+          "type": "string",
+          "default": "mpnn",
+          "description": "Sequence design method. Choose from 'mpnn' (ProteinMPNN Fast-Relax) or 'fampnn' (Full-Atom MPNN).",
+          "enum": [
+            "mpnn",
+            "fampnn"
+          ]
+        },
+        "pred_method": {
+          "type": "string",
+          "default": "af2",
+          "description": "Structure prediction method. Choose from 'af2' (AlphaFold2 Initial-Guess) or 'boltz' (Boltz-2).",
+          "enum": [
+            "af2",
+            "boltz"
+          ]
+        },
+        "zip_pdbs": {
+          "type": "boolean",
+          "description": "Whether to compress output final designs in a tar.gz archive. If false, results will be output as uncompressed PDB files.",
+          "default": true,
+          "hidden": true
+        },
+        "run_fold_only": {
+          "type": "boolean",
+          "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
+          "hidden": true
+        },
+        "skip_fold": {
+          "type": "boolean",
+          "description": "Skip Fold Design and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "hidden": true
+        },
+        "skip_fold_seq": {
+          "type": "boolean",
+          "description": "Skip Fold Design and Sequence Design, and run Structure Prediction and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "hidden": true
+        },
+        "skip_fold_seq_pred": {
+          "type": "boolean",
+          "description": "Skip Fold Design, Sequence Design, and Structure Prediction, and run Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "hidden": true
+        },
+        "skip_input_dir": {
+          "type": "string",
+          "description": "Path to input files when skipping stages e.g. './rfd_results'",
+          "format": "directory-path",
+          "hidden": true
+        }
+      }
+    },
+    "bindcraft_advanced_parameters": {
+      "title": "BindCraft Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of BindCraft.",
+      "default": "",
+      "properties": {
+        "bc_chains": {
+          "type": "string",
+          "description": "Input PDB chains to target. Can be one or multiple, in a comma-separated format e.g. 'A,C'. Other chains will be ignored during design.",
+          "pattern": "^[A-Z](,[A-Z])*$",
+          "hidden": true
+        },
+        "bc_design_protocol": {
+          "type": "string",
+          "description": "Which binder design protocol to run? 'default' is recommended. 'betasheet' promotes the design of more beta sheeted proteins, but requires more sampling. 'peptide' is optimised for helical peptide binders.",
+          "enum": [
+            "default",
+            "betasheet",
+            "peptide"
+          ],
+          "default": "default",
+          "hidden": true
+        },
+        "bc_template_protocol": {
+          "type": "string",
+          "description": "What target template protocol to use? 'default' allows for limited amount of flexibility. 'flexible' allows for greater target flexibility on both sidechain and backbone level.",
+          "enum": [
+            "default",
+            "flexible"
+          ],
+          "default": "default",
+          "hidden": true
+        },
+        "bc_omit_AAs": {
+          "type": "string",
+          "description": "Residue types to avoid during sequence design (comma separated list, one letter case-insensitive) (default: 'C') e.g. 'C,H'. These residue types can still occur if no other options are possible in the position.",
+          "pattern": "^[A-Z](,[A-Z])*$",
+          "default": "C",
+          "hidden": true
+        },
+        "bc_fix_interface_residues": {
+          "type": "boolean",
+          "description": "Whether to preserve/fix the interface residues of the binder designed by BindCraft during the subsequent sequence design stage (Recommended to leave as true).",
+          "hidden": true,
+          "default": true
+        },
+        "bc_advanced_json": {
+          "type": "string",
+          "description": "Path to a custom advanced settings json file. Not recommended unless you know what you are doing. Some parameters will be ignored as they apply to BindCraft routines downstream of fold design that are not implemented here e.g. MPNN parameters.",
+          "hidden": true,
+          "format": "file-path",
+          "pattern": "\\.json$",
+          "default": null
+        }
+      }
+    },
+    "rfdiffusion_advanced_parameters": {
+      "title": "RFdiffusion Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of RFdiffusion.",
+      "default": "",
+      "properties": {}
+    },
+    "proteinmpnn_fastrelax_parameters": {
+      "title": "ProteinMPNN-FastRelax Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of ProteinMPNN-FastRelax. Used for binder design modes only.",
+      "default": "",
+      "properties": {
+        "mpnn_omitAAs": {
+          "type": "string",
+          "default": "CX",
+          "pattern": "^[A-Za-z]*$",
+          "description": "A string of all residue types (one letter case-insensitive) to avoid for design. Default: CX",
+          "hidden": true
+        },
+        "mpnn_temperature": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Temperature for sequence sampling. Higher values increase sequence diversity.",
+          "hidden": true
+        },
+        "mpnn_checkpoint_type": {
+          "type": "string",
+          "default": "soluble",
+          "enum": [
+            "vanilla",
+            "soluble",
+            "hyper"
+          ],
+          "description": "Checkpoint type to use for ProteinMPNN. Choose from 'vanilla', 'soluble' or 'hyper' (default = 'soluble').",
+          "hidden": true
+        },
+        "mpnn_checkpoint_model": {
+          "type": "string",
+          "default": "v_48_020",
+          "description": "Checkpoint model to use for ProteinMPNN. Indicates noise level used during training for backbone atoms.  Choose from 'v_48_002','v_48_010,'v_48_020','v_48_030'. (default = 'v_48_020', noised with 0.20\u00c5 Gaussian noise)",
+          "enum": [
+            "v_48_002",
+            "v_48_010",
+            "v_48_020",
+            "v_48_030"
+          ],
+          "hidden": true
+        },
+        "mpnn_backbone_noise": {
+          "type": "number",
+          "default": 0,
+          "description": "Standard deviation of Gaussian noise to add to backbone atoms. 0 = no change to backbone, 0.1-0.3 = allows mild perturbation of backbone.",
+          "hidden": true
+        },
+        "mpnn_relax_max_cycles": {
+          "type": "integer",
+          "default": 0,
+          "description": "Maximum number of fast relax cycles to run on each sequence. Set to zero to disable.",
+          "hidden": true
+        },
+        "mpnn_relax_seqs_per_cycle": {
+          "type": "integer",
+          "default": 1,
+          "description": "Number of sequences to generate between relaxation steps. The sequence with the best score will be kept.",
+          "hidden": true
+        },
+        "mpnn_relax_output": {
+          "type": "boolean",
+          "description": "Whether to run a relaxation cycle before saving output.",
+          "hidden": true
+        },
+        "mpnn_relax_convergence_rmsd": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Design is considered converged if the C-alpha RMSD (\u00c5) between cycles is <= this threshold.",
+          "hidden": true
+        },
+        "mpnn_relax_convergence_score": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Design is considered converged if the improvement in score between cycles is <= this threshold.",
+          "hidden": true
+        },
+        "mpnn_relax_convergence_max_cycles": {
+          "type": "integer",
+          "default": 1,
+          "description": "Design is considered converged if it meets both convergence criteria for n consecutive cycles.",
+          "hidden": true
+        },
+        "mpnn_extra_config": {
+          "type": "string",
+          "description": "Additional configuration parameters to pass to ProteinMPNN-FastRelax that are not externalised in Nextflow. e.g. '-protein_features=\"full\"'",
+          "hidden": true
+        }
+      }
+    },
+    "full_atom_mpnn_parameters": {
+      "title": "Full-Atom MPNN Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of Full-Atom MPNN",
+      "default": "",
+      "properties": {
+        "fampnn_fix_target_sidechains": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fix target side-chain positions when performing binder sequence design (default: false)",
+          "hidden": true
+        },
+        "fampnn_psce_threshold": {
+          "type": "number",
+          "default": 0.3,
+          "description": "Only keep sidechains below this PSCE threshold during design; null to keep all.",
+          "hidden": true
+        },
+        "fampnn_temperature": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Temperature for sequence sampling. Higher values increase sequence diversity.",
+          "hidden": true
+        },
+        "fampnn_exclude_cys": {
+          "type": "boolean",
+          "default": true,
+          "description": "Exclude cysteine residues from sequence design.",
+          "hidden": true
+        },
+        "fampnn_extra_config": {
+          "type": "string",
+          "description": "Additional configuration parameters to pass to Full-Atom MPNN that are not externalised in Nextflow. e.g. 'timestep_schedule.num_steps=100 seq_only=true'",
+          "hidden": true
+        }
+      }
+    },
+    "prediction_advanced_parameters": {
+      "title": "Structure Prediction Advanced Parameters",
+      "type": "object",
+      "description": "Parameters for AlphaFold2 Initial-Guess and Boltz-2",
+      "default": "",
+      "properties": {
+        "uncropped_target_pdb": {
+          "type": "string",
+          "description": "Path to uncropped target PDB file to use in structure prediction e.g. 'benchmarkdata/5o45_pd-l1_uncropped.pdb'",
+          "hidden": true,
+          "format": "file-path",
+          "pattern": "\\.pdb$"
+        },
+        "af2_initial_guess": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use an initial-guess of the target chain(s) when performing binder structure prediction. When false, AF2 will not use an initial guess. Default = true",
+          "hidden": true
+        },
+        "af2_extra_config": {
+          "type": "string",
+          "hidden": true,
+          "description": "Additional configuration parameters to pass to AlphaFold2 Initial-Guess that are not externalised in Nextflow. e.g. '-recycle 3'"
+        },
+        "boltz_recycling_steps": {
+          "type": "integer",
+          "default": 3,
+          "description": "The number of recycling steps to use for prediction.",
+          "minimum": 1,
+          "hidden": true
+        },
+        "boltz_diffusion_samples": {
+          "type": "integer",
+          "default": 1,
+          "description": "The number of diffusion samples to use for prediction.",
+          "minimum": 1,
+          "hidden": true
+        },
+        "boltz_sampling_steps": {
+          "type": "integer",
+          "default": 200,
+          "description": "The number of sampling steps to use for prediction.",
+          "minimum": 1,
+          "hidden": true
+        },
+        "boltz_use_potentials": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
+          "hidden": true
+        },
+        "boltz_use_templates": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to use template structures to guide Boltz-2 predictions. Template is generated from input design structure. For monomer modes: uses chain A as template. For binder modes: uses chain B (target) as template only, similar to AlphaFold2 Initial-Guess.",
+          "hidden": true
+        },
+        "boltz_template_force": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enforce template structure using a potential (force constraint). Only applies if boltz_use_templates=true.",
+          "hidden": true
+        },
+        "boltz_template_threshold": {
+          "type": "number",
+          "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied.",
+          "hidden": true
+        },
+        "boltz_extra_config": {
+          "type": "string",
+          "hidden": true,
+          "description": "Additional configuration parameters to pass to Boltz-2 that are not externalised in Nextflow. e.g. '--msa_pairing_strategy complete'"
+        }
+      }
+    },
+    "filtering_parameters": {
+      "title": "Filtering Parameters",
+      "type": "object",
+      "description": "Metrics are calculated on the binder chain only in binder design modes, otherwise all chains are used in calculations.",
+      "default": "",
+      "properties": {
+        "fold_min_helices": {
+          "type": "integer",
+          "description": "Minimum number of alpha-helices required. e.g. 3",
+          "hidden": true
+        },
+        "fold_max_helices": {
+          "type": "integer",
+          "description": "Maximum number of alpha-helices allowed. e.g. 6",
+          "hidden": true
+        },
+        "fold_min_strands": {
+          "type": "integer",
+          "description": "Minimum number of beta-strands required. e.g. 2",
+          "hidden": true
+        },
+        "fold_max_strands": {
+          "type": "integer",
+          "description": "Maximum number of beta-strands allowed. e.g. 6",
+          "hidden": true
+        },
+        "fold_min_ss": {
+          "type": "integer",
+          "description": "Minimum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 4",
+          "hidden": true
+        },
+        "fold_max_ss": {
+          "type": "integer",
+          "description": "Maximum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 8",
+          "hidden": true
+        },
+        "fold_min_rog": {
+          "type": "number",
+          "description": "Minimum radius of gyration (\u00c5). e.g. 10",
+          "hidden": true
+        },
+        "fold_max_rog": {
+          "type": "number",
+          "description": "Maximum radius of gyration (\u00c5). e.g. 20",
+          "hidden": true
+        },
+        "mpnn_max_score": {
+          "type": "number",
+          "description": "Maximum MPNN score (negative log likelihood). A lower score means ProteinMPNN is more confident in the sequence.",
+          "hidden": true
+        },
+        "fampnn_max_psce": {
+          "type": "number",
+          "description": "Max PSCE score for designed side-chains. A lower score means FAMPNN is more confident in the sequence.",
+          "hidden": true
+        },
+        "af2_max_pae_interaction": {
+          "type": "number",
+          "description": "Max predicted aligned error for interactions e.g. 10",
+          "hidden": true
+        },
+        "af2_max_pae_overall": {
+          "type": "number",
+          "description": "Max predicted aligned error for all chains e.g. 10",
+          "hidden": true
+        },
+        "af2_max_pae_binder": {
+          "type": "number",
+          "description": "Max predicted aligned error for binder e.g. 5",
+          "hidden": true
+        },
+        "af2_max_pae_target": {
+          "type": "number",
+          "description": "Max predicted aligned error for target e.g. 5",
+          "hidden": true
+        },
+        "af2_min_plddt_overall": {
+          "type": "number",
+          "description": "Min average pLDDT score for target and binder chains e.g. 90",
+          "hidden": true
+        },
+        "af2_min_plddt_binder": {
+          "type": "number",
+          "description": "Min pLDDT score required for binder e.g. 85",
+          "hidden": true
+        },
+        "af2_min_plddt_target": {
+          "type": "number",
+          "description": "Min pLDDT score required for target e.g 90",
+          "hidden": true
+        },
+        "af2_max_rmsd_overall": {
+          "type": "number",
+          "description": "Max RMSD when all chains are aligned e.g. 2",
+          "hidden": true
+        },
+        "af2_max_rmsd_binder_bndaln": {
+          "type": "number",
+          "description": "Max binder RMSD when binder chains are aligned e.g. 1",
+          "hidden": true
+        },
+        "af2_max_rmsd_binder_tgtaln": {
+          "type": "number",
+          "description": "Max binder RMSD when target chains are aligned e.g. 2",
+          "hidden": true
+        },
+        "af2_max_rmsd_target": {
+          "type": "number",
+          "description": "Max target RMSD when target chains are aligned e.g. 2",
+          "hidden": true
+        },
+        "boltz_max_overall_rmsd": {
+          "type": "number",
+          "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2",
+          "hidden": true
+        },
+        "boltz_max_binder_rmsd": {
+          "type": "number",
+          "description": "Max RMSD between binder chains of Boltz-2 prediction and input design. e.g. 1",
+          "hidden": true
+        },
+        "boltz_max_target_rmsd": {
+          "type": "number",
+          "description": "Max RMSD between target chains of Boltz-2 prediction and input design. e.g. 1",
+          "hidden": true
+        },
+        "boltz_min_conf_score": {
+          "type": "number",
+          "description": "Minimum confidence score e.g. 0.85",
+          "hidden": true
+        },
+        "boltz_min_ptm": {
+          "type": "number",
+          "description": "Minimum predicted TM-score e.g. 0.7",
+          "hidden": true
+        },
+        "boltz_min_ptm_interface": {
+          "type": "number",
+          "description": "Minimum predicted TM-score of binder-target interface e.g. 0.65",
+          "hidden": true
+        },
+        "boltz_min_plddt": {
+          "type": "number",
+          "description": "Minimum pLDDT score e.g. 0.85",
+          "hidden": true
+        },
+        "boltz_min_plddt_interface": {
+          "type": "number",
+          "description": "Minimum pLDDT score of the binder-target interface e.g. 0.8",
+          "hidden": true
+        },
+        "boltz_max_pde": {
+          "type": "number",
+          "description": "Maximum predicted distance error e.g. 10",
+          "hidden": true
+        },
+        "boltz_max_pde_interface": {
+          "type": "number",
+          "description": "Maximum predicted distance error for the binder-target interface e.g 12",
+          "hidden": true
+        }
+      }
+    },
+    "cluster_parameters": {
+      "title": "Cluster Parameters",
+      "type": "object",
+      "description": "The cluster parameters may need adjusting depending on your HPC setup and available hardware. You must ensure that the paths to the containers and models for RFdiffusion, AlphaFold2 and Boltz-2 are valid and contain the expected files.",
+      "default": "",
+      "properties": {
+        "container_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Path to pipeline containers directory.",
+          "hidden": true
+        },
+        "rfd_models": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Path to the RFdiffusion model checkpoints.",
+          "hidden": true
+        },
+        "af2_models": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Path to the AlphaFold2 databases.",
+          "hidden": true
+        },
+        "boltz_models": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Path to the Boltz-2 models.",
+          "hidden": true
+        },
+        "gpu_model": {
+          "type": "string",
+          "default": "A30",
+          "description": "GPU model to request, e.g., 'A30'.",
+          "hidden": true
+        },
+        "gpu_queue": {
+          "type": "string",
+          "description": "GPU queue name or partition (if applicable, e.g. 'gpuq')",
+          "hidden": true
+        },
+        "gpus": {
+          "type": "integer",
+          "default": 4,
+          "description": "Number of GPUs to request.",
+          "hidden": true
+        },
+        "cpus": {
+          "type": "integer",
+          "default": 24,
+          "description": "Number of CPUs requested for CPU-only jobs",
+          "hidden": true
+        },
+        "cpus_per_gpu": {
+          "type": "integer",
+          "default": 8,
+          "description": "Number of CPUs requested per GPU",
+          "hidden": true
+        },
+        "memory_gpu": {
+          "type": "string",
+          "default": "24GB",
+          "description": "Memory requested for GPU jobs",
+          "hidden": true
+        },
+        "memory_cpu": {
+          "type": "string",
+          "default": "24GB",
+          "description": "Memory requested for CPU-only jobs",
+          "hidden": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/definitions/essential_parameters"
+    },
+    {
+      "$ref": "#/definitions/mode_specific_parameters"
+    },
+    {
+      "$ref": "#/definitions/workflow_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/bindcraft_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/rfdiffusion_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/proteinmpnn_fastrelax_parameters"
+    },
+    {
+      "$ref": "#/definitions/full_atom_mpnn_parameters"
+    },
+    {
+      "$ref": "#/definitions/prediction_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/filtering_parameters"
+    },
+    {
+      "$ref": "#/definitions/cluster_parameters"
+    }
+  ]
+}
