@@ -1,0 +1,101 @@
+Bootstrap: docker
+From: nvidia/cuda:12.8.0-base-ubuntu24.04
+
+%post
+    # Install build dependencies
+    apt-get -q update
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+        git \
+        wget \
+        ca-certificates \
+        build-essential \
+        libgfortran5
+
+    # Install Miniforge (uses conda-forge by default, no Anaconda main channel)
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O /tmp/miniforge.sh
+    bash /tmp/miniforge.sh -b -p /opt/conda
+    rm /tmp/miniforge.sh
+    
+    # Initialize conda
+    /opt/conda/bin/conda init bash
+    
+    # Create BindCraft environment with Python 3.10
+    /opt/conda/bin/conda create -n BindCraft python=3.10 -y
+    
+    # Activate environment
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate BindCraft
+    
+    # Install conda packages from conda-forge and custom channels (excluding JAX and PyRosetta)
+    conda install -c conda-forge -c nvidia \
+        pip pandas matplotlib 'numpy<2.0.0' biopython scipy pdbfixer seaborn \
+        libgfortran5 tqdm jupyter ffmpeg fsspec py3dmol \
+        chex dm-haiku 'flax<0.10.0' dm-tree joblib ml-collections immutabledict optax \
+        cuda-nvcc cudnn \
+        -y
+    
+    # Install JAX with CUDA support via pip
+    export PIP_NO_CACHE_DIR=1
+    pip install --upgrade "jax[cuda12]"
+
+    # Install PyRosetta
+    pip install pyrosetta-installer
+    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+    
+    # Install ColabDesign from GitHub
+    pip install git+https://github.com/sokrypton/ColabDesign.git --no-deps
+    
+    # Clone BindCraft repository
+    git clone https://github.com/martinpacesa/BindCraft /opt/BindCraft
+    cd /opt/BindCraft && git checkout 0366085
+    
+    # Make executables executable
+    chmod +x /opt/BindCraft/functions/dssp
+    chmod +x /opt/BindCraft/functions/DAlphaBall.gcc
+    
+    # Create activation script for BASH_ENV
+    mkdir -p /opt/etc
+    echo '#!/bin/bash' > /opt/etc/bashrc
+    echo '. /opt/conda/etc/profile.d/conda.sh' >> /opt/etc/bashrc
+    echo 'conda activate BindCraft' >> /opt/etc/bashrc
+    chmod +x /opt/etc/bashrc
+    
+    # Cleanup
+    apt-get autoremove -y
+    apt-get clean
+    conda clean -a -y
+
+%environment
+    export PATH="/opt/conda/bin:/opt/BindCraft:$PATH"
+    export CONDA_DEFAULT_ENV=BindCraft
+    export BASH_ENV=/opt/etc/bashrc
+
+%runscript
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate BindCraft
+    cd /opt/BindCraft
+    if [ $# -eq 0 ]; then
+        exec /bin/bash --norc
+    else
+        exec "$@"
+    fi
+
+%labels
+    Author JoshuaHardy 
+    Version 2.0
+    Description "Apptainer container for BindCraft protein binder design"
+    
+%help
+    BindCraft container for protein binder design using AlphaFold2, ProteinMPNN, and PyRosetta.
+    
+    Execute with GPU support using:
+        apptainer run --nv bindcraft.sif
+    
+    Run BindCraft with:
+        apptainer run --nv bindcraft.sif python bindcraft.py \
+            --settings './settings_target/PDL1.json' \
+            --filters './settings_filters/default_filters.json' \
+            --advanced './settings_advanced/default_4stage_multimer.json'
+    
+    Note: PyRosetta requires a license for commercial use.
+    Provide AlphaFold2 weights via --bind at runtime.

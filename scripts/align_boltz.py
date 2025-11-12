@@ -191,7 +191,7 @@ def main():
     # Prepare processing tasks
     tasks = []
     for boltz_file in args.boltz_dir.glob("fold_*_seq_*_boltzpred.pdb"):
-        match = re.match(r"fold_(\d+)_seq_(\d+)_boltzpred\.pdb", boltz_file.name)
+        match = re.match(r"fold_(\d+)_seq_(\d+)_.*\.pdb", boltz_file.name)
         if not match:
             continue
             

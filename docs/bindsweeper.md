@@ -108,7 +108,7 @@ profile: milton      # Nextflow profile to use
 
 # Parameters that remain constant across all runs
 fixed_params:
-  rfd_input_pdb: "/path/to/protein.pdb"
+  input_pdb: "/path/to/protein.pdb"
   rfd_noise_scale: 0.0
 
 # Parameters to sweep across different values
@@ -154,11 +154,11 @@ sweep_params:
 #### Value List Parameters
 ```yaml
 sweep_params:
-  rfd_hotspots:
+  hotspot_residues:
     values:
-      - "[A56,A115,A123]"
-      - "[A56,A115]"
-      - "[A56]"
+      - "A56,A115,A123"
+      - "A56,A115"
+      - "A56"
 ```
 
 ## Example Configurations
@@ -171,8 +171,8 @@ mode: binder_denovo
 profile: milton
 
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  design_length: "60-100"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
   rfd_noise_scale: 1.0
   rfd_ckpt_override: "complex_beta"
 
@@ -181,11 +181,11 @@ fixed_params:
   af2_min_plddt_overall: 80
 
 sweep_params:
-  rfd_hotspots:
+  hotspot_residues:
     values:
       - null
-      - "[A56]"
-      - "[A56,A115,A123]"
+      - "A56"
+      - "A56,A115,A123"
 ```
 
 ### 2. Noise Scale Sweep
@@ -196,9 +196,9 @@ mode: binder_denovo
 profile: milton
 
 fixed_params:
-  rfd_contigs: "[A17-131/0 60-100]"
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
-  rfd_hotspots: "[A56,A115,A123]"
+  design_length: "60-100"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  hotspot_residues: "A56,A115,A123"
   rfd_ckpt_override: "complex_beta"
 
 sweep_params:
@@ -217,11 +217,9 @@ mode: binder_foldcond
 profile: milton
 
 fixed_params:
-  rfd_input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
-  rfd_hotspots: "[A56,A115,A123]"
+  input_pdb: "./benchmarkdata/5o45_pd-l1.pdb"
+  hotspot_residues: "A56,A115,A123"
   rfd_noise_scale: 0.0
-  rfd_target_ss: "./benchmarkdata/5o45_pd-l1_ss.pt"
-  rfd_target_adj:  "./benchmarkdata/5o45_pd-l1_adj.pt"
 
 sweep_params:
   rfd_scaffold_dir:

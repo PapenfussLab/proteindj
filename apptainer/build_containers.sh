@@ -6,7 +6,7 @@ BUILD_DIRECTORY="/dev/shm/${USER}/containers"
 # Container build configuration
 declare -A CONTAINERS=(
     ["af2"]="af2.def"
-    ["bindsweeper"]="bindsweeper.def"
+    ["bindcraft"]="bindcraft.def"
     ["boltz2"]="boltz2.def"
     ["dl_binder_design"]="dl_binder_design.def"
     ["fampnn"]="fampnn.def"
@@ -16,7 +16,7 @@ declare -A CONTAINERS=(
 
 # Enable/disable container builds (1=enabled, 0=disabled)
 BUILD_AF2=1
-BUILD_BINDSWEEPER=1
+BUILD_BINDCRAFT=1
 BUILD_BOLTZ2=1
 BUILD_DL_BINDER_DESIGN=1
 BUILD_FAMPNN=1

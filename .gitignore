@@ -1,7 +1,10 @@
 .nextflow/*
 .nextflow.log*
+.github
+.vscode
 pdj_results/
 models/
+test/
 
 # Bindsweeper
 bindsweeper.config

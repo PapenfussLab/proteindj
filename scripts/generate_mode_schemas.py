@@ -83,15 +83,16 @@ def build_mode_schema(main_schema, mode, overrides):
             if not defn['required']:
                 del defn['required']
 
-    # Special handling for rfd_mode
+    # Special handling for design_mode
     for defn in schema['definitions'].values():
-        if 'rfd_mode' in defn.get('properties', {}):
-            prop = defn['properties']['rfd_mode']
+        if 'design_mode' in defn.get('properties', {}):
+            prop = defn['properties']['design_mode']
             prop['description'] = "Pipeline mode."
             
             if mode == 'custom':
                 # Set full enum list for custom mode
                 prop['enum'] = [
+                    "bindcraft_denovo",
                     "binder_denovo",
                     "binder_foldcond",
                     "binder_motifscaff",
@@ -102,11 +103,11 @@ def build_mode_schema(main_schema, mode, overrides):
                     "monomer_partialdiff"
                 ]
                 # Preserve default if specified in CSV
-                if 'rfd_mode' in overrides and overrides['rfd_mode'] is not None:
-                    prop['default'] = convert_value(overrides['rfd_mode'], prop)
+                if 'design_mode' in overrides and overrides['design_mode'] is not None:
+                    prop['default'] = convert_value(overrides['design_mode'], prop)
             else:
                 # For non-custom modes, set single enum value
-                val = convert_value(overrides.get('rfd_mode', mode), prop)
+                val = convert_value(overrides.get('design_mode', mode), prop)
                 prop['enum'] = [val]
                 prop['default'] = val
 
