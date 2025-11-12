@@ -27,13 +27,13 @@ workflow {
     }
     
     if (params.cpus < 2){
-        throw new IllegalArgumentException("--cpus must be > 1")
+        throw new IllegalArgumentException("--cpus must be >= 2")
     }
     if (params.cpus_per_gpu < 2){
-        throw new IllegalArgumentException("--cpus_per_gpu must be > 1")
+        throw new IllegalArgumentException("--cpus_per_gpu must be >= 2")
     }
     if (params.gpus < 1){
-        throw new IllegalArgumentException("--gpus must be > 0")
+        throw new IllegalArgumentException("--gpus must be >= 1")
     }
 
     def outputDirectory = params.out_dir
