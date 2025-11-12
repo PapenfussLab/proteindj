@@ -26,6 +26,16 @@ workflow {
         // Silently continue - topic channels work by default in v25+
     }
     
+    if (params.cpus < 2){
+        throw new IllegalArgumentException("--cpus must be > 1")
+    }
+    if (params.cpus_per_gpu < 2){
+        throw new IllegalArgumentException("--cpus_per_gpu must be > 1")
+    }
+    if (params.gpus < 1){
+        throw new IllegalArgumentException("--gpus must be > 0")
+    }
+
     def outputDirectory = params.out_dir
 
     VALID_MODES = ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'monomer_denovo', 'monomer_foldcond', 'monomer_motifscaff', 'monomer_partialdiff']
