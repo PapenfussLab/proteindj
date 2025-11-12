@@ -62,13 +62,13 @@ process RunRFD {
     """
     echo "Running RFdiffusion for batch ${batch_id} in ${mode} mode"
     echo "RFdiffusion command: ${rfdCommand} inference.num_designs=${batch_size}"
-    python3.10 ${rfdCommand} \
+    python3 ${rfdCommand} \
         inference.model_directory_path=/app/RFdiffusion/models \
         inference.schedule_directory_path=/app/RFdiffusion/schedules \
         inference.design_startnum=${design_startnum} \
         inference.num_designs=${batch_size} 2>&1 | tee ${inference_log_filename}
     
-    python3.10 /scripts/metadata_converter.py --input_dir rfd_results --converter rfd --input_ext trb -o rfd_metadata_${batch_id}.jsonl
+    python3 /scripts/metadata_converter.py --input_dir rfd_results --converter rfd --input_ext trb -o rfd_metadata_${batch_id}.jsonl
     """
 }
 process FilterFold {

@@ -183,7 +183,6 @@ BindSweeper is a python-based tool that can launch multiple instances of Protein
 
 - Boltz-2:
   - Currently concatenates target chain sequences, meaning predictions of targets with chain-breaks or multiple chains is problematic
-  - No option to predict target protein structure with templates
 
 ### Seqera Support <a name="seqera"></a>
 
