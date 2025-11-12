@@ -33,7 +33,7 @@ From: mambaorg/micromamba:1.5.8
 
 %environment
     # so we can just run it out of the box without having to set the prefix
-    export PATH=/opt/conda/envs/pyrosetta/bin:$PATH
+    export PATH=/opt/conda/envs/mpnn/bin:$PATH
 
 # Entry point for the container when run.
 %runscript
@@ -41,5 +41,5 @@ From: mambaorg/micromamba:1.5.8
 
 %labels
     Author JoshuaHardy, DylanSilke
-    Version 1.0
+    Version 2.0
     Description "Apptainer container for dl_binder_design including SolubleMPNN and HyperMPNN weights"
