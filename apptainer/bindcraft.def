@@ -26,19 +26,24 @@ From: nvidia/cuda:12.8.0-base-ubuntu24.04
     . /opt/conda/etc/profile.d/conda.sh
     conda activate BindCraft
     
-    # Install conda packages from conda-forge and custom channels (excluding JAX)
-    conda install -c conda-forge -c nvidia --channel https://conda.graylab.jhu.edu \
+    # Install conda packages from conda-forge and custom channels (excluding JAX and PyRosetta)
+    conda install -c conda-forge -c nvidia \
         pip pandas matplotlib 'numpy<2.0.0' biopython scipy pdbfixer seaborn \
-        libgfortran5 tqdm jupyter ffmpeg pyrosetta fsspec py3dmol \
+        libgfortran5 tqdm jupyter ffmpeg fsspec py3dmol \
         chex dm-haiku 'flax<0.10.0' dm-tree joblib ml-collections immutabledict optax \
         cuda-nvcc cudnn \
         -y
     
     # Install JAX with CUDA support via pip
-    pip install --no-cache-dir --upgrade "jax[cuda12]"
+    export PIP_NO_CACHE_DIR=1
+    pip install --upgrade "jax[cuda12]"
+
+    # Install PyRosetta
+    pip install pyrosetta-installer
+    python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
     
     # Install ColabDesign from GitHub
-    pip install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git --no-deps
+    pip install git+https://github.com/sokrypton/ColabDesign.git --no-deps
     
     # Clone BindCraft repository
     git clone https://github.com/martinpacesa/BindCraft /opt/BindCraft
