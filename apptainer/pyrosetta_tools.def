@@ -13,17 +13,23 @@ From: mambaorg/micromamba:1.5.8
         pigz \
         sed
 
+    # Setup micromamba environment
     micromamba create -n pyrosetta -c conda-forge python=3.9 pip pyyaml -y
     eval "$(micromamba shell hook --shell bash)"
     micromamba activate pyrosetta
 
+    # Install pyrosetta
+    export PIP_NO_CACHE_DIR=1
     pip install pyrosetta-installer 
     python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
 
-    pip install biopython pandas matplotlib torch
+    # Install pip packages (including CPU-version of PyTorch)
+    pip install biopython pandas matplotlib
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
     apt-get autoremove -y
     apt-get clean
+    micromamba clean --all --yes
 
 %environment
     # so we can just run it out of the box without having to set the prefix
@@ -32,3 +38,8 @@ From: mambaorg/micromamba:1.5.8
 # Entry point for the container when run.
 %runscript
     exec "$@"
+
+%labels
+    Author JulieIskander, DylanSilke, JoshuaHardy
+    Version 2.0
+    Description "Apptainer container for PyRosetta and other tools for ProteinDJ"

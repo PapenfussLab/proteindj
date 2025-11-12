@@ -10,7 +10,8 @@ From: nvidia/cuda:12.9.1-base-ubuntu22.04
         build-essential
     
     # Install the provided versions of pip packages
-    pip install -U  \
+    export PIP_NO_CACHE_DIR=1
+    pip install \
         biopython==1.86 \
         git+https://github.com/NVIDIA/dllogger#egg=dllogger \
         dm-haiku==0.0.15 \
@@ -46,7 +47,7 @@ From: nvidia/cuda:12.9.1-base-ubuntu22.04
 
 %labels
     AUTHOR JoshuaHardy
-    Version 1.0
+    Version 2.0
     Description "Apptainer container for AlphaFold2 Initial-Guess"
 
 %help
