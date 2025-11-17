@@ -550,12 +550,6 @@
       "description": "The cluster parameters may need adjusting depending on your HPC setup and available hardware. You must ensure that the paths to the containers and models for RFdiffusion, AlphaFold2 and Boltz-2 are valid and contain the expected files.",
       "default": "",
       "properties": {
-        "container_dir": {
-          "type": "string",
-          "format": "directory-path",
-          "description": "Path to pipeline containers directory.",
-          "hidden": true
-        },
         "rfd_models": {
           "type": "string",
           "format": "directory-path",

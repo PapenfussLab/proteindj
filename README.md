@@ -56,7 +56,7 @@ Next, download the models for AF2, Boltz, and RFdiffusion (~11 GB) using the dow
 bash scripts/download_models.sh
 ```
 
-Apptainer will automatically fetch containers as needed during the Nextflow run and cache them locally. If you would like to build containers locally, you can follow our [Installation Guide](docs/installation.md).
+Apptainer will automatically fetch containers as needed during the Nextflow run and cache them locally to the location specified by the environment variable `NXF_APPTAINER_CACHEDIR`. If you would like to build containers locally, you can follow our [Installation Guide](docs/installation.md).
 
 ## Using ProteinDJ <a name="execution"></a>
 

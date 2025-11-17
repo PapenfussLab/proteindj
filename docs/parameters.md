@@ -242,7 +242,6 @@ The cluster parameters may need adjusting depending on your HPC setup and availa
 
 | Parameter       | Example Value                  | Description                                        |
 | --------------- | ------------------------------ | -------------------------------------------------- |
-| `container_dir` | `'./containers'`               | Path to pipeline containers directory or cloud URI |
 | `rfd_models`    | `"${projectDir}/models/rfd"`   | Path to the RFdiffusion model checkpoints.         |
 | `af2_models `   | `"${projectDir}/models/af2"`   | Path to the AlphaFold2 models.                     |
 | `boltz_models`  | `"${projectDir}/models/boltz"` | Path to the Boltz-2 models.                        |

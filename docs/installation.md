@@ -152,11 +152,21 @@ ls -la models/boltz/  # Should contain .ckpt files and mols directory
 
 ## Step 4: Build Containers
 
-ProteinDJ requires several containers for the different dependencies. By default, these will be fetched during execution of Nextflow and cached. You can also direct proteinDJ to container files located in `container_dir`. We have provide def files for containers in `proteindj/apptainer`. You may already have similar containers for some of these programs, but we have made changes to the source code and environment so we do not recommend using other containers with ProteinDJ. If the containers have already been built, you only need to update the `container_dir` variable in `nextflow.config` to the build directory.
+ProteinDJ requires several containers for the different dependencies. By default, these will be fetched during execution of Nextflow and cached by Apptainer to the location specified by the environment variable `NXF_APPTAINER_CACHEDIR`. If you are on a shared environment, we recommend creating a profile in nextflow.config with `apptainer.cacheDir` set to a shared location with read/write permissions for all users (see the Milton/WEHI profile as an example). 
+
+We recommend using our containers from the cloud, but if you would like to build/modify containers locally, we have provide def files for containers in `proteindj/apptainer`. When updating ProteinDJ make sure to also update your local containers to maintain compatibility with the pipeline. You may already have similar containers for some of these programs, but we have made changes to the source code and environment so we do not recommend using other containers with ProteinDJ. Once the containers have been built, you need to change the path to each built container in `nextflow.config` e.g. for BindCraft: 
+```
+withLabel: 'BC' {
+   container         = "/path/to/containers/bindcraft.sif"
+   containerOptions  = """--nv \
+   --bind ${params.af2_models}:/af2params \
+   """
+}     
+```
 
 We have provided a script for building the containers in a series of sbatch jobs (`apptainer/build_containers.sh`). You may need to tweak the SLURM parameters and enviroment settings for your cluster.
 
-> **⚠️ Important:** Container building requires significant resources and may take 1-2 hours.
+> **⚠️ Important:** Container building requires significant resources and may take several hours.
 
 ### Option A: Automated Parallel Build using SLURM script
 
@@ -226,7 +236,6 @@ nano nextflow.config
 
 | Parameter       | Description                                 | Examples                       |
 | --------------- | ------------------------------------------- | ------------------------------ |
-| `container_dir` | Path to built containers                    | `'/shared/containers'`         |
 | `rfd_models`    | Path to RFdiffusion models                  | `"${projectDir}/models/rfd"`   |
 | `af2_models`    | Path to AlphaFold2 models                   | `"${projectDir}/models/af2"`   |
 | `boltz_models`  | Path to Boltz-2 models                      | `"${projectDir}/models/boltz"` |
