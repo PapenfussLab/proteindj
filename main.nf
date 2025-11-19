@@ -481,19 +481,20 @@ workflow {
         else if (params.pred_method == "boltz") {
             // Prep yaml files for Boltz-2
             PrepBoltz(pred_input_pdbs)
-
-            // reallocate batching for GPU
-            Utils
-                .rebatchGPU(PrepBoltz.out.yamls, params.gpus)
-                .set { pred_input_tuple }
             
             // Handle templates - use empty channel if not present
             PrepBoltz.out.templates
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { templates_ch }
 
+            // reallocate batching for GPU
+            Utils
+                .rebatchGPU(PrepBoltz.out.yamls, params.gpus)
+                .combine(templates_ch)
+                .set { pred_input_tuple }
+
             // Perform prediction of designs using Boltz-2
-            RunBoltz(pred_input_tuple, templates_ch)
+            RunBoltz(pred_input_tuple)
 
             // Batch files for CPUs
             Utils

@@ -158,7 +158,7 @@ def main():
     parser.add_argument("--design_dir", type=Path, required=True, 
                       help="Directory with Design PDBs (fold_*_seq_*.pdb)")
     parser.add_argument("--boltz_dir", type=Path, required=True,
-                      help="Directory with Boltz PDBs and JSONs (fold_*_seq_*_boltzpred.*)")
+                      help="Directory with Boltz PDBs and JSONs (fold_*_seq_*_boltzpred.pdb)")
     parser.add_argument("--output_dir", type=Path, default="aligned",
                       help="Output directory for results")
     parser.add_argument("--design_type", choices=['binder', 'monomer'], required=True,

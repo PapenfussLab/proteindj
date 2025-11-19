@@ -38,8 +38,7 @@ process RunBoltz {
     tag "B${batch_id}"
 
     input:
-    tuple val(batch_id), path(yamls)
-    path templates_dir, stageAs: 'templates'
+    tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
 
     output:
     tuple path ("predictions/*.pdb"), path ("predictions/*.json"), emit: pdbs_jsons
