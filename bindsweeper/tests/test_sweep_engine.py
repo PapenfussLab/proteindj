@@ -51,7 +51,7 @@ class TestSweepCombination:
         """Test creating a sweep combination."""
         combo = SweepCombination(
             mode="binder_denovo",
-            all_params={"rfd_num_designs": 8, "rfd_noise_scale": 0.5},
+            all_params={"num_designs": 8, "rfd_noise_scale": 0.5},
             swept_params={"rfd_noise_scale": 0.5},
             profile_name="test_profile",
             output_dir="/test/output",
@@ -71,7 +71,7 @@ class TestSweepEngine:
         """Mock sweep configuration."""
         config = Mock(spec=SweepConfig)
         config.mode = "binder_denovo"
-        config.fixed_params = {"rfd_contigs": "A17-145/0 50-100", "rfd_num_designs": 4}
+        config.fixed_params = {"design_length": "50-100", "num_designs": 4}
 
         # Mock sweep parameters
         noise_sweep = Mock()
@@ -89,7 +89,7 @@ class TestSweepEngine:
         """Create a sweep engine with mocked dependencies."""
         with patch("bindsweeper.sweep_engine.parse_nextflow_config") as mock_parse:
             mock_parse.return_value = {
-                "rfd_mode": None,
+                "design_mode": None,
                 "seqs_per_design": 8,
                 "out_dir": "/default/output",
             }
@@ -126,7 +126,7 @@ class TestSweepEngine:
         """Test generating combinations with no sweep parameters."""
         config = Mock(spec=SweepConfig)
         config.mode = "denovo"
-        config.fixed_params = {"rfd_num_designs": 4}
+        config.fixed_params = {"num_designs": 4}
         config.sweep_params = {}
 
         with patch("bindsweeper.sweep_engine.parse_nextflow_config") as mock_parse:

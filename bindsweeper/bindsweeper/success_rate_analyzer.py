@@ -19,8 +19,8 @@ class SuccessMetrics:
     total_designs: int
     successful_designs: int
     success_rate: float
-    rfd_generated: int
-    rfd_filtered: int
+    fold_generated: int
+    fold_filtered: int
     seq_generated: int
     seq_filtered: int
     pred_filtered: int
@@ -35,8 +35,8 @@ class SuccessMetrics:
             total_designs=data["total_designs"],
             successful_designs=data["successful_designs"],
             success_rate=data["success_rate"],
-            rfd_generated=data["rfd_generated"],
-            rfd_filtered=data["rfd_filtered"],
+            fold_generated=data["fold_generated"],
+            fold_filtered=data["fold_filtered"],
             seq_generated=data["seq_generated"],
             seq_filtered=data["seq_filtered"],
             pred_filtered=data["pred_filtered"],
@@ -51,8 +51,8 @@ class SuccessMetrics:
             "total_designs": self.total_designs,
             "successful_designs": self.successful_designs,
             "success_rate": self.success_rate,
-            "rfd_generated": self.rfd_generated,
-            "rfd_filtered": self.rfd_filtered,
+            "fold_generated": self.fold_generated,
+            "fold_filtered": self.fold_filtered,
             "seq_generated": self.seq_generated,
             "seq_filtered": self.seq_filtered,
             "pred_filtered": self.pred_filtered,
@@ -148,7 +148,7 @@ class SuccessRateAnalyzer:
                 'success_rate': metrics.success_rate,
                 'successful_designs': metrics.successful_designs,
                 'total_designs': metrics.total_designs,
-                'rfd_retention_rate': metrics.pipeline_metrics.get('rfd_retention_rate', 0.0),
+                'fold_retention_rate': metrics.pipeline_metrics.get('fold_retention_rate', 0.0),
                 'seq_retention_rate': metrics.pipeline_metrics.get('seq_retention_rate', 0.0),
                 'pred_retention_rate': metrics.pipeline_metrics.get('pred_retention_rate', 0.0),
                 'overall_retention_rate': metrics.pipeline_metrics.get('overall_retention_rate', 0.0),

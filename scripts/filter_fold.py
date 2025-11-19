@@ -13,7 +13,7 @@ import re
 
 def setup_logger():
     """Configure logging to output to both file and stdout"""
-    logger = logging.getLogger('filter_rfd')
+    logger = logging.getLogger('filter_fold')
     logger.setLevel(logging.INFO)
     
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -24,7 +24,7 @@ def setup_logger():
     
     # Create unique log filename
     unique_id = str(uuid.uuid4())[:8]
-    log_filename = f'filter_rfd_{unique_id}.log'
+    log_filename = f'filter_fold_{unique_id}.log'
     file_handler = logging.FileHandler(log_filename)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -41,11 +41,11 @@ def extract_fold_id(pdb_filename):
 
 def analyze_structure(args):
     """Analyze structure with automatic chain detection"""
-    (pdb_file, rfd_min_ss, rfd_max_ss, rfd_min_helices, rfd_max_helices, 
-     rfd_min_strands, rfd_max_strands, rfd_min_rog, rfd_max_rog, 
+    (pdb_file, fold_min_ss, fold_max_ss, fold_min_helices, fold_max_helices, 
+     fold_min_strands, fold_max_strands, fold_min_rog, fold_max_rog, 
      output_dir, json_dir) = args
 
-    logger = logging.getLogger('filter_rfd')
+    logger = logging.getLogger('filter_fold')
 
     try:
         # Load structure with PyRosetta
@@ -114,24 +114,24 @@ def analyze_structure(args):
             return True
 
         # Apply all filters
-        passes_ss_filter = passes_filter(total_ss, rfd_min_ss, rfd_max_ss)
-        passes_helix_filter = passes_filter(helix_count, rfd_min_helices, rfd_max_helices)
-        passes_strand_filter = passes_filter(strand_count, rfd_min_strands, rfd_max_strands)
-        passes_rog_filter = passes_filter(rog, rfd_min_rog, rfd_max_rog)
+        passes_ss_filter = passes_filter(total_ss, fold_min_ss, fold_max_ss)
+        passes_helix_filter = passes_filter(helix_count, fold_min_helices, fold_max_helices)
+        passes_strand_filter = passes_filter(strand_count, fold_min_strands, fold_max_strands)
+        passes_rog_filter = passes_filter(rog, fold_min_rog, fold_max_rog)
 
         passes_all_filters = (passes_ss_filter and passes_helix_filter and 
                              passes_strand_filter and passes_rog_filter)
 
         # Create filter description for logging
         applied_filters = []
-        if rfd_min_ss is not None or rfd_max_ss is not None:
-            applied_filters.append(f"SS: {rfd_min_ss or 'None'}-{rfd_max_ss or 'None'}")
-        if rfd_min_helices is not None or rfd_max_helices is not None:
-            applied_filters.append(f"Helix: {rfd_min_helices or 'None'}-{rfd_max_helices or 'None'}")
-        if rfd_min_strands is not None or rfd_max_strands is not None:
-            applied_filters.append(f"Strand: {rfd_min_strands or 'None'}-{rfd_max_strands or 'None'}")
-        if rfd_min_rog is not None or rfd_max_rog is not None:
-            applied_filters.append(f"RoG: {rfd_min_rog or 'None'}-{rfd_max_rog or 'None'}")
+        if fold_min_ss is not None or fold_max_ss is not None:
+            applied_filters.append(f"SS: {fold_min_ss or 'None'}-{fold_max_ss or 'None'}")
+        if fold_min_helices is not None or fold_max_helices is not None:
+            applied_filters.append(f"Helix: {fold_min_helices or 'None'}-{fold_max_helices or 'None'}")
+        if fold_min_strands is not None or fold_max_strands is not None:
+            applied_filters.append(f"Strand: {fold_min_strands or 'None'}-{fold_max_strands or 'None'}")
+        if fold_min_rog is not None or fold_max_rog is not None:
+            applied_filters.append(f"RoG: {fold_min_rog or 'None'}-{fold_max_rog or 'None'}")
 
         filters_str = ", ".join(applied_filters) if applied_filters else "No filters applied"
 
@@ -162,10 +162,10 @@ def analyze_structure(args):
 
         return {
             "fold_id": fold_id,
-            "rfd_helices": helix_count,
-            "rfd_strands": strand_count,
-            "rfd_total_ss": total_ss,
-            "rfd_RoG": rog,
+            "fold_helices": helix_count,
+            "fold_strands": strand_count,
+            "fold_total_ss": total_ss,
+            "fold_RoG": rog,
         }
 
     except Exception as e:
@@ -177,14 +177,14 @@ def main():
     parser.add_argument('--input-dir', type=str, help='Directory containing PDB files')
     parser.add_argument('--json-dir', type=str, default=None, 
                        help='Directory containing JSON files corresponding to PDB files (default: same as input-dir)')
-    parser.add_argument('--rfd-min-ss', type=int, default=None, help='Minimum total secondary structure elements')
-    parser.add_argument('--rfd-max-ss', type=int, default=None, help='Maximum total secondary structure elements')
-    parser.add_argument('--rfd-min-helices', type=int, default=None, help='Minimum number of alpha helices')
-    parser.add_argument('--rfd-max-helices', type=int, default=None, help='Maximum number of alpha helices')
-    parser.add_argument('--rfd-min-strands', type=int, default=None, help='Minimum number of beta strands')
-    parser.add_argument('--rfd-max-strands', type=int, default=None, help='Maximum number of beta strands')
-    parser.add_argument('--rfd-min-rog', type=float, default=None, help='Minimum radius of gyration')
-    parser.add_argument('--rfd-max-rog', type=float, default=None, help='Maximum radius of gyration')
+    parser.add_argument('--fold-min-ss', type=int, default=None, help='Minimum total secondary structure elements')
+    parser.add_argument('--fold-max-ss', type=int, default=None, help='Maximum total secondary structure elements')
+    parser.add_argument('--fold-min-helices', type=int, default=None, help='Minimum number of alpha helices')
+    parser.add_argument('--fold-max-helices', type=int, default=None, help='Maximum number of alpha helices')
+    parser.add_argument('--fold-min-strands', type=int, default=None, help='Minimum number of beta strands')
+    parser.add_argument('--fold-max-strands', type=int, default=None, help='Maximum number of beta strands')
+    parser.add_argument('--fold-min-rog', type=float, default=None, help='Minimum radius of gyration')
+    parser.add_argument('--fold-max-rog', type=float, default=None, help='Maximum radius of gyration')
     parser.add_argument('--ncpus', type=int, default=1, help='Number of CPU cores to use')
     parser.add_argument('--output-dir', type=Path, default="filtered", 
         help="Directory to save filtered PDB files (default: filtered)")
@@ -214,14 +214,14 @@ def main():
     
     process_args = [(
         pdb, 
-        args.rfd_min_ss, 
-        args.rfd_max_ss,
-        args.rfd_min_helices, 
-        args.rfd_max_helices,
-        args.rfd_min_strands, 
-        args.rfd_max_strands,
-        args.rfd_min_rog,
-        args.rfd_max_rog,
+        args.fold_min_ss, 
+        args.fold_max_ss,
+        args.fold_min_helices, 
+        args.fold_max_helices,
+        args.fold_min_strands, 
+        args.fold_max_strands,
+        args.fold_min_rog,
+        args.fold_max_rog,
         args.output_dir,
         json_dir
     ) for pdb in pdb_files]
@@ -233,7 +233,7 @@ def main():
     valid_results = [result for result in results if result is not None]
     
     # save analysis data to JSONL
-    output_filename = f'rfd_data_{str(uuid.uuid4())[:8]}.jsonl'
+    output_filename = f'fold_data_{str(uuid.uuid4())[:8]}.jsonl'
     with open(output_filename, 'w') as f:
         for result in valid_results:
             json.dump(result, f)

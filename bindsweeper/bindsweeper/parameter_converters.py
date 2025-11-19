@@ -76,17 +76,17 @@ class HotspotsParameterConverter(ParameterConverter):
         """Convert hotspot list or string to formatted string."""
         # Handle empty values - convert to null
         if value in [None, "null", "", "[]"] or (isinstance(value, list) and len(value) == 0):
-            return {"rfd_hotspots": None}
+            return {"hotspot_residues": None}
         elif isinstance(value, str):
             # If already a string, pass through directly
-            return {"rfd_hotspots": value}
+            return {"hotspot_residues": value}
         elif isinstance(value, list):
             # If a list, join with commas
             hotspot_str = ",".join(value) if value else ""
-            return {"rfd_hotspots": f"[{hotspot_str}]"}
+            return {"hotspot_residues": f"{hotspot_str}"}
         else:
             # Fallback for other types
-            return {"rfd_hotspots": str(value)}
+            return {"hotspot_residues": str(value)}
 
     def to_command_arg(self, param_name: str, value: Any) -> Optional[str]:
         """No command line argument for hotspots (handled by profile)."""
@@ -104,7 +104,7 @@ class InputPdbParameterConverter(ParameterConverter):
 
     def to_profile_param(self, param_name: str, value: str) -> dict[str, Any]:
         """Pass through input PDB path."""
-        return {"rfd_input_pdb": value}
+        return {"input_pdb": value}
 
     def to_command_arg(self, param_name: str, value: str) -> Optional[str]:
         """Convert to command line argument for partial diffusion mode."""
@@ -131,9 +131,9 @@ PARAMETER_CONVERTERS = {
     "rfd_noise_scale": NoiseScaleParameterConverter(),
     "noise_scale": NoiseScaleParameterConverter(),  # Alias
     "hotspots": HotspotsParameterConverter(),
-    "rfd_hotspots": HotspotsParameterConverter(),  # Alias
+    "hotspot_residues": HotspotsParameterConverter(),  # Alias
     "input_pdb": InputPdbParameterConverter(),
-    "rfd_input_pdb": InputPdbParameterConverter(),  # Alias
+    "input_pdb": InputPdbParameterConverter(),  # Alias
     "contigs": ContigsParameterConverter(),
     "rfd_contigs": ContigsParameterConverter(),  # Alias
 }

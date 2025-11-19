@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--debug", is_flag=True, help="Enable debug logging")
-@click.version_option(version="0.1.8")
+@click.version_option(version="0.1.9")
 @click.option("--dry-run", is_flag=True, help="Print commands without executing them")
 @click.option(
     "--skip-sweep", is_flag=True, help="Skip parameter sweep and only process results"

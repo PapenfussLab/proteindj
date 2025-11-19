@@ -49,13 +49,13 @@ class TestSweepConfig:
         assert "rfd_contigs" in config.fixed_params
         assert "rfd_noise_scale" in config.sweep_params
         assert "rfd_ckpt_override" in config.sweep_params
-        assert "rfd_hotspots" in config.sweep_params
+        assert "hotspot_residues" in config.sweep_params
 
     def test_from_yaml_missing_mode(self, temp_dir):
         """Test loading YAML without required mode."""
         yaml_content = """
 fixed_params:
-  rfd_num_designs: 4
+  num_designs: 4
         """
         yaml_path = Path(temp_dir) / "invalid.yaml"
         yaml_path.write_text(yaml_content)
@@ -68,7 +68,7 @@ fixed_params:
         yaml_content = """
 mode: denovo
 fixed_params:
-  rfd_num_designs: 4
+  num_designs: 4
         """
         yaml_path = Path(temp_dir) / "no_sweep.yaml"
         yaml_path.write_text(yaml_content)
@@ -76,7 +76,7 @@ fixed_params:
         config = SweepConfig.from_yaml(str(yaml_path))
         assert config.mode == "denovo"
         assert len(config.sweep_params) == 0
-        assert "rfd_num_designs" in config.fixed_params
+        assert "num_designs" in config.fixed_params
 
     def test_from_yaml_custom_results_config(self, temp_dir):
         """Test loading YAML with custom results configuration."""
@@ -102,7 +102,7 @@ results_config:
 
         # Check list sweeps
         assert isinstance(config.sweep_params["rfd_ckpt_override"], ListSweep)
-        assert isinstance(config.sweep_params["rfd_hotspots"], ListSweep)
+        assert isinstance(config.sweep_params["hotspot_residues"], ListSweep)
 
 
 class TestValidateParamsAgainstSchema:
@@ -114,7 +114,7 @@ class TestValidateParamsAgainstSchema:
         schema_path.write_text(json.dumps(sample_nextflow_schema))
 
         config_data = {
-            "fixed_params": {"rfd_mode": "denovo", "rfd_num_designs": 8},
+            "fixed_params": {"design_mode": "denovo", "num_designs": 8},
             "sweep_params": {"rfd_noise_scale": {"min": 0.0, "max": 1.0, "step": 0.5}},
         }
 
@@ -128,7 +128,7 @@ class TestValidateParamsAgainstSchema:
 
         config_data = {
             "fixed_params": {
-                "rfd_mode": "invalid_mode"  # Not in enum
+                "design_mode": "invalid_mode"  # Not in enum
             }
         }
 
@@ -142,7 +142,7 @@ class TestValidateParamsAgainstSchema:
 
         config_data = {
             "sweep_params": {
-                "rfd_num_designs": {
+                "num_designs": {
                     "type": "range",
                     "min": 100,
                     "max": 2000,

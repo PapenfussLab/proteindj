@@ -63,7 +63,7 @@ def read_data_from_directory(directory_path, pattern='*.json'):
             try:
                 # Extract metadata from filename
                 filename = Path(json_file).stem
-                match = re.match(r'fold_(\d+)_seq_(\d+)_boltzpred', filename)
+                match = re.match(r'fold_(\d+)_seq_(\d+)_.*', filename)
                 if not match:
                     print(f"Skipping invalid filename format: {filename}")
                     continue

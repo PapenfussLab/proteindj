@@ -158,7 +158,7 @@ def main():
     parser.add_argument("--design_dir", type=Path, required=True, 
                       help="Directory with Design PDBs (fold_*_seq_*.pdb)")
     parser.add_argument("--boltz_dir", type=Path, required=True,
-                      help="Directory with Boltz PDBs and JSONs (fold_*_seq_*_boltzpred.*)")
+                      help="Directory with Boltz PDBs and JSONs (fold_*_seq_*_boltzpred.pdb)")
     parser.add_argument("--output_dir", type=Path, default="aligned",
                       help="Output directory for results")
     parser.add_argument("--design_type", choices=['binder', 'monomer'], required=True,
@@ -191,7 +191,7 @@ def main():
     # Prepare processing tasks
     tasks = []
     for boltz_file in args.boltz_dir.glob("fold_*_seq_*_boltzpred.pdb"):
-        match = re.match(r"fold_(\d+)_seq_(\d+)_boltzpred\.pdb", boltz_file.name)
+        match = re.match(r"fold_(\d+)_seq_(\d+)_.*\.pdb", boltz_file.name)
         if not match:
             continue
             
