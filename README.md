@@ -37,7 +37,7 @@ If you find ProteinDJ or BindSweeper useful in your research, please [cite us](h
   - [Seqera Support](#seqera)
   - [Troubleshooting and common errors](#errors)
   - [Data used for benchmarking](#append-bench)
-  - [Citations for software packages used in ProteinDJ](#append-citations)
+  - [Citations for software packages used in ProteinDJ](#citations)
 
 ## Installation <a name="install"></a>
 
@@ -208,7 +208,7 @@ We used five structures for testing and benchmarking our pipeline.
 | PD-L1             | 5O45   | 5o45_pd-l1.pdb | [A17-131/0]                                            | [A56, A115, A123]  |
 | TrkA              | 1WWW   | 1www_trka.pdb  | [X282-382/0]                                           | [X294, X296, X333] |
 
-### Citations for software packages used in ProteinDJ <a name="append-citations"></a>
+### Citations for software packages used in ProteinDJ <a name="citations"></a>
 
 ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. bioRxiv. https://doi.org/10.1101/2025.09.24.678028
 
