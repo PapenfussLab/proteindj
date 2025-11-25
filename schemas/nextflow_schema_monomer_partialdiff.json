@@ -11,7 +11,7 @@
       "description": "These parameters are required for ProteinDJ and are used by every mode.",
       "default": "",
       "properties": {
-        "rfd_mode": {
+        "design_mode": {
           "type": "string",
           "description": "Pipeline mode.",
           "default": "monomer_partialdiff",
@@ -19,15 +19,15 @@
             "monomer_partialdiff"
           ]
         },
-        "rfd_num_designs": {
+        "num_designs": {
           "type": "integer",
           "default": 8,
-          "description": "Number of designs to generate using RFdiffusion."
+          "description": "Number of designs to generate using RFdiffusion or Bindcraft."
         },
         "seqs_per_design": {
           "type": "integer",
           "default": 8,
-          "description": "Number of sequences to generate per RFdiffusion design."
+          "description": "Number of sequences to generate per design."
         },
         "out_dir": {
           "type": "string",
@@ -37,8 +37,8 @@
         }
       },
       "required": [
-        "rfd_mode",
-        "rfd_num_designs",
+        "design_mode",
+        "num_designs",
         "seqs_per_design",
         "out_dir"
       ]
@@ -49,25 +49,28 @@
       "description": "These parameters are used for some of the ProteinDJ modes.",
       "default": "",
       "properties": {
-        "rfd_contigs": {
-          "type": "string",
-          "description": "Contigs specification. See examples in documentation. e.g. '[A17-145/0 50-100]'.",
-          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$",
-          "default": "[A17-111/20]"
-        },
-        "rfd_input_pdb": {
+        "input_pdb": {
           "type": "string",
           "pattern": ".*\\.pdb$",
           "format": "file-path",
           "description": "Path to an input PDB file. e.g. 'target.pdb'",
           "default": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
         },
+        "rfd_contigs": {
+          "type": "string",
+          "description": "Contigs specification strings for residues to include from input PDB and/or design length, e.g. `[A17-145/0 50-100]`. See docs for examples. Optional for multiple modes, required by `binder_motifscaff` and `monomer_motifscaff`. If null, contigs will be auto generated from input PDB (all residues) and/or `design_length`.",
+          "pattern": "^\\[[A-Z0-9\\-\\/ \\[\\]]+\\]$"
+        },
         "rfd_partial_diffusion_timesteps": {
           "type": "integer",
           "description": "Number of timesteps for partial diffusion. e.g. 20",
           "default": 20
         }
-      }
+      },
+      "required": [
+        "input_pdb",
+        "rfd_partial_diffusion_timesteps"
+      ]
     },
     "workflow_advanced_parameters": {
       "title": "Mode-Specific Parameters",
@@ -99,24 +102,24 @@
           "default": true,
           "hidden": true
         },
-        "run_rfd_only": {
+        "run_fold_only": {
           "type": "boolean",
-          "description": "Whether to run RFdiffusion only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
+          "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
           "hidden": true
         },
-        "skip_rfd": {
+        "skip_fold": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
-        "skip_rfd_seq": {
+        "skip_fold_seq": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design and Sequence Design, and run Structure Prediction and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
-        "skip_rfd_seq_pred": {
+        "skip_fold_seq_pred": {
           "type": "boolean",
-          "description": "Skip RFdiffusion and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
+          "description": "Skip Fold Design, Sequence Design, and Structure Prediction, and run Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B.",
           "hidden": true
         },
         "skip_input_dir": {
@@ -127,12 +130,18 @@
         }
       }
     },
+    "bindcraft_advanced_parameters": {
+      "title": "BindCraft Advanced Parameters",
+      "type": "object",
+      "description": "Advanced parameters to control the behaviour of BindCraft.",
+      "default": "",
+      "properties": {}
+    },
     "rfdiffusion_advanced_parameters": {
       "title": "RFdiffusion Advanced Parameters",
       "type": "object",
       "description": "Advanced parameters to control the behaviour of RFdiffusion.",
       "default": "",
-      "help_text": "",
       "properties": {
         "rfd_ckpt_override": {
           "type": "string",
@@ -187,9 +196,10 @@
           "default": "soluble",
           "enum": [
             "vanilla",
-            "soluble"
+            "soluble",
+            "hyper"
           ],
-          "description": "Checkpoint type to use for ProteinMPNN. Choose from 'vanilla' or 'soluble' (default = 'soluble').",
+          "description": "Checkpoint type to use for ProteinMPNN. Choose from 'vanilla', 'soluble' or 'hyper' (default = 'soluble').",
           "hidden": true
         },
         "mpnn_checkpoint_model": {
@@ -327,6 +337,23 @@
           "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
           "hidden": true
         },
+        "boltz_use_templates": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to use template structures to guide Boltz-2 predictions. Template is generated from input design structure. For monomer modes: uses chain A as template. For binder modes: uses chain B (target) as template only, similar to AlphaFold2 Initial-Guess.",
+          "hidden": true
+        },
+        "boltz_template_force": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to enforce template structure using a potential (force constraint). Only applies if boltz_use_templates=true.",
+          "hidden": true
+        },
+        "boltz_template_threshold": {
+          "type": "number",
+          "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied.",
+          "hidden": true
+        },
         "boltz_extra_config": {
           "type": "string",
           "hidden": true,
@@ -340,42 +367,42 @@
       "description": "Metrics are calculated on the binder chain only in binder design modes, otherwise all chains are used in calculations.",
       "default": "",
       "properties": {
-        "rfd_min_helices": {
+        "fold_min_helices": {
           "type": "integer",
           "description": "Minimum number of alpha-helices required. e.g. 3",
           "hidden": true
         },
-        "rfd_max_helices": {
+        "fold_max_helices": {
           "type": "integer",
           "description": "Maximum number of alpha-helices allowed. e.g. 6",
           "hidden": true
         },
-        "rfd_min_strands": {
+        "fold_min_strands": {
           "type": "integer",
           "description": "Minimum number of beta-strands required. e.g. 2",
           "hidden": true
         },
-        "rfd_max_strands": {
+        "fold_max_strands": {
           "type": "integer",
           "description": "Maximum number of beta-strands allowed. e.g. 6",
           "hidden": true
         },
-        "rfd_min_ss": {
+        "fold_min_ss": {
           "type": "integer",
           "description": "Minimum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 4",
           "hidden": true
         },
-        "rfd_max_ss": {
+        "fold_max_ss": {
           "type": "integer",
           "description": "Maximum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 8",
           "hidden": true
         },
-        "rfd_min_rog": {
+        "fold_min_rog": {
           "type": "number",
           "description": "Minimum radius of gyration (\u00c5). e.g. 10",
           "hidden": true
         },
-        "rfd_max_rog": {
+        "fold_max_rog": {
           "type": "number",
           "description": "Maximum radius of gyration (\u00c5). e.g. 20",
           "hidden": true
@@ -453,12 +480,6 @@
       "description": "The cluster parameters may need adjusting depending on your HPC setup and available hardware. You must ensure that the paths to the containers and models for RFdiffusion, AlphaFold2 and Boltz-2 are valid and contain the expected files.",
       "default": "",
       "properties": {
-        "container_dir": {
-          "type": "string",
-          "format": "directory-path",
-          "description": "Path to pipeline containers directory.",
-          "hidden": true
-        },
         "rfd_models": {
           "type": "string",
           "format": "directory-path",
@@ -530,6 +551,9 @@
     },
     {
       "$ref": "#/definitions/workflow_advanced_parameters"
+    },
+    {
+      "$ref": "#/definitions/bindcraft_advanced_parameters"
     },
     {
       "$ref": "#/definitions/rfdiffusion_advanced_parameters"

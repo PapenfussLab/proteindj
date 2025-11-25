@@ -97,7 +97,7 @@ profile: milton
 
 # Fixed parameters (override nextflow.config)
 fixed_params:
-  rfd_num_designs: 8
+  num_designs: 8
   seqs_per_design: 8
 
 # Parameters to sweep
@@ -108,11 +108,11 @@ sweep_params:
     max: 0.5
     step: 0.25
   
-  rfd_hotspots:
+  hotspot_residues:
     values:
-      - "[B208,B232,B239]"
-      - "[B210,B234]"
-      - "[]"
+      - "B208,B232,B239"
+      - "B210,B234"
+      - ""
 
 # Results processing configuration
 results_config:

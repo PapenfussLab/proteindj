@@ -5,9 +5,18 @@ process PrepBoltz {
     path pdb_files
 
     output:
-    path ("yamls/*.yaml"), emit: yamls
+    path ("output/*.yaml"), emit: yamls
+    path ("output/templates"), emit: templates, optional: true
 
     script:
+    // Determine template chain based on design mode
+    def templateChain = params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'bindcraft_denovo'] ? 'B' : 'A'
+    
+    // Build template parameters if enabled
+    def templateParams = params.boltz_use_templates ? "--use-template --template-chain ${templateChain}" : ""
+    def templateForceParam = params.boltz_use_templates && params.boltz_template_force ? "--template-force" : ""
+    def templateThresholdParam = params.boltz_use_templates && params.boltz_template_threshold ? "--template-threshold ${params.boltz_template_threshold}" : ""
+    
     """
     eval "\$(micromamba shell hook --shell bash)"
     micromamba activate pyrosetta
@@ -15,9 +24,13 @@ process PrepBoltz {
     # Generate yaml files containing sequences for Boltz-2 prediction 
     python /scripts/prep_boltz_yaml.py \
         --input "./" \
-        --output "yamls"
+        --output "output" \
+        ${templateParams} \
+        ${templateForceParam} \
+        ${templateThresholdParam}
     """
 }
+
 process RunBoltz {
     label 'Boltz'
     label 'gpu'
@@ -25,7 +38,7 @@ process RunBoltz {
     tag "B${batch_id}"
 
     input:
-    tuple val(batch_id), path(yamls)
+    tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
 
     output:
     tuple path ("predictions/*.pdb"), path ("predictions/*.json"), emit: pdbs_jsons
@@ -55,7 +68,7 @@ process RunBoltz {
             --cache /boltzcache \
             ${params.boltz_extra_config ? params.boltz_extra_config : ''} \
             2>&1 | tee boltz_${batch_id}.log
- 
+    
         # Move output files out of nested directories and rename to fold_X_seq_X_boltzpred.pdb|json
         mkdir -p predictions
         for dir in boltz_results_yamls/predictions/fold_*_seq_*; do
@@ -70,8 +83,7 @@ process RunBoltz {
                 mv "\${dir}/confidence_\${inputname}_model_0.json" "predictions/\${inputname}_boltzpred.json"
             fi
         done
-
-        """
+    """
 }
 process AlignBoltz {
     label 'pyrosetta_tools'
@@ -97,7 +109,7 @@ process AlignBoltz {
     eval "\$(micromamba shell hook --shell bash)"
     micromamba activate pyrosetta
 
-    # Script to align predictions to RFdiffusion designs and calculate RMSD
+    # Script to align predictions to designs and calculate RMSD
     # Also, extracts and renames metadata from json files
     python /scripts/align_boltz.py \
         --design_dir ./ \

@@ -20,8 +20,8 @@ From: nvidia/cuda:12.8.0-base-ubuntu24.04
     . /opt/venv/bin/activate
 
     # install boltz
-    git clone https://github.com/jwohlwend/boltz.git && cd /boltz && git checkout aaef502
-    pip install --no-cache-dir .
+    git clone https://github.com/jwohlwend/boltz.git && cd /boltz && git checkout cb04aec
+    pip install --no-cache-dir ".[cuda]"
 
     # cleanup build dependencies
     apt-get autoremove -y
@@ -47,5 +47,10 @@ From: nvidia/cuda:12.8.0-base-ubuntu24.04
     boltz --help
     echo "Build tests completed sucessfully"
 
+%labels
+    Author JoshuaHardy
+    Version 2.0
+    Description "Apptainer container for Boltz-2 with CUDA 12.8 runtime"
+
 %help
-    Boltz container with CUDA 12.8 runtime
+    Boltz-2 container with CUDA 12.8 runtime

@@ -21,6 +21,7 @@ From: nvidia/cuda:12.8.0-base-ubuntu24.04
     git clone https://github.com/PapenfussLab/fampnn.git /app/fampnn && cd /app/fampnn && git checkout 18363df
 
     # install  dependencies
+    export PIP_NO_CACHE_DIR=1
     pip install scipy certifi torch-geometric gemmi biopython tqdm natsort omegaconf rdkit einops hydra-core torchtyping dm-tree timm jaxtyping joblib pandas
 
     # install fampnn package
@@ -50,7 +51,7 @@ From: nvidia/cuda:12.8.0-base-ubuntu24.04
 
 %labels
     Author JoshuaHardy, DylanSilke
-    Version 1.0
+    Version 2.0
     Description "Apptainer container for Full-atom MPNN (fampnn)"
 
 %help
