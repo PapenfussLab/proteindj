@@ -27,7 +27,7 @@ Metrics calculated on the BindCraft or RFdiffusion generated folds.
 | `rfd_sampled_mask` | Contigs used by RFdiffusion to produce the fold. (e.g., `['E6-155/0', '100-100']`) |
 | `bc_length` | Length of binder selected by BindCraft |
 | `bc_plddt` | Average per-residue confidence score (0-100) for the complex calculated by BindCraft. |
-| `bc_target_rmsd` | The RMSD between the input target structure and the target structure after binder design |
+| `bc_rmsd_target` | The RMSD between the input target structure and the target structure after binder design |
 | `fold_helices`      | Number of alpha-helices in the designed fold (calculated by PyRosetta).         |
 | `fold_strands`      | Number of beta-strands in the designed fold (calculated by PyRosetta).          |
 | `fold_total_ss`     | Total secondary structures (helices + strands) in the designed fold.            |
@@ -65,9 +65,9 @@ Metrics from AlphaFold2 Initial-Guess or Boltz-2 predictions evaluating structur
 | `af2_rmsd_binder_tgtaln` | C-alpha RMSD comparing binder chains only between input design and AF2 prediction, when target chains are aligned. |
 | `af2_rmsd_target`        | C-alpha RMSD comparing target chains only between input design and AF2 prediction.                                 |
 | `af2_time`               | Time taken (seconds) for AF2 prediction.                                                                           |
-| `boltz_overall_rmsd`     | C-alpha RMSD of Boltz-2 prediction vs input design (all chains).                                                   |
-| `boltz_binder_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
-| `boltz_target_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
+| `boltz_rmsd_overall`     | C-alpha RMSD of Boltz-2 prediction vs input design (all chains).                                                   |
+| `boltz_rmsd_binder`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
+| `boltz_rmsd_target`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
 | `boltz_conf_score`       | Confidence score for Boltz-2 prediction; higher is more confident.                                                 |
 | `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
 | `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |

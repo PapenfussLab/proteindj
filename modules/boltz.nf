@@ -144,9 +144,9 @@ process FilterBoltz {
         params,
         "boltz",
         [
-            "max_overall_rmsd",
-            "max_binder_rmsd",
-            "max_target_rmsd",
+            "max_rmsd_overall",
+            "max_rmsd_binder",
+            "max_rmsd_target",
             "min_conf_score",
             "min_ptm",
             "min_ptm_binder",

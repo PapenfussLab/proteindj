@@ -62,7 +62,7 @@ class MetadataConverter:
             # RFdiffusion fields
             'rfd_sampled_mask',
             # BindCraft design fields
-            'bc_length','bc_plddt','bc_target_rmsd',
+            'bc_length','bc_plddt','bc_rmsd_target',
             # Fold design secondary structure and RoG
             'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # MPNN/FAMPNN fields
@@ -72,7 +72,7 @@ class MetadataConverter:
             'af2_plddt_overall', 'af2_plddt_binder', 'af2_plddt_target',
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
-            'boltz_overall_rmsd', 'boltz_binder_rmsd','boltz_target_rmsd',
+            'boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
             'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface',
             'boltz_plddt', 'boltz_plddt_interface',
             'boltz_pde', 'boltz_pde_interface',

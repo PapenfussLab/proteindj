@@ -88,9 +88,9 @@ def align_structures(args):
             rmsd_binder = superimposer_a.rms
 
             rmsd_data = {
-                "boltz_overall_rmsd": round(rmsd_overall, 2),
-                "boltz_target_rmsd": round(rmsd_target, 2),
-                "boltz_binder_rmsd": round(rmsd_binder, 2)
+                "boltz_rmsd_overall": round(rmsd_overall, 2),
+                "boltz_rmsd_target": round(rmsd_target, 2),
+                "boltz_rmsd_binder": round(rmsd_binder, 2)
             }
 
         else:  # Monomer design
@@ -102,7 +102,7 @@ def align_structures(args):
             superimposer.apply(boltz_structure.get_atoms())
             
             rmsd_data = {
-                "boltz_overall_rmsd": round(superimposer.rms, 2)
+                "boltz_rmsd_overall": round(superimposer.rms, 2)
             }
 
         # Save aligned structure (always chain B aligned for binder)
@@ -121,9 +121,9 @@ def align_structures(args):
                     "fold_id": fold_id,
                     "seq_id": seq_id,
                     "description": boltz_path.name,
-                    "boltz_overall_rmsd": round(data.get("boltz_overall_rmsd", rmsd_data.get("boltz_overall_rmsd", 0)), 2),
-                    "boltz_target_rmsd": round(rmsd_data.get("boltz_target_rmsd", 0), 2),
-                    "boltz_binder_rmsd": round(rmsd_data.get("boltz_binder_rmsd", 0), 2),
+                    "boltz_rmsd_overall": round(data.get("boltz_rmsd_overall", rmsd_data.get("boltz_rmsd_overall", 0)), 2),
+                    "boltz_rmsd_target": round(rmsd_data.get("boltz_rmsd_target", 0), 2),
+                    "boltz_rmsd_binder": round(rmsd_data.get("boltz_rmsd_binder", 0), 2),
                     "boltz_conf_score": round(data.get("confidence_score", 0), 3),
                     "boltz_ptm": round(data.get("ptm", 0), 3),
                     "boltz_ptm_binder": round(data.get("chains_ptm", {}).get("0", 0), 3),
@@ -139,7 +139,7 @@ def align_structures(args):
                     "fold_id": fold_id,
                     "seq_id": seq_id,
                     "description": boltz_path.name,
-                    "boltz_overall_rmsd": round(data.get("boltz_overall_rmsd", rmsd_data.get("boltz_overall_rmsd", 0)), 2),
+                    "boltz_rmsd_overall": round(data.get("boltz_rmsd_overall", rmsd_data.get("boltz_rmsd_overall", 0)), 2),
                     "boltz_conf_score": round(data.get("confidence_score", 0), 3),
                     "boltz_ptm": round(data.get("ptm", 0), 3),
                     "boltz_plddt": round(data.get("complex_plddt", 0), 3),
@@ -149,7 +149,7 @@ def align_structures(args):
             with open(dst_json, 'w') as f:
                 json.dump(out_json, f, indent=2)
 
-        return (boltz_path.name, rmsd_data.get('boltz_overall_rmsd'), None)
+        return (boltz_path.name, rmsd_data.get('boltz_rmsd_overall'), None)
 
     except Exception as e:
         logger.error(f"Failed {boltz_path.name}: {str(e)}")

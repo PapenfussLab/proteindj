@@ -449,7 +449,7 @@
           "description": "Max RMSD when all chains are aligned e.g. 2",
           "hidden": true
         },
-        "boltz_max_overall_rmsd": {
+        "boltz_max_rmsd_overall": {
           "type": "number",
           "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2",
           "hidden": true

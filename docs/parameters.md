@@ -169,7 +169,7 @@ The most powerful predictors of experimental success are structure prediction me
 | `af2_min_plddt_overall`       | 80                            | 80                           | 90                                 |
 | `af2_max_rmsd_binder_bndaln`  | 1                             |                              | 1.5                                |
 | `af2_max_rmsd_binder_tgtaln`  |                               | 6                            |                                    |
-| `boltz_max_overall_rmsd`      |                               |                              | 2.5                                |
+| `boltz_max_rmsd_overall`      |                               |                              | 2.5                                |
 | `boltz_min_ptm_binder`        |                               |                              | 0.8                                |
 | `pr_min_intface_shpcomp`      |                               | 0.6                          |                                    |
 | `pr_min_intface_hbonds`       |                               | 3                            |                                    |
@@ -235,9 +235,9 @@ Boltz-2 Filtering Parameters.
 
 | Parameter                   | Description                                                                                       |
 | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `boltz_max_overall_rmsd`    | Max C-alpha RMSD between all chains of Boltz-2 prediction and input design                        |
-| `boltz_max_binder_rmsd`     | Max C-alpha RMSD between binder chains of Boltz-2 prediction and input design. Binder modes only. |
-| `boltz_max_target_rmsd`     | Max C-alpha RMSD between target chains of Boltz-2 prediction and input design. Binder modes only. |
+| `boltz_max_rmsd_overall`    | Max C-alpha RMSD between all chains of Boltz-2 prediction and input design                        |
+| `boltz_max_rmsd_binder`     | Max C-alpha RMSD between binder chains of Boltz-2 prediction and input design. Binder modes only. |
+| `boltz_max_rmsd_target`     | Max C-alpha RMSD between target chains of Boltz-2 prediction and input design. Binder modes only. |
 | `boltz_min_conf_score`      | Minimum confidence score of the prediction                                                        |
 | `boltz_min_ptm`             | Minimum predicted template modelling score of the prediction                                      |
 | `boltz_min_ptm_binder`      | Minimum predicted template modelling score of the binder chain. Binder modes only.                |
