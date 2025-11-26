@@ -79,8 +79,9 @@ class MetadataConverter:
             # PyRosetta Analysis fields
             'pr_helices','pr_strands', 'pr_total_ss','pr_RoG',
             'pr_intface_BSA','pr_intface_shpcomp',
-            'pr_intface_hbonds','pr_intface_deltaG',
-            'pr_intface_packstat','pr_TEM','pr_surfhphobics_%',
+            'pr_intface_deltaG','pr_intface_deltaGtoBSA',
+            'pr_intface_hbonds','pr_intface_unsat_hbonds',
+            'pr_intface_packstat','pr_TEM','pr_surfhphobics',
             'seq_ext_coef','seq_length','seq_MW','seq_pI',
             # Sequence at the end for readability, followed by time stats
             'sequence','rfd_time','bc_time','af2_time'

@@ -66,9 +66,11 @@ def calculate_interface_metrics(pose, chain1='A', chain2='B'):
     return {
         f'pr_intface_BSA{suffix}': round(metrics.dSASA[1] / 2),
         f'pr_intface_shpcomp{suffix}': round(metrics.sc_value, 3),
-        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
         f'pr_intface_deltaG{suffix}': round(metrics.dG[1], 1),
-        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3),
+        f'pr_intface_deltaGtoBSA{suffix}': round(metrics.dG_dSASA_ratio, 3),
+        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
+        f'pr_intface_unsat_hbonds{suffix}': metrics.delta_unsat_hbonds,
+        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3)
     }
 
 def get_chain_ids(pose):

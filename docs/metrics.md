@@ -91,10 +91,12 @@ Measures related to protein structure stability and interface interactions.
 | `pr_intface_BSA`      | Buried surface area (Å²) at the binding interface.                     |
 | `pr_intface_shpcomp`  | Shape complementarity of interface (0-1 scale; 1 is optimal).          |
 | `pr_intface_hbonds`   | Number of hydrogen bonds at the interface.                             |
-| `pr_intface_deltaG`   | Solvation free energy gain at interface (kcal/mol).                    |
+| `pr_intface_unsat_hbonds`   | Number of buried, unsatisfied hydrogen bonds at the interface.                             |
+| `pr_intface_deltaG`   | Solvation free energy gain at interface (in Rosetta Energy Units; lower is better).                    |
+| `pr_intface_deltaGtoBSA`   | Ratio of delta-G to buried surface area                    |
 | `pr_intface_packstat` | Packing quality of the interface (0-1 scale; higher is better).        |
-| `pr_TEM`              | Total energy metric score; lower indicates more stable design.         |
-| `pr_surfhphobics_%`   | Percentage of hydrophobic residues exposed on the surface.             |
+| `pr_TEM`              | Total energy metric score (in Rosetta Energy Units; lower indicates more stable designs).         |
+| `pr_surfhphobics`   | Percentage of hydrophobic residues exposed on the surface.             |
 
 ---
 
