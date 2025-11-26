@@ -109,6 +109,17 @@
           "default": true,
           "hidden": true
         },
+        "rank_designs": {
+          "type": "boolean",
+          "description": "Whether to rank final designs by prediction quality metrics and output ranked_designs.",
+          "default": true,
+          "hidden": true
+        },
+        "max_designs": {
+          "type": "integer",
+          "description": "Maximum number of top-ranked designs to output (null = output all ranked designs)",
+          "hidden": true
+        },
         "run_fold_only": {
           "type": "boolean",
           "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)",
@@ -540,6 +551,111 @@
         "boltz_max_pde_interface": {
           "type": "number",
           "description": "Maximum predicted distance error for the binder-target interface e.g 12",
+          "hidden": true
+        },
+        "pr_min_helices": {
+          "type": "integer",
+          "description": "Minimum number of alpha-helices in predicted structure",
+          "hidden": true
+        },
+        "pr_max_helices": {
+          "type": "integer",
+          "description": "Maximum number of alpha-helices in predicted structure",
+          "hidden": true
+        },
+        "pr_min_strands": {
+          "type": "integer",
+          "description": "Minimum number of beta-strands in predicted structure",
+          "hidden": true
+        },
+        "pr_max_strands": {
+          "type": "integer",
+          "description": "Maximum number of beta-strands in predicted structure",
+          "hidden": true
+        },
+        "pr_min_total_ss": {
+          "type": "integer",
+          "description": "Minimum total secondary structure elements (\u03b1-helices + \u03b2-strands) in predicted structure",
+          "hidden": true
+        },
+        "pr_max_total_ss": {
+          "type": "integer",
+          "description": "Maximum total secondary structure elements (\u03b1-helices + \u03b2-strands) in predicted structure",
+          "hidden": true
+        },
+        "pr_min_rog": {
+          "type": "number",
+          "description": "Minimum radius of gyration (\u00c5) of predicted structure",
+          "hidden": true
+        },
+        "pr_max_rog": {
+          "type": "number",
+          "description": "Maximum radius of gyration (\u00c5) of predicted structure",
+          "hidden": true
+        },
+        "pr_min_intface_bsa": {
+          "type": "number",
+          "description": "Minimum buried surface area (\u00c5\u00b2) at the binding interface",
+          "hidden": true
+        },
+        "pr_min_intface_shpcomp": {
+          "type": "number",
+          "description": "Minimum shape complementarity of interface (0-1 scale; 1 is optimal)",
+          "hidden": true
+        },
+        "pr_min_intface_hbonds": {
+          "type": "integer",
+          "description": "Minimum number of hydrogen bonds at the interface",
+          "hidden": true
+        },
+        "pr_max_intface_unsat_hbonds": {
+          "type": "integer",
+          "description": "Maximum number of buried, unsatisfied hydrogen bonds at the interface",
+          "hidden": true
+        },
+        "pr_max_intface_deltag": {
+          "type": "number",
+          "description": "Maximum solvation free energy gain at interface (Rosetta Energy Units; lower is better)",
+          "hidden": true
+        },
+        "pr_max_intface_deltagtobsa": {
+          "type": "number",
+          "description": "Maximum ratio of delta-G to buried surface area",
+          "hidden": true
+        },
+        "pr_min_intface_packstat": {
+          "type": "number",
+          "description": "Minimum packing quality of the interface (0-1 scale; higher is better)",
+          "hidden": true
+        },
+        "pr_max_tem": {
+          "type": "number",
+          "description": "Maximum total energy metric score (Rosetta Energy Units; lower indicates more stable designs)",
+          "hidden": true
+        },
+        "pr_max_surfhphobics": {
+          "type": "number",
+          "description": "Maximum percentage of hydrophobic residues exposed on the surface",
+          "hidden": true
+        },
+        "seq_min_ext_coef": {
+          "type": "number",
+          "description": "Minimum extinction coefficient at 280nm (M\u207b\u00b9cm\u207b\u00b9)",
+          "hidden": true
+        },
+        "seq_max_ext_coef": {
+          "type": "number",
+          "description": "Maximum extinction coefficient at 280nm (M\u207b\u00b9cm\u207b\u00b9)",
+          "hidden": true
+        },
+        "seq_min_pi": {
+          "type": "number",
+          "description": "Minimum isoelectric point (pI) of the sequence",
+          "hidden": true
+        },
+        "seq_max_pi": {
+          "type": "number",
+          "description": "Maximum isoelectric point (pI) of the sequence",
           "hidden": true
         }
       }
