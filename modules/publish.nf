@@ -4,7 +4,9 @@ process PublishResults {
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "all_designs.csv"
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "success_metrics.json"
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "best_designs*"
-    publishDir "${params.out_dir}/run/report", mode: 'copy', pattern: "filter_best_designs.log"
+    publishDir "${params.out_dir}/results", mode: 'copy', pattern: "ranked_designs*"
+    publishDir "${params.out_dir}/run/publish", mode: 'copy', pattern: "filter_best_designs.log"
+    publishDir "${params.out_dir}/run/publish", mode: 'copy', pattern: "rank_designs.log"
 
     input:
     path final_pdbs
@@ -20,7 +22,9 @@ process PublishResults {
     output:
     path "all_designs.csv"
     path ("best_designs*"), optional: true
+    path ("ranked_designs*"), optional: true
     path "filter_best_designs.log"
+    path ("rank_designs.log"), optional: true
     path "success_metrics.json"
 
     script:
@@ -48,10 +52,18 @@ process PublishResults {
     def param_combo = params.bindsweeper_param_combo ?: "default"
     def num_processes = task.cpus - 1
     
+    // Determine ranking metric based on prediction method
+    def ranking_metric = params.pred_method == 'boltz' ? 'boltz_ptm_interface' : 'af2_pae_interaction'
+    
     // Check for placeholder
     if (final_pdbs_exist) {
         if (!params.run_fold_only){
-            println("* Final predictions after Analysis filtering: ${filter_analysis_count}\n")
+            println("* Final predictions after Analysis filtering: ${filter_analysis_count}")
+            if (params.rank_designs & (params.max_designs != null)){
+                println("* After Ranking, will output the best ${params.max_designs} designs\n")
+            } else {
+                println("* After Ranking, will output all ${filter_analysis_count} designs\n")
+            }
         }
         """
         # Create best_designs.csv with only rows for final PDB files
@@ -72,7 +84,30 @@ process PublishResults {
             --final-designs-count ${filter_pred_count} \
             --parameter-combination "${param_combo}" \
             --output success_metrics.json
-        # Optionally compress PDB files
+            
+        # Optionally rank designs
+        if [ ${params.rank_designs} == 'true' ] ; then
+            echo "Ranking designs by ${ranking_metric}"
+            python /scripts/rank_designs.py \
+                --csv best_designs.csv \
+                --pdb-dir best_designs \
+                --output-csv ranked_designs.csv \
+                --output-dir ranked_designs \
+                --ranking-metric ${ranking_metric} \
+                ${params.max_designs ? "--max-designs ${params.max_designs}" : ""} \
+                2>&1 | tee rank_designs.log
+            
+            # Optionally compress ranked PDB files
+            if [ ${params.zip_pdbs} == 'true' ] ; then
+                tar -h \
+                    --use-compress-program="pigz -p ${num_processes}" \
+                    -cf ranked_designs.tar.gz \
+                    ranked_designs
+                rm -rf ranked_designs
+            fi
+        fi
+        
+        # Optionally compress best_designs PDB files
         if [ ${params.zip_pdbs} == 'true' ] ; then
             tar -h \
                 --use-compress-program="pigz -p ${num_processes}" \

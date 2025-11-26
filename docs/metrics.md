@@ -2,7 +2,7 @@
 
 # ProteinDJ Metrics and Metadata Guide
 
-ProteinDJ generates and captures various scoring metrics and metadata for all designs throughout the pipeline in output CSV files ('`all_designs.csv`' and '`best_designs.csv`'). Note that when designs are filtered, the metadata from subsequent stages will not be calculated for these designs in `all_designs.csv` so you may see gaps in the CSV file. These metrics are useful for assessing the quality, confidence, and biophysical characteristics of your protein designs. Below is a detailed guide to the key scoring metrics used in ProteinDJ.
+ProteinDJ generates and captures various scoring metrics and metadata for all designs throughout the pipeline in output CSV files ('`all_designs.csv`', '`best_designs.csv`', and '`ranked_designs.csv`'). Note that when designs are filtered, the metadata from subsequent stages will not be calculated for these designs in `all_designs.csv` so you may see gaps in the CSV file. These metrics are useful for assessing the quality, confidence, and biophysical characteristics of your protein designs. Below is a detailed guide to the key scoring metrics used in ProteinDJ.
 
 ---
 
