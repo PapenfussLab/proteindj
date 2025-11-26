@@ -68,7 +68,7 @@ Metrics from AlphaFold2 Initial-Guess or Boltz-2 predictions evaluating structur
 | `boltz_overall_rmsd`     | C-alpha RMSD of Boltz-2 prediction vs input design (all chains).                                                   |
 | `boltz_binder_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
 | `boltz_target_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
-| `boltz_conf_score`       | Confidence score for Boltz-2 prediction; lower is more confident.                                                  |
+| `boltz_conf_score`       | Confidence score for Boltz-2 prediction; higher is more confident.                                                 |
 | `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
 | `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |
 | `boltz_plddt`            | Predicted LDDT score (Boltz-2) for the complex (0-1 scale; higher is better).                                      |
