@@ -129,7 +129,8 @@ def rank_designs(df, metric, max_seqs_per_fold=None):
             print(f"  - Number of unique folds: {len(fold_counts)}")
             print(f"  - Sequences per fold: min={fold_counts.min()}, max={fold_counts.max()}, mean={fold_counts.mean():.1f}")
             
-            df_sorted = df_filtered
+            # Re-sort by metric to restore global ranking order after per-fold filtering
+            df_sorted = df_filtered.sort_values(by=metric, ascending=ascending).reset_index(drop=True)
     
     # Add rank column (1-indexed)
     df_sorted.insert(0, 'rank', range(1, len(df_sorted) + 1))
