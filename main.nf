@@ -6,7 +6,7 @@ include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { PrepFAMPNN ; FilterFAMPNN; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
 include { AlignAF2; FilterAF2; RunAF2 } from './modules/af2.nf'
-include { AnalyseBestDesigns } from './modules/analysis.nf'
+include { AnalysePredictions; FilterAnalysis } from './modules/analysis.nf'
 include { PublishResults } from './modules/publish.nf'
 include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz } from './modules/boltz.nf'
 include { CombineMetadata } from './modules/combine_metadata.nf'
@@ -465,10 +465,10 @@ workflow {
             // Batch files for CPUs
             Utils
                 .rebatchTuples(RunAF2.out.pdbs_jsons, 200)
-                .set { af2_tuple }
+                .set { pred_tuple }
 
             // Filtering of AF2 results
-            FilterAF2(af2_tuple)
+            FilterAF2(pred_tuple)
 
             if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 // Alignment of PDBs to target chain(s). Only need one reference file
@@ -505,14 +505,14 @@ workflow {
             // Batch files for CPUs
             Utils
                 .rebatchTuples(RunBoltz.out.pdbs_jsons, 200)
-                .set { boltz_tuple }
+                .set { pred_tuple }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
             if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
-                AlignBoltz(boltz_tuple, filt_seq_pdbs, 'binder')
+                AlignBoltz(pred_tuple, filt_seq_pdbs, 'binder')
             }
             else {
-                AlignBoltz(boltz_tuple, filt_seq_pdbs, 'monomer')
+                AlignBoltz(pred_tuple, filt_seq_pdbs, 'monomer')
             }
             // Compress output files
             CompressBoltz("boltz", AlignBoltz.out.pdbs_jsons.flatten().collect())
@@ -563,9 +563,13 @@ workflow {
     ////////////////////
     if (!params.run_fold_only) {
         // Analysis of PDBs to generate additional metrics 
-        AnalyseBestDesigns(analysis_input_pdbs)
+        AnalysePredictions(analysis_input_pdbs)
+
+        // Filtering of analysis results
+        FilterAnalysis(AnalysePredictions.out.jsonl, analysis_input_pdbs)
+
         // Use placeholder PDB file if no designs survive filtering
-        analysis_input_pdbs
+        FilterAnalysis.out.pdbs
             .flatten()
             .collect()
             .ifEmpty(file("${projectDir}/lib/placeholder.pdb"))
@@ -600,35 +604,45 @@ workflow {
         Utils.countPdbFiles(final_pdbs).set { filter_fold_count }
         seq_count = 0
         filter_seq_count = 0
+        pred_count = 0
         filter_pred_count = 0
+        filter_analysis_count = 0
     }
     else if (params.skip_fold_seq_pred) {
         fold_count = 0
         filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
+        pred_count = 0
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else if (params.skip_fold_seq) {
         fold_count = 0
         filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else if (params.skip_fold) {
         fold_count = 0
         filter_fold_count = 0
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else {
         Utils.countPdbFiles(fold_tuples).set { fold_count }
         Utils.countPdbFiles(filt_fold_pdbs_jsons).set { filter_fold_count }
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
 
     // Generate report and statistics of run
@@ -639,7 +653,9 @@ workflow {
         filter_fold_count,
         seq_count,
         filter_seq_count,
-        filter_pred_count
+        pred_count,
+        filter_pred_count,
+        filter_analysis_count
     )
     
     // Save log file on completion

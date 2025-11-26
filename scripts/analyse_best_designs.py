@@ -172,7 +172,7 @@ def calculate_surface_chemistry(pose):
             total_count += 1
 
     return {
-        'pr_surfhphobics_%': round(surface_hydrophobic_count * 100 / total_count, 1)
+        'pr_surfhphobics': round(surface_hydrophobic_count * 100 / total_count, 1)
     }
 
 def calculate_tem(pose):
@@ -269,7 +269,7 @@ def calculate_whole_pose_metrics(pose):
     
     return {
         'pr_RoG_total': round(rog, 2),
-        **{f'pr_surfhphobics_total_%': surface_metrics['pr_surfhphobics_%']},
+        **{f'pr_surfhphobics_total': surface_metrics['pr_surfhphobics']},
         **tem_metrics
     }
 
