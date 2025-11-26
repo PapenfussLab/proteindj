@@ -159,6 +159,12 @@
           "hidden": true,
           "default": "null"
         },
+        "max_seqs_per_fold": {
+          "type": "integer",
+          "description": "Maximum number of sequences per fold to keep after ranking (null = no limit). Helps increase fold diversity.",
+          "hidden": true,
+          "default": "null"
+        },
         "run_fold_only": {
           "type": "boolean",
           "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)",

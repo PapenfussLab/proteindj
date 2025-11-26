@@ -51,17 +51,24 @@ def parse_arguments():
         default=None,
         help="Maximum number of top designs to output (default: all)"
     )
+    parser.add_argument(
+        "--max-seqs-per-fold",
+        type=int,
+        default=None,
+        help="Maximum number of sequences per fold_id to keep (default: no limit)"
+    )
     
     return parser.parse_args()
 
 
-def rank_designs(df, metric):
+def rank_designs(df, metric, max_seqs_per_fold=None):
     """
     Rank designs based on the specified metric.
     
     Args:
         df: pandas DataFrame with design metrics
         metric: column name to rank by
+        max_seqs_per_fold: maximum number of sequences to keep per fold_id (None for no limit)
     
     Returns:
         DataFrame sorted by metric with rank column added
@@ -95,6 +102,34 @@ def rank_designs(df, metric):
         print(f"Ranking by {metric} (higher is better)")
     
     df_sorted = df.sort_values(by=metric, ascending=ascending).reset_index(drop=True)
+    
+    # Apply max_seqs_per_fold filter if specified
+    if max_seqs_per_fold is not None:
+        print(f"\nApplying max_seqs_per_fold filter: keeping top {max_seqs_per_fold} sequences per fold")
+        
+        # Check if fold_id column exists
+        if 'fold_id' not in df_sorted.columns:
+            print("Warning: fold_id column not found, skipping max_seqs_per_fold filter", file=sys.stderr)
+        else:
+            # Group by fold_id and keep top N sequences per fold
+            df_filtered = df_sorted.groupby('fold_id', group_keys=False).apply(
+                lambda x: x.head(max_seqs_per_fold)
+            ).reset_index(drop=True)
+            
+            original_count = len(df_sorted)
+            filtered_count = len(df_filtered)
+            removed = original_count - filtered_count
+            
+            print(f"  - Original designs: {original_count}")
+            print(f"  - Designs after filter: {filtered_count}")
+            print(f"  - Designs removed: {removed}")
+            
+            # Show fold distribution
+            fold_counts = df_filtered.groupby('fold_id').size()
+            print(f"  - Number of unique folds: {len(fold_counts)}")
+            print(f"  - Sequences per fold: min={fold_counts.min()}, max={fold_counts.max()}, mean={fold_counts.mean():.1f}")
+            
+            df_sorted = df_filtered
     
     # Add rank column (1-indexed)
     df_sorted.insert(0, 'rank', range(1, len(df_sorted) + 1))
@@ -194,9 +229,9 @@ def main():
     print(f"Found {len(df)} designs in CSV")
     
     # Rank designs
-    df_ranked = rank_designs(df, args.ranking_metric)
+    df_ranked = rank_designs(df, args.ranking_metric, args.max_seqs_per_fold)
     
-    print(f"Ranked {len(df_ranked)} designs by {args.ranking_metric}")
+    print(f"\nRanked {len(df_ranked)} designs by {args.ranking_metric}")
     
     # Apply max_designs limit if specified
     output_count = len(df_ranked) if args.max_designs is None else min(len(df_ranked), args.max_designs)

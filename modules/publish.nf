@@ -95,6 +95,7 @@ process PublishResults {
                 --output-dir ranked_designs \
                 --ranking-metric ${ranking_metric} \
                 ${params.max_designs ? "--max-designs ${params.max_designs}" : ""} \
+                ${params.max_seqs_per_fold ? "--max-seqs-per-fold ${params.max_seqs_per_fold}" : ""} \
                 2>&1 | tee rank_designs.log
             
             # Optionally compress ranked PDB files
