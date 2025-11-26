@@ -126,6 +126,8 @@ def align_structures(args):
                     "boltz_binder_rmsd": round(rmsd_data.get("boltz_binder_rmsd", 0), 2),
                     "boltz_conf_score": round(data.get("confidence_score", 0), 3),
                     "boltz_ptm": round(data.get("ptm", 0), 3),
+                    "boltz_ptm_binder": round(data.get("chains_ptm", {}).get("0", 0), 3),
+                    "boltz_ptm_target": round(data.get("chains_ptm", {}).get("1", 0), 3),
                     "boltz_ptm_interface": round(data.get("iptm", 0), 3),
                     "boltz_plddt": round(data.get("complex_plddt", 0), 3),
                     "boltz_plddt_interface": round(data.get("complex_iplddt", 0), 3),

@@ -22,7 +22,11 @@ def parse_arguments():
                     help='Minimum confidence score')
     parser.add_argument('--boltz-min-ptm', type=float, 
                     help='Minimum pTM score')
-    parser.add_argument('--boltz-min-ptm_interface', type=float,
+    parser.add_argument('--boltz-min-ptm-binder', type=float,
+                    help='Minimum pTM score for binder chain')
+    parser.add_argument('--boltz-min-ptm-target', type=float,
+                    help='Minimum pTM score for target chain')
+    parser.add_argument('--boltz-min-ptm-interface', type=float,
                     help='Minimum interface pTM score')
     parser.add_argument('--boltz-min-plddt', type=float,
                     help='Minimum complex pLDDT score')
@@ -155,6 +159,16 @@ def filter_data(data, args):
                 if ptm < args.boltz_min_ptm:
                     failures.append(f"ptm {ptm:.3f} < {args.boltz_min_ptm}")
             
+            if args.boltz_min_ptm_binder:
+                ptm_binder = entry.get('boltz_ptm_binder', 0)
+                if ptm_binder < args.boltz_min_ptm_binder:
+                    failures.append(f"ptm_binder {ptm_binder:.3f} < {args.boltz_min_ptm_binder}")
+            
+            if args.boltz_min_ptm_target:
+                ptm_target = entry.get('boltz_ptm_target', 0)
+                if ptm_target < args.boltz_min_ptm_target:
+                    failures.append(f"ptm_target {ptm_target:.3f} < {args.boltz_min_ptm_target}")
+            
             if args.boltz_min_ptm_interface:
                 ptm_interface = entry.get('boltz_ptm_interface', 0)
                 if ptm_interface < args.boltz_min_ptm_interface:
@@ -251,6 +265,8 @@ def main():
         args.boltz_max_target_rmsd is not None or
         args.boltz_min_conf_score is not None or
         args.boltz_min_ptm is not None or
+        args.boltz_min_ptm_binder is not None or
+        args.boltz_min_ptm_target is not None or
         args.boltz_min_ptm_interface is not None or
         args.boltz_min_plddt is not None or
         args.boltz_min_plddt_interface is not None or

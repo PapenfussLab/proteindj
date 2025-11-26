@@ -149,6 +149,8 @@ process FilterBoltz {
             "max_target_rmsd",
             "min_conf_score",
             "min_ptm",
+            "min_ptm_binder",
+            "min_ptm_target",
             "min_ptm_interface",
             "min_plddt",
             "min_plddt_interface",
