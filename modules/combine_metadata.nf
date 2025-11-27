@@ -1,5 +1,5 @@
 process CombineMetadata {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     cache false
     publishDir "${params.out_dir}/run/combine_metadata", mode: 'copy'
 

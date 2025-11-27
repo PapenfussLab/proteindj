@@ -1,0 +1,47 @@
+Bootstrap: docker
+From: ubuntu:24.04
+
+%post
+    # install deps
+    apt-get -q update
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+        python3-venv \
+        python3-pip \
+        wget \
+        unzip \
+        git \
+        procps \
+        coreutils \
+        grep \
+        pigz \
+        sed
+
+    # create and activate virtual environment
+    python3 -m venv /opt/venv
+    . /opt/venv/bin/activate
+
+    # install python tools
+    export PIP_NO_CACHE_DIR=1
+    pip install biopython pandas matplotlib pyyaml
+    
+    # cleanup build dependencies
+    apt-get autoremove -y
+    apt-get clean
+    
+    # link venv
+    echo '. /opt/venv/bin/activate' >> $APPTAINER_ENVIRONMENT
+
+%runscript
+    if [ $# -eq 0 ]; then
+        exec /bin/bash --norc
+    else
+        exec "$@"
+    fi
+
+%help
+    Container with BioPython, Matplotlib, Pandas, and PyYAML installed in a Python virtual environment.
+    To use, run the container and your environment will be activated automatically.
+
+%labels
+    Author JoshuaHardy
+    Version 2.1

@@ -23,7 +23,7 @@ process AnalysePredictions {
     """
 }
 process FilterAnalysis {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/filter_analysis", mode: 'copy', pattern: '*.log'
 
     input:

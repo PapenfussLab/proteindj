@@ -1,5 +1,5 @@
 process MergeUncroppedTarget {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     input:
     path pdb_files
@@ -15,9 +15,6 @@ process MergeUncroppedTarget {
     """
     mkdir -p uncropped_pdb
     mv ${uncropped_target_pdb} uncropped_pdb/. 
-
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
 
     python /scripts/merge_uncropped_target.py \
     --uncropped_pdb uncropped_pdb/*.pdb \

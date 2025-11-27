@@ -1,5 +1,5 @@
 process GenerateRFDContigs {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     input:
     path(input_pdb)
