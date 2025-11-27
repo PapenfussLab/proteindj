@@ -62,7 +62,7 @@ class MetadataConverter:
             # RFdiffusion fields
             'rfd_sampled_mask',
             # BindCraft design fields
-            'bc_length','bc_plddt','bc_target_rmsd',
+            'bc_length','bc_plddt','bc_rmsd_target',
             # Fold design secondary structure and RoG
             'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # MPNN/FAMPNN fields
@@ -72,15 +72,16 @@ class MetadataConverter:
             'af2_plddt_overall', 'af2_plddt_binder', 'af2_plddt_target',
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
-            'boltz_overall_rmsd', 'boltz_binder_rmsd','boltz_target_rmsd',
+            'boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
             'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface',
             'boltz_plddt', 'boltz_plddt_interface',
             'boltz_pde', 'boltz_pde_interface',
             # PyRosetta Analysis fields
             'pr_helices','pr_strands', 'pr_total_ss','pr_RoG',
             'pr_intface_BSA','pr_intface_shpcomp',
-            'pr_intface_hbonds','pr_intface_deltaG',
-            'pr_intface_packstat','pr_TEM','pr_surfhphobics_%',
+            'pr_intface_deltaG','pr_intface_deltaGtoBSA',
+            'pr_intface_hbonds','pr_intface_unsat_hbonds',
+            'pr_intface_packstat','pr_TEM','pr_surfhphobics',
             'seq_ext_coef','seq_length','seq_MW','seq_pI',
             # Sequence at the end for readability, followed by time stats
             'sequence','rfd_time','bc_time','af2_time'

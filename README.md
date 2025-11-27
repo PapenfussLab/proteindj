@@ -130,14 +130,16 @@ After running the pipeline, you can find all the results as well as intermediate
 
 ```
 out_dir/
-├── configs/              # Config files used for run
-├── inputs/               # Input files used in run e.g. PDB files for binder design
-├── run/                  # Intermediate results and log files with subfolders for each process
-├── results/              # Final results and metadata
-    ├── best_designs/     # Directory containing PDB files of designs that passed all filters
-    ├── all_designs.csv   # CSV file with metadata for all designs
-    └── best_designs.csv  # CSV file with metadata for designs that passed all filters
-└── nextflow.log          # Copy of Nextflow log from run
+├── configs/                # Config files used for run
+├── inputs/                 # Input files used in run e.g. PDB files for binder design
+├── run/                    # Intermediate results and log files with subfolders for each process
+├── results/                # Final results and metadata
+    ├── best_designs/       # Directory containing PDB files of designs that passed all filters
+    ├── ranked_designs/     # Directory containing ranked PDB files of designs that passed all filters
+    ├── all_designs.csv     # CSV file with metadata for all designs
+    ├── best_designs.csv    # CSV file with metadata for designs that passed all filters
+    └── ranked_designs.csv  # CSV file with metadata for ranked designs that passed all filters
+└── nextflow.log            # Copy of Nextflow log from run
 ```
 
 > Tip: If your run gets interrupted you can resume from the last completed step by using the -resume flag e.g. `nextflow run main.nf -profile monomer_denovo -resume`
