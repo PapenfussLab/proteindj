@@ -837,7 +837,7 @@ def getAdvancedSettingsPath(bc_design_protocol, bc_template_protocol) {
         case "default":
             designProtocolTag = "default_4stage_multimer"
             break
-        case "beta-sheet":
+        case "betasheet":
             designProtocolTag = "betasheet_4stage_multimer"
             break
         case "peptide":
