@@ -653,6 +653,16 @@
           "description": "Maximum percentage of hydrophobic residues exposed on the surface",
           "hidden": true
         },
+        "pr_max_sap": {
+          "type": "number",
+          "description": "Maximum mean residue Spatial Aggregation Propensity for monomer/binder (solubility prediction; lower is better)",
+          "hidden": true
+        },
+        "pr_max_sap_complex": {
+          "type": "number",
+          "description": "Maximum mean residue Spatial Aggregation Propensity for binder in complex (solubility prediction; lower is better)",
+          "hidden": true
+        },
         "seq_min_ext_coef": {
           "type": "number",
           "description": "Minimum extinction coefficient at 280nm (M\u207b\u00b9cm\u207b\u00b9)",

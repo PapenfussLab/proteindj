@@ -97,6 +97,8 @@ Measures related to protein structure stability and interface interactions.
 | `pr_intface_packstat` | Packing quality of the interface (0-1 scale; higher is better).        |
 | `pr_TEM`              | Total energy metric score (in Rosetta Energy Units; lower indicates more stable designs).         |
 | `pr_surfhphobics`   | Percentage of hydrophobic residues exposed on the surface.             |
+| `pr_SAP`              | Mean residue Spatial Aggregation Propensity of monomer/binder (solubility prediction; lower is better). |
+| `pr_SAP_complex`      | Mean residue Spatial Aggregation Propensity of binder when complexed with target (solubility prediction; lower is better). If hydrophobic residues form part of the binder-target interface, this score will be lower than pr_SAP. |
 
 ---
 

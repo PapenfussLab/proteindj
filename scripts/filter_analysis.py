@@ -29,6 +29,8 @@ def parse_arguments():
     parser.add_argument('--pr-min-intface-packstat', type=float, help='Minimum interface packing statistic')
     parser.add_argument('--pr-max-tem', type=float, help='Maximum total energy metric (REU)')
     parser.add_argument('--pr-max-surfhphobics', type=float, help='Maximum surface hydrophobics percentage')
+    parser.add_argument('--pr-max-sap', type=float, help='Maximum mean residue SAP (solubility)')
+    parser.add_argument('--pr-max-sap-complex', type=float, help='Maximum mean residue SAP in complex (solubility)')
     
     # Sequence Analysis Metrics
     parser.add_argument('--seq-min-ext-coef', type=float, help='Minimum extinction coefficient')
@@ -131,6 +133,8 @@ def filter_data(data, args):
         ('pr_intface_packstat', args.pr_min_intface_packstat, None, float),
         ('pr_TEM', None, args.pr_max_tem, float),
         ('pr_surfhphobics', None, args.pr_max_surfhphobics, float),
+        ('pr_SAP', None, args.pr_max_sap, float),
+        ('pr_SAP_complex', None, args.pr_max_sap_complex, float),
         # Sequence metrics
         ('seq_ext_coef', args.seq_min_ext_coef, args.seq_max_ext_coef, float),
         ('seq_pI', args.seq_min_pi, args.seq_max_pi, float),
