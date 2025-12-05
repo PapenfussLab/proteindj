@@ -637,6 +637,7 @@ def main():
             print(f"Successfully created JSONL file with selected metadata at {output_jsonl}")
         else:
             print(f"Failed to create JSONL file at {output_jsonl}")
+        return
     if args.split_by_description:
         logging.info(f"Converting metadata to individual JSON files using {args.converter} converter")
         if isinstance(args.input_files, list):
