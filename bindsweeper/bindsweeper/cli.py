@@ -164,8 +164,8 @@ def cli(
                 sweep_data = yaml.safe_load(f)
             mode = sweep_data.get("mode", "")
 
-            if mode.startswith("binder_"):
-                # Use binder schema for binder modes
+            if mode.startswith("binder_") or mode.startswith("bindcraft_"):
+                # Use binder schema for binder and bindcraft modes
                 schema_path = os.path.join(os.path.dirname(__file__), "binder_schema.json")
             else:
                 # Use nextflow schema for other modes
