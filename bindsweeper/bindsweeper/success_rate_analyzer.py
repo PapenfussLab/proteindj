@@ -24,6 +24,7 @@ class SuccessMetrics:
     seq_generated: int
     seq_filtered: int
     pred_filtered: int
+    analysis_filtered: int
     timestamp: str
     pipeline_metrics: Dict[str, float]
     
@@ -40,6 +41,7 @@ class SuccessMetrics:
             seq_generated=data["seq_generated"],
             seq_filtered=data["seq_filtered"],
             pred_filtered=data["pred_filtered"],
+            analysis_filtered=data["analysis_filtered"],
             timestamp=data["timestamp"],
             pipeline_metrics=data.get("pipeline_metrics", {})
         )
@@ -56,6 +58,7 @@ class SuccessMetrics:
             "seq_generated": self.seq_generated,
             "seq_filtered": self.seq_filtered,
             "pred_filtered": self.pred_filtered,
+            "analysis_filtered": self.analysis_filtered,
             "timestamp": self.timestamp,
             "pipeline_metrics": self.pipeline_metrics
         }
@@ -151,6 +154,7 @@ class SuccessRateAnalyzer:
                 'fold_retention_rate': metrics.pipeline_metrics.get('fold_retention_rate', 0.0),
                 'seq_retention_rate': metrics.pipeline_metrics.get('seq_retention_rate', 0.0),
                 'pred_retention_rate': metrics.pipeline_metrics.get('pred_retention_rate', 0.0),
+                'analysis_retention_rate': metrics.pipeline_metrics.get('analysis_retention_rate', 0.0),
                 'overall_retention_rate': metrics.pipeline_metrics.get('overall_retention_rate', 0.0),
                 'timestamp': metrics.timestamp
             }

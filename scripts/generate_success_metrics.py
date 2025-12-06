@@ -50,6 +50,12 @@ def parse_arguments():
         help="Number of predictions after filtering"
     )
     parser.add_argument(
+        "--filter-analysis-count",
+        type=int,
+        required=True,
+        help="Number of designs after analysis filtering"
+    )
+    parser.add_argument(
         "--final-designs-count",
         type=int,
         required=True,
@@ -92,11 +98,13 @@ def generate_success_metrics(args) -> Dict[str, Any]:
         "seq_generated": args.seq_count,
         "seq_filtered": args.filter_seq_count,
         "pred_filtered": args.filter_pred_count,
+        "analysis_filtered": args.filter_analysis_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "pipeline_metrics": {
             "fold_retention_rate": round(calculate_success_rate(args.filter_fold_count, args.fold_count), 4),
             "seq_retention_rate": round(calculate_success_rate(args.filter_seq_count, args.seq_count), 4),
             "pred_retention_rate": round(calculate_success_rate(args.filter_pred_count, args.filter_seq_count), 4) if args.filter_seq_count > 0 else 0.0,
+            "analysis_retention_rate": round(calculate_success_rate(args.filter_analysis_count, args.filter_pred_count), 4) if args.filter_pred_count > 0 else 0.0,
             "overall_retention_rate": round(calculate_success_rate(args.final_designs_count, args.seq_count), 4)
         }
     }

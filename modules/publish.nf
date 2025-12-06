@@ -81,7 +81,8 @@ process PublishResults {
             --seq-count ${seq_count} \
             --filter-seq-count ${filter_seq_count} \
             --filter-pred-count ${filter_pred_count} \
-            --final-designs-count ${filter_pred_count} \
+            --filter-analysis-count ${filter_analysis_count} \
+            --final-designs-count ${filter_analysis_count} \
             --parameter-combination "${param_combo}" \
             --output success_metrics.json
             
@@ -130,6 +131,7 @@ process PublishResults {
             --seq-count ${seq_count} \
             --filter-seq-count ${filter_seq_count} \
             --filter-pred-count ${filter_pred_count} \
+            --filter-analysis-count ${filter_analysis_count} \
             --final-designs-count 0 \
             --parameter-combination "${param_combo}" \
             --output success_metrics.json
