@@ -55,6 +55,17 @@ logger = logging.getLogger(__name__)
     help="Add -resume flag to Nextflow commands to use cached tasks where inputs haven't changed",
 )
 @click.option(
+    "--parallel",
+    is_flag=True,
+    help="Execute parameter combinations in parallel (each with isolated Nextflow cache)",
+)
+@click.option(
+    "--max-parallel",
+    type=int,
+    default=4,
+    help="Maximum number of parallel Nextflow runs (default: 4)",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to sweep configuration YAML file (default: sweep.yaml)",
@@ -82,6 +93,8 @@ def cli(
     yes_to_all: bool,
     quick_test: bool,
     resume: bool,
+    parallel: bool,
+    max_parallel: int,
     config: str,
     output_dir: str,
     pipeline_path: str,
@@ -104,6 +117,9 @@ def cli(
         
         if resume:
             click.echo(f"Resume mode enabled - Nextflow will use -resume to cache tasks where inputs haven't changed\n")
+        
+        if parallel:
+            click.echo(f"Parallel mode enabled - executing up to {max_parallel} Nextflow runs concurrently with isolated caches\n")
 
         # Use provided nextflow_config or discover it
         if nextflow_config:
@@ -209,7 +225,10 @@ def cli(
 
             
             # Initialize sweep engine
-            engine = SweepEngine(config, out_dir, nextflow_config_path, resume=resume)
+            engine = SweepEngine(
+                config, out_dir, nextflow_config_path, 
+                resume=resume, parallel=parallel, max_parallel=max_parallel
+            )
         
         if not skip_sweep:
             # Run quick test if requested
@@ -228,9 +247,10 @@ def cli(
                     )
 
                     if not dry_run:
-                        # Execute quick test (don't use resume for quick tests)
+                        # Execute quick test (don't use resume for quick tests, but allow parallel)
                         quick_results = engine.execute_sweep(
-                            quick_combinations, dry_run, continue_on_error, resume=False
+                            quick_combinations, dry_run, continue_on_error, 
+                            resume=False, parallel=parallel
                         )
 
                         # Check if quick test passed
@@ -277,7 +297,10 @@ def cli(
                     write_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
 
                     # Execute sweep
-                    results = engine.execute_sweep(combinations, dry_run, continue_on_error, resume=resume)
+                    results = engine.execute_sweep(
+                        combinations, dry_run, continue_on_error, 
+                        resume=resume, parallel=parallel
+                    )
 
         # Process results
         if not dry_run:
