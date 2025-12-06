@@ -1,5 +1,5 @@
 process PrepBoltz {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     input:
     path pdb_files
@@ -18,9 +18,6 @@ process PrepBoltz {
     def templateThresholdParam = params.boltz_use_templates && params.boltz_template_threshold ? "--template-threshold ${params.boltz_template_threshold}" : ""
     
     """
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
-
     # Generate yaml files containing sequences for Boltz-2 prediction 
     python /scripts/prep_boltz_yaml.py \
         --input "./" \
@@ -86,8 +83,8 @@ process RunBoltz {
     """
 }
 process AlignBoltz {
-    label 'pyrosetta_tools'
-    publishDir "${params.out_dir}/run/align", mode: 'copy', pattern: "alignment_*.log"
+    label 'python_tools'
+    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.log"
 
     input:
     tuple path(pdb_files), path(json_files)
@@ -104,11 +101,6 @@ process AlignBoltz {
     def num_processes = task.cpus - 1
 
     """
-    export MAMBA_ROOT_PREFIX=/opt/conda/
-    
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
-
     # Script to align predictions to designs and calculate RMSD
     # Also, extracts and renames metadata from json files
     python /scripts/align_boltz.py \
@@ -128,7 +120,7 @@ process AlignBoltz {
     """
 }
 process FilterBoltz {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/filter_boltz", mode: 'copy', pattern: '*.log'
 
     input:

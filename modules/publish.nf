@@ -1,5 +1,5 @@
 process PublishResults {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "all_designs.csv"
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "success_metrics.json"
