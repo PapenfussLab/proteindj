@@ -51,11 +51,12 @@ class SweepEngine:
     """Engine for executing parameter sweeps."""
 
     def __init__(
-        self, config: SweepConfig, base_output_dir: str, nextflow_config_path: str
+        self, config: SweepConfig, base_output_dir: str, nextflow_config_path: str, resume: bool = False
     ):
         self.config = config
         self.base_output_dir = os.path.expandvars(base_output_dir)
         self.nextflow_config_path = nextflow_config_path
+        self.resume = resume
 
 
     def generate_combinations(self) -> list[SweepCombination]:
@@ -228,9 +229,12 @@ class SweepEngine:
 
         # Add parameter combination identifier as a custom parameter
         param_combo_arg = f"--bindsweeper_param_combo '{param_combo}'" if param_combo else ""
+        
+        # Add -resume flag if resume mode is enabled
+        resume_arg = "-resume" if self.resume else ""
 
         # Use both nextflow.config and bindsweeper.config with -C flag
-        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} -profile {profile_str} --out_dir '{output_dir}' --zip_pdbs false {param_combo_arg}".strip()
+        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} {resume_arg} -profile {profile_str} --out_dir '{output_dir}' --zip_pdbs false {param_combo_arg}".strip()
 
     def generate_profiles(self, combinations: list[SweepCombination]) -> list[str]:
         """Generate profile content for all combinations."""
@@ -299,11 +303,20 @@ class SweepEngine:
         combinations: list[SweepCombination],
         dry_run: bool = False,
         continue_on_error: bool = False,
+        resume: bool = False,
     ) -> list[CommandResult]:
-        """Execute all parameter combinations."""
+        """Execute all parameter combinations.
+        
+        When resume=True, adds -resume flag to Nextflow commands, allowing
+        Nextflow's caching mechanism to skip cached tasks. Nextflow will
+        automatically detect parameter changes and re-run affected tasks.
+        """
         results = []
 
         logger.info(f"Executing {len(combinations)} parameter combinations")
+        
+        if resume:
+            logger.info("Resume mode: Nextflow will use cached tasks where possible")
 
         for i, combo in enumerate(combinations, 1):
             logger.info(f"\nProcessing combination {i}/{len(combinations)}:")

@@ -50,6 +50,11 @@ logger = logging.getLogger(__name__)
     help="Run a quick test with 2 designs and 2 sequences per design before the full run",
 )
 @click.option(
+    "--resume",
+    is_flag=True,
+    help="Add -resume flag to Nextflow commands to use cached tasks where inputs haven't changed",
+)
+@click.option(
     "--config",
     type=click.Path(),
     help="Path to sweep configuration YAML file (default: sweep.yaml)",
@@ -76,6 +81,7 @@ def cli(
     continue_on_error: bool,
     yes_to_all: bool,
     quick_test: bool,
+    resume: bool,
     config: str,
     output_dir: str,
     pipeline_path: str,
@@ -95,6 +101,9 @@ def cli(
     try:
         if dry_run:
             click.echo(f"Performing dry run to validate config and preview parameter combinations\n")
+        
+        if resume:
+            click.echo(f"Resume mode enabled - Nextflow will use -resume to cache tasks where inputs haven't changed\n")
 
         # Use provided nextflow_config or discover it
         if nextflow_config:
@@ -200,7 +209,7 @@ def cli(
 
             
             # Initialize sweep engine
-            engine = SweepEngine(config, out_dir, nextflow_config_path)
+            engine = SweepEngine(config, out_dir, nextflow_config_path, resume=resume)
         
         if not skip_sweep:
             # Run quick test if requested
@@ -219,9 +228,9 @@ def cli(
                     )
 
                     if not dry_run:
-                        # Execute quick test
+                        # Execute quick test (don't use resume for quick tests)
                         quick_results = engine.execute_sweep(
-                            quick_combinations, dry_run, continue_on_error
+                            quick_combinations, dry_run, continue_on_error, resume=False
                         )
 
                         # Check if quick test passed
@@ -268,7 +277,7 @@ def cli(
                     write_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
 
                     # Execute sweep
-                    results = engine.execute_sweep(combinations, dry_run, continue_on_error)
+                    results = engine.execute_sweep(combinations, dry_run, continue_on_error, resume=resume)
 
         # Process results
         if not dry_run:

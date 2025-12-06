@@ -247,6 +247,7 @@ sweep_params:
 ### Execution Options
 - `--skip-sweep`: Skip parameter sweep and only process results
 - `--continue-on-error`: Continue if individual parameter sweeps fail
+- `--resume`: Add -resume flag to Nextflow commands to use cached tasks where inputs haven't changed
 - `--quick-test`: Run quick test with reduced parameters first
 - `--auto-update`: Automatically sync/update dependencies
 
@@ -296,6 +297,28 @@ bindsweeper --debug --config sweep.yaml
 bindsweeper --continue-on-error --config sweep.yaml
 ```
 
+### Resume Interrupted Sweeps
+```bash
+bindsweeper --resume --config sweep.yaml
+```
+
+When using `--resume`, BindSweeper adds the `-resume` flag to all Nextflow commands. This enables Nextflow's caching mechanism, which:
+- Skips tasks that have already completed successfully
+- Re-runs only tasks where inputs, parameters, or scripts have changed
+- Automatically detects parameter changes and re-executes affected tasks
+- Preserves computational resources by avoiding redundant work
+
+**Use cases for `--resume`:**
+- **Interrupted runs**: Cluster timeouts, manual cancellation, or system failures
+- **Iterative development**: Testing bug fixes in later pipeline stages while reusing early stage results
+- **Parameter refinement**: Re-running with modified filtering thresholds while keeping expensive fold/sequence generation cached
+
+**Important notes:**
+- Nextflow determines what to cache based on task hashes (inputs, scripts, parameters, containers)
+- If you modify any parameters (fixed or swept), Nextflow will automatically detect this and re-run affected tasks
+- The `.nextflow/cache/` and `work/` directories must be preserved for resume to work
+- Resume works at the task level within each parameter combination, not at the combination level
+
 ## File Structure
 
 BindSweeper generates organised output directories:
@@ -327,9 +350,11 @@ BindSweeper automatically:
 
 1. **Start with Quick Tests**: Use `--quick-test` to validate configuration
 2. **Use Dry Runs**: Preview commands with `--dry-run` before execution
-3. **Monitor Resources**: Large parameter sweeps can be resource-intensive
-4. **Organize Results**: Use descriptive output directory names
-5. **Check Dependencies**: Ensure ProteinDJ and required tools are installed
+3. **Use Resume for Long Runs**: Always use `--resume` for multi-hour sweeps to recover from interruptions
+4. **Monitor Resources**: Large parameter sweeps can be resource-intensive
+5. **Organize Results**: Use descriptive output directory names
+6. **Check Dependencies**: Ensure ProteinDJ and required tools are installed
+7. **Preserve Cache Directories**: Keep `.nextflow/` and `work/` directories to enable resume functionality
 
 ## Troubleshooting
 
@@ -339,6 +364,8 @@ BindSweeper automatically:
 2. **Invalid parameters**: Check YAML syntax and parameter names
 3. **Resource constraints**: Monitor system resources during execution
 4. **Path issues**: Use absolute paths for input files
+5. **Resume not working**: Ensure `.nextflow/cache/` and `work/` directories exist and haven't been cleaned
+6. **Unexpected re-execution with resume**: Nextflow detects input/parameter/script changes and correctly re-runs affected tasks
 
 ### Debug Information
 
