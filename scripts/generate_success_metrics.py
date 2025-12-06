@@ -81,16 +81,83 @@ def calculate_success_rate(successful_designs: int, total_designs: int) -> float
     return successful_designs / total_designs
 
 
+def calculate_overall_success_rate(args) -> tuple:
+    """
+    Calculate overall success rate using the first non-zero count as denominator.
+    This handles cases where pipeline stages are skipped.
+    
+    Returns:
+        tuple: (success_rate, total_designs_count) where total_designs_count is the entry point count
+    """
+    # Determine the entry point based on first non-zero count
+    # Priority order: fold → seq → pred → analysis input
+    if args.fold_count > 0:
+        # Full pipeline or fold_only mode
+        total = args.fold_count
+    elif args.seq_count > 0:
+        # skip_fold mode
+        total = args.seq_count
+    elif args.filter_seq_count > 0:
+        # skip_fold_seq mode
+        total = args.filter_seq_count
+    elif args.filter_pred_count > 0:
+        # skip_fold_seq_pred mode
+        total = args.filter_pred_count
+    else:
+        # No inputs provided
+        return 0.0, 0
+    
+    return calculate_success_rate(args.final_designs_count, total), total
+
+
 def generate_success_metrics(args) -> Dict[str, Any]:
     """Generate success metrics dictionary."""
     
-    # Calculate overall success rate based on final designs vs total sequences generated
-    # This gives the true success rate: how many of the generated sequences made it through
-    success_rate = calculate_success_rate(args.final_designs_count, args.seq_count)
+    # Calculate overall success rate based on pipeline entry point
+    # This correctly handles skipped stages by using the first non-zero count
+    success_rate, total_designs = calculate_overall_success_rate(args)
+    
+    # Build pipeline metrics, marking stages as None when they weren't run
+    pipeline_metrics = {}
+    
+    # Fold retention rate (only if fold stage was run)
+    if args.fold_count > 0:
+        pipeline_metrics["fold_retention_rate"] = round(
+            calculate_success_rate(args.filter_fold_count, args.fold_count), 4
+        )
+    else:
+        pipeline_metrics["fold_retention_rate"] = None
+    
+    # Sequence retention rate (only if seq stage was run)
+    if args.seq_count > 0:
+        pipeline_metrics["seq_retention_rate"] = round(
+            calculate_success_rate(args.filter_seq_count, args.seq_count), 4
+        )
+    else:
+        pipeline_metrics["seq_retention_rate"] = None
+    
+    # Prediction retention rate (only if pred stage was run)
+    if args.filter_seq_count > 0:
+        pipeline_metrics["pred_retention_rate"] = round(
+            calculate_success_rate(args.filter_pred_count, args.filter_seq_count), 4
+        )
+    else:
+        pipeline_metrics["pred_retention_rate"] = None
+    
+    # Analysis retention rate (only if analysis stage was run)
+    if args.filter_pred_count > 0:
+        pipeline_metrics["analysis_retention_rate"] = round(
+            calculate_success_rate(args.filter_analysis_count, args.filter_pred_count), 4
+        )
+    else:
+        pipeline_metrics["analysis_retention_rate"] = None
+    
+    # Overall retention rate (always calculated from entry point to final)
+    pipeline_metrics["overall_retention_rate"] = round(success_rate, 4)
     
     metrics = {
         "parameter_combination": args.parameter_combination,
-        "total_designs": args.seq_count,
+        "total_designs": total_designs,
         "successful_designs": args.final_designs_count,
         "success_rate": round(success_rate, 4),
         "fold_generated": args.fold_count,
@@ -100,13 +167,7 @@ def generate_success_metrics(args) -> Dict[str, Any]:
         "pred_filtered": args.filter_pred_count,
         "analysis_filtered": args.filter_analysis_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "pipeline_metrics": {
-            "fold_retention_rate": round(calculate_success_rate(args.filter_fold_count, args.fold_count), 4),
-            "seq_retention_rate": round(calculate_success_rate(args.filter_seq_count, args.seq_count), 4),
-            "pred_retention_rate": round(calculate_success_rate(args.filter_pred_count, args.filter_seq_count), 4) if args.filter_seq_count > 0 else 0.0,
-            "analysis_retention_rate": round(calculate_success_rate(args.filter_analysis_count, args.filter_pred_count), 4) if args.filter_pred_count > 0 else 0.0,
-            "overall_retention_rate": round(calculate_success_rate(args.final_designs_count, args.seq_count), 4)
-        }
+        "pipeline_metrics": pipeline_metrics
     }
     
     return metrics
