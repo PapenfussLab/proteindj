@@ -290,7 +290,7 @@ def create_metadata_from_row(row, fold_id, chain_a_length, chain_b_length,
         'fold_id': fold_id,
         'bc_length': int(row['Length']),
         'bc_plddt': float(row['pLDDT']),
-        'bc_target_rmsd': float(row['Target_RMSD']),
+        'bc_rmsd_target': float(row['Target_RMSD']),
         'bc_intface_res': bc_intface_res,
         'bc_time': parse_trajectory_time(row['TrajectoryTime']),
         'rfd_inpaint_seq': rfd_inpaint_seq

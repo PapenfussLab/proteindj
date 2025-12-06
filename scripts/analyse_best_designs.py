@@ -66,9 +66,11 @@ def calculate_interface_metrics(pose, chain1='A', chain2='B'):
     return {
         f'pr_intface_BSA{suffix}': round(metrics.dSASA[1] / 2),
         f'pr_intface_shpcomp{suffix}': round(metrics.sc_value, 3),
-        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
         f'pr_intface_deltaG{suffix}': round(metrics.dG[1], 1),
-        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3),
+        f'pr_intface_deltaGtoBSA{suffix}': round(metrics.dG_dSASA_ratio, 3),
+        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
+        f'pr_intface_unsat_hbonds{suffix}': metrics.delta_unsat_hbonds,
+        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3)
     }
 
 def get_chain_ids(pose):
@@ -170,7 +172,7 @@ def calculate_surface_chemistry(pose):
             total_count += 1
 
     return {
-        'pr_surfhphobics_%': round(surface_hydrophobic_count * 100 / total_count, 1)
+        'pr_surfhphobics': round(surface_hydrophobic_count * 100 / total_count, 1)
     }
 
 def calculate_tem(pose):
@@ -267,7 +269,7 @@ def calculate_whole_pose_metrics(pose):
     
     return {
         'pr_RoG_total': round(rog, 2),
-        **{f'pr_surfhphobics_total_%': surface_metrics['pr_surfhphobics_%']},
+        **{f'pr_surfhphobics_total': surface_metrics['pr_surfhphobics']},
         **tem_metrics
     }
 
