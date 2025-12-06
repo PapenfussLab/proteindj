@@ -179,6 +179,13 @@ class MetadataConverter:
             logging.info(f"Final output columns: {df.columns.tolist()}")
 
             # File Output
+            # Convert Int64 to regular int for CSV output (preserving empty cells for NA values)
+            # This ensures seq_id is written as integer in CSV, not float
+            if 'seq_id' in df.columns:
+                # Replace NA with empty string for CSV, will be empty cell
+                df['seq_id'] = df['seq_id'].apply(lambda x: '' if pd.isna(x) else int(x))
+                logging.info("Converted seq_id to integer strings for CSV output")
+            
             df.to_csv(output_file, index=False)
             if os.path.exists(output_file):
                 logging.info(f"Successfully wrote output to {output_file} ({df.shape[0]} rows, {df.shape[1]} columns)")
@@ -630,6 +637,7 @@ def main():
             print(f"Successfully created JSONL file with selected metadata at {output_jsonl}")
         else:
             print(f"Failed to create JSONL file at {output_jsonl}")
+        return
     if args.split_by_description:
         logging.info(f"Converting metadata to individual JSON files using {args.converter} converter")
         if isinstance(args.input_files, list):

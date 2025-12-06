@@ -17,7 +17,7 @@ process GenerateRFDContigs {
     export CONTIGS
     """
 }
-process GenerateRFDfoldcond {
+process GenerateRFDFoldCond {
     label 'pyrosetta_tools'
 
     input:

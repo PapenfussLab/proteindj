@@ -272,6 +272,8 @@ Analysis Filtering Parameters for the final Analysis stage using PyRosetta and B
 | `pr_min_intface_packstat`     | Minimum packing quality of the interface (0-1 scale; higher is better)                        |
 | `pr_max_tem`                  | Maximum total energy metric score (Rosetta Energy Units; lower indicates more stable designs) |
 | `pr_max_surfhphobics`         | Maximum percentage of hydrophobic residues exposed on the surface                             |
+| `pr_max_sap`                  | Maximum mean residue Spatial Aggregation Propensity for monomer/binder (solubility prediction; lower is better) |
+| `pr_max_sap_complex`          | Maximum mean residue Spatial Aggregation Propensity for binder in complex (solubility prediction; lower is better) |
 | `seq_min_ext_coef`            | Minimum extinction coefficient at 280nm (M⁻¹cm⁻¹)                                             |
 | `seq_max_ext_coef`            | Maximum extinction coefficient at 280nm (M⁻¹cm⁻¹)                                             |
 | `seq_min_pi`                  | Minimum isoelectric point (pI) of the sequence                                                |

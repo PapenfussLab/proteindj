@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-include { GenerateRFDContigs; GenerateRFDfoldcond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
+include { GenerateRFDContigs; GenerateRFDFoldCond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
 include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { PrepFAMPNN ; FilterFAMPNN; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
@@ -191,9 +191,9 @@ workflow {
             }
 
             if(params.design_mode == 'binder_foldcond'){
-                GenerateRFDfoldcond(file(params.input_pdb))
-                GenerateRFDfoldcond.out.target_adj.set{target_adj}
-                GenerateRFDfoldcond.out.target_ss.set{target_ss}
+                GenerateRFDFoldCond(file(params.input_pdb))
+                GenerateRFDFoldCond.out.target_adj.set{target_adj}
+                GenerateRFDFoldCond.out.target_ss.set{target_ss}
             } else {
                 Channel.value(file("${projectDir}/lib/NO_FILE")).set{target_adj}
                 Channel.value(file("${projectDir}/lib/NO_FILE1")).set{target_ss}
@@ -853,7 +853,7 @@ def getAdvancedSettingsPath(bc_design_protocol, bc_template_protocol) {
         case "default":
             designProtocolTag = "default_4stage_multimer"
             break
-        case "beta-sheet":
+        case "betasheet":
             designProtocolTag = "betasheet_4stage_multimer"
             break
         case "peptide":
