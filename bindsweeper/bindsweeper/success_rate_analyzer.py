@@ -23,6 +23,7 @@ class SuccessMetrics:
     fold_filtered: int
     seq_generated: int
     seq_filtered: int
+    pred_generated: int
     pred_filtered: int
     analysis_filtered: int
     timestamp: str
@@ -40,6 +41,7 @@ class SuccessMetrics:
             fold_filtered=data["fold_filtered"],
             seq_generated=data["seq_generated"],
             seq_filtered=data["seq_filtered"],
+            pred_generated=data["pred_generated"],
             pred_filtered=data["pred_filtered"],
             analysis_filtered=data["analysis_filtered"],
             timestamp=data["timestamp"],
@@ -57,6 +59,7 @@ class SuccessMetrics:
             "fold_filtered": self.fold_filtered,
             "seq_generated": self.seq_generated,
             "seq_filtered": self.seq_filtered,
+            "pred_generated": self.pred_generated,
             "pred_filtered": self.pred_filtered,
             "analysis_filtered": self.analysis_filtered,
             "timestamp": self.timestamp,

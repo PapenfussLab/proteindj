@@ -25,6 +25,7 @@ class TestSuccessMetrics:
             'fold_filtered': 95,
             'seq_generated': 100,
             'seq_filtered': 85,
+            'pred_generated': 85,
             'pred_filtered': 75,
             'analysis_filtered': 15,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -66,6 +67,7 @@ class TestSuccessMetrics:
             'fold_filtered': 0,
             'seq_generated': 100,
             'seq_filtered': 85,
+            'pred_generated': 85,
             'pred_filtered': 75,
             'analysis_filtered': 15,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -94,38 +96,45 @@ class TestSuccessMetrics:
         assert metrics.pipeline_metrics['overall_retention_rate'] == 0.15
 
     def test_from_dict_skip_fold_seq(self):
-        """Test creating SuccessMetrics with fold and seq stages skipped."""
+        """Test creating SuccessMetrics with fold and seq stages skipped.
+        
+        Scenario: User provides 100 sequenced PDBs, prediction runs and produces 100 outputs,
+        filtering reduces to 75, analysis filtering reduces to 15.
+        
+        Note: In skip_fold_seq mode, pred_count represents predictions generated (before filtering).
+        """
         data = {
             'parameter_combination': 'test_skip_fold_seq',
-            'total_designs': 75,
+            'total_designs': 100,  # Entry point is pred_count (100 predictions generated)
             'successful_designs': 15,
-            'success_rate': 0.20,
+            'success_rate': 0.15,  # 15/100
             'fold_generated': 0,
             'fold_filtered': 0,
             'seq_generated': 0,
-            'seq_filtered': 75,
-            'pred_filtered': 75,
-            'analysis_filtered': 15,
+            'seq_filtered': 0,
+            'pred_generated': 100,
+            'pred_filtered': 75,  # After prediction filtering
+            'analysis_filtered': 15,  # After analysis filtering
             'timestamp': '2024-01-01T00:00:00Z',
             'pipeline_metrics': {
                 'fold_retention_rate': None,
                 'seq_retention_rate': None,
-                'pred_retention_rate': 1.0,
-                'analysis_retention_rate': 0.20,
-                'overall_retention_rate': 0.20
+                'pred_retention_rate': 0.75,  # 75/100 predictions passed filtering
+                'analysis_retention_rate': 0.20,  # 15/75 passed analysis
+                'overall_retention_rate': 0.15  # 15/100 overall
             }
         }
 
         metrics = SuccessMetrics.from_dict(data)
 
-        assert metrics.total_designs == 75  # Entry point is filter_seq_count
+        assert metrics.total_designs == 100  # Should use pred_count as entry point
         assert metrics.successful_designs == 15
-        assert metrics.success_rate == 0.20
+        assert metrics.success_rate == 0.15
         # First two stages skipped
         assert metrics.pipeline_metrics['fold_retention_rate'] is None
         assert metrics.pipeline_metrics['seq_retention_rate'] is None
         # Prediction and analysis ran
-        assert metrics.pipeline_metrics['pred_retention_rate'] == 1.0
+        assert metrics.pipeline_metrics['pred_retention_rate'] == 0.75
         assert metrics.pipeline_metrics['analysis_retention_rate'] == 0.20
 
     def test_from_dict_skip_fold_seq_pred(self):
@@ -139,6 +148,7 @@ class TestSuccessMetrics:
             'fold_filtered': 0,
             'seq_generated': 0,
             'seq_filtered': 0,
+            'pred_generated': 0,
             'pred_filtered': 75,
             'analysis_filtered': 15,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -173,7 +183,9 @@ class TestSuccessMetrics:
             'fold_filtered': 95,
             'seq_generated': 0,
             'seq_filtered': 0,
+            'pred_generated': 0,
             'pred_filtered': 0,
+            'analysis_filtered': 0,
             'analysis_filtered': 0,
             'timestamp': '2024-01-01T00:00:00Z',
             'pipeline_metrics': {
@@ -208,6 +220,7 @@ class TestSuccessMetrics:
             'fold_filtered': 0,
             'seq_generated': 100,
             'seq_filtered': 85,
+            'pred_generated': 85,
             'pred_filtered': 75,
             'analysis_filtered': 15,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -249,6 +262,7 @@ class TestSuccessRateAnalyzer:
             'fold_filtered': 95,
             'seq_generated': 100,
             'seq_filtered': 85,
+            'pred_generated': 85,
             'pred_filtered': 75,
             'analysis_filtered': 20,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -275,6 +289,7 @@ class TestSuccessRateAnalyzer:
             'fold_filtered': 0,
             'seq_generated': 100,
             'seq_filtered': 90,
+            'pred_generated': 90,
             'pred_filtered': 80,
             'analysis_filtered': 25,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -301,7 +316,9 @@ class TestSuccessRateAnalyzer:
             'fold_filtered': 98,
             'seq_generated': 0,
             'seq_filtered': 0,
+            'pred_generated': 0,
             'pred_filtered': 0,
+            'analysis_filtered': 0,
             'analysis_filtered': 0,
             'timestamp': '2024-01-01T00:00:00Z',
             'pipeline_metrics': {
@@ -349,6 +366,7 @@ class TestSuccessRateAnalyzer:
             'fold_filtered': 0,
             'seq_generated': 100,
             'seq_filtered': 90,
+            'pred_generated': 90,
             'pred_filtered': 80,
             'analysis_filtered': 25,
             'timestamp': '2024-01-01T00:00:00Z',
@@ -395,6 +413,7 @@ class TestSuccessRateAnalyzer:
             'fold_filtered': 95,
             'seq_generated': 100,
             'seq_filtered': 50,
+            'pred_generated': 50,
             'pred_filtered': 10,
             'analysis_filtered': 0,
             'timestamp': '2024-01-01T00:00:00Z',

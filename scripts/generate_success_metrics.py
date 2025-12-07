@@ -44,6 +44,12 @@ def parse_arguments():
         help="Number of sequences after filtering"  
     )
     parser.add_argument(
+        "--pred-count",
+        type=int,
+        required=True,
+        help="Number of predictions generated"
+    )
+    parser.add_argument(
         "--filter-pred-count",
         type=int,
         required=True,
@@ -88,24 +94,33 @@ def calculate_overall_success_rate(args) -> tuple:
     
     Returns:
         tuple: (success_rate, total_designs_count) where total_designs_count is the entry point count
+        
+    Raises:
+        ValueError: If the pipeline stage configuration is invalid or unexpected
     """
-    # Determine the entry point based on first non-zero count
-    # Priority order: fold → seq → pred → analysis input
+    # Determine the entry point based on which stages were run
+    # Use the earliest unfiltered count as the denominator
+    
     if args.fold_count > 0:
-        # Full pipeline or fold_only mode
+        # Full pipeline - start from fold stage
         total = args.fold_count
     elif args.seq_count > 0:
-        # skip_fold mode
+        # skip_fold=true - start from sequence stage
         total = args.seq_count
-    elif args.filter_seq_count > 0:
-        # skip_fold_seq mode
-        total = args.filter_seq_count
+    elif args.pred_count > 0:
+        # skip_fold_seq=true - start from prediction stage (unfiltered)
+        total = args.pred_count
     elif args.filter_pred_count > 0:
-        # skip_fold_seq_pred mode
+        # skip_fold_seq_pred=true - start from filtered predictions (user input)
         total = args.filter_pred_count
     else:
-        # No inputs provided
-        return 0.0, 0
+        # No valid entry point found - this indicates a configuration error
+        raise ValueError(
+            "No valid pipeline entry point found. At least one of fold_count, seq_count, "
+            "pred_count, or filter_pred_count must be greater than 0. "
+            f"Current values: fold={args.fold_count}, seq={args.seq_count}, "
+            f"pred={args.pred_count}, filter_pred={args.filter_pred_count}"
+        )
     
     return calculate_success_rate(args.final_designs_count, total), total
 
@@ -137,11 +152,14 @@ def generate_success_metrics(args) -> Dict[str, Any]:
         pipeline_metrics["seq_retention_rate"] = None
     
     # Prediction retention rate (only if pred stage was run)
-    if args.filter_seq_count > 0:
+    # pred_count represents predictions before filtering
+    if args.pred_count > 0:
+        # Normal case: predictions were generated and counted
         pipeline_metrics["pred_retention_rate"] = round(
-            calculate_success_rate(args.filter_pred_count, args.filter_seq_count), 4
+            calculate_success_rate(args.filter_pred_count, args.pred_count), 4
         )
     else:
+        # Prediction stage was skipped
         pipeline_metrics["pred_retention_rate"] = None
     
     # Analysis retention rate (only if analysis stage was run)
@@ -164,6 +182,7 @@ def generate_success_metrics(args) -> Dict[str, Any]:
         "fold_filtered": args.filter_fold_count,
         "seq_generated": args.seq_count,
         "seq_filtered": args.filter_seq_count,
+        "pred_generated": args.pred_count,
         "pred_filtered": args.filter_pred_count,
         "analysis_filtered": args.filter_analysis_count,
         "timestamp": datetime.now(timezone.utc).isoformat(),

@@ -80,6 +80,7 @@ process PublishResults {
             --filter-fold-count ${filter_fold_count} \
             --seq-count ${seq_count} \
             --filter-seq-count ${filter_seq_count} \
+            --pred-count ${pred_count} \
             --filter-pred-count ${filter_pred_count} \
             --filter-analysis-count ${filter_analysis_count} \
             --final-designs-count ${filter_analysis_count} \
@@ -130,6 +131,7 @@ process PublishResults {
             --filter-fold-count ${filter_fold_count} \
             --seq-count ${seq_count} \
             --filter-seq-count ${filter_seq_count} \
+            --pred-count ${pred_count} \
             --filter-pred-count ${filter_pred_count} \
             --filter-analysis-count ${filter_analysis_count} \
             --final-designs-count 0 \
