@@ -8,7 +8,7 @@ include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
 include { AlignAF2; FilterAF2; RunAF2 } from './modules/af2.nf'
 include { AnalyseBestDesigns } from './modules/analysis.nf'
 include { PublishResults } from './modules/publish.nf'
-include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz } from './modules/boltz.nf'
+include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz; BoltziPSAE } from './modules/boltz.nf'
 include { CombineMetadata } from './modules/combine_metadata.nf'
 include { Compress as CompressRFD } from './modules/compress'
 include { Compress as CompressMPNN } from './modules/compress'
@@ -506,6 +506,15 @@ workflow {
             Utils
                 .rebatchTuples(RunBoltz.out.pdbs_jsons, 200)
                 .set { boltz_tuple }
+
+            Utils
+                .rebatchTuples(RunBoltz.out.pdbs_npz, 200)
+                .set { ipsae_input_tuple }
+
+            // Calculate Boltz-2 iPSAE scores for binders only
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+            BoltziPSAE(ipsae_input_tuple)
+            }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
             if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {

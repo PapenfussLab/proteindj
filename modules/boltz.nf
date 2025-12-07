@@ -41,7 +41,8 @@ process RunBoltz {
     tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
 
     output:
-    tuple path ("predictions/*.pdb"), path ("predictions/*.json"), emit: pdbs_jsons
+    tuple path("predictions/*.pdb"), path("predictions/*.npz"), emit: pdbs_npz      // For BoltzIPSAe
+    tuple path("predictions/*.pdb"), path("predictions/*.json"), emit: pdbs_jsons   // For AlignBoltz
     path ("*.log"), emit: logs
 
     script:
@@ -69,7 +70,7 @@ process RunBoltz {
             ${params.boltz_extra_config ? params.boltz_extra_config : ''} \
             2>&1 | tee boltz_${batch_id}.log
     
-        # Move output files out of nested directories and rename to fold_X_seq_X_boltzpred.pdb|json
+        # Move output files out of nested directories and rename to fold_X_seq_X_boltzpred.pdb|json|npz
         mkdir -p predictions
         for dir in boltz_results_yamls/predictions/fold_*_seq_*; do
             # Extract input name from directory path
@@ -82,9 +83,53 @@ process RunBoltz {
             if [ -f "\${dir}/confidence_\${inputname}_model_0.json" ]; then
                 mv "\${dir}/confidence_\${inputname}_model_0.json" "predictions/\${inputname}_boltzpred.json"
             fi
+            # Process NPZ file
+            if [ -f "\${dir}/pae_\${inputname}_model_0.npz" ]; then
+            mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
+            fi
         done
     """
 }
+
+process BoltziPSAE {
+    label 'pyrosetta_tools'
+    publishDir "${params.out_dir}/run/iPSAEcalculation", mode: 'copy', pattern: "*.{csv,jsonl}"
+
+    input:
+    tuple path(pdb_files), path(npz_files)
+
+    output:
+    path "ipsae_and_ipae.csv"
+    path ("ipsae_and_ipae.jsonl"), topic: metadata_ch_fold_seq
+
+    script:
+
+    """
+    export MAMBA_ROOT_PREFIX=/opt/conda/
+    
+    eval "\$(micromamba shell hook --shell bash)"
+    micromamba activate pyrosetta
+
+    # Step 1: Prepare run.csv from PDBs/NPZs
+
+    python /scripts/process_inputs.py \
+         --input_pdbs ./ \
+         --output_dir ./
+
+    # Safety check: ensure run.csv exists
+    test -f run.csv || { echo "Error: run.csv not generated"; exit 1; }
+
+    
+    # Step 2: Run iPSAE scoring batch
+    python /scripts/run_ipsae_batch.py \
+         --run-csv ./run.csv \
+         --out-csv ./ipsae_and_ipae.csv \
+         --out-jsonl ./ipsae_and_ipae.jsonl \
+         --boltz-dir ./ \
+         --ipsae-script-path /scripts/ipsae_w_ipae.py
+    """
+}
+
 process AlignBoltz {
     label 'pyrosetta_tools'
     publishDir "${params.out_dir}/run/align", mode: 'copy', pattern: "alignment_*.log"
