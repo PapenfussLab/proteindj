@@ -509,10 +509,10 @@ workflow {
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
             if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
-                AlignBoltz(pred_tuple, filt_seq_pdbs, 'binder')
+                AlignBoltz(pred_tuple, pred_input_pdbs, 'binder')
             }
             else {
-                AlignBoltz(pred_tuple, filt_seq_pdbs, 'monomer')
+                AlignBoltz(pred_tuple, pred_input_pdbs, 'monomer')
             }
             // Compress output files
             CompressBoltz("boltz", AlignBoltz.out.pdbs_jsons.flatten().collect())
