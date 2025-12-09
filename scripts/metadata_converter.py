@@ -73,7 +73,7 @@ class MetadataConverter:
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
             'boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
-            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface',
+            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface','boltz_ptm_binder','boltz_ptm_target',
             'boltz_plddt', 'boltz_plddt_interface',
             'boltz_pde', 'boltz_pde_interface',
             # PyRosetta Analysis fields
