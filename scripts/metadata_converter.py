@@ -73,7 +73,7 @@ class MetadataConverter:
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
             'boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
-            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface',
+            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface','boltz_ptm_binder','boltz_ptm_target',
             'boltz_plddt', 'boltz_plddt_interface',
             'boltz_pde', 'boltz_pde_interface',
             # PyRosetta Analysis fields
@@ -81,7 +81,7 @@ class MetadataConverter:
             'pr_intface_BSA','pr_intface_shpcomp',
             'pr_intface_deltaG','pr_intface_deltaGtoBSA',
             'pr_intface_hbonds','pr_intface_unsat_hbonds',
-            'pr_intface_packstat','pr_TEM','pr_surfhphobics',
+            'pr_intface_packstat','pr_SAP','pr_SAP_complex','pr_surfhphobics','pr_TEM',
             'seq_ext_coef','seq_length','seq_MW','seq_pI',
             # Sequence at the end for readability, followed by time stats
             'sequence','rfd_time','bc_time','af2_time'

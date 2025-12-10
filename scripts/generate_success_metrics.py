@@ -101,11 +101,8 @@ def calculate_overall_success_rate(args) -> tuple:
     # Determine the entry point based on which stages were run
     # Use the earliest unfiltered count as the denominator
     
-    if args.fold_count > 0:
-        # Full pipeline - start from fold stage
-        total = args.fold_count
-    elif args.seq_count > 0:
-        # skip_fold=true - start from sequence stage
+    if args.seq_count > 0:
+        # full pipeline or skip_fold=true - denominator is always n sequences not fold
         total = args.seq_count
     elif args.pred_count > 0:
         # skip_fold_seq=true - start from prediction stage (unfiltered)
@@ -113,6 +110,9 @@ def calculate_overall_success_rate(args) -> tuple:
     elif args.filter_pred_count > 0:
         # skip_fold_seq_pred=true - start from filtered predictions (user input)
         total = args.filter_pred_count
+    elif args.fold_count > 0:
+        # fold_only=true
+        total = args.fold_count
     else:
         # No valid entry point found - this indicates a configuration error
         raise ValueError(
