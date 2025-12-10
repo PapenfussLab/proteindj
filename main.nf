@@ -507,12 +507,15 @@ workflow {
                 .rebatchTuples(RunBoltz.out.pdbs_jsons, 200)
                 .set { pred_tuple }
 
+            // Convert pred_input_pdbs to value channel for reuse across all batches
+            pred_input_pdbs.collect().set { designs_for_alignment }
+
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
             if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
-                AlignBoltz(pred_tuple, filt_seq_pdbs, 'binder')
+                AlignBoltz(pred_tuple, designs_for_alignment, 'binder')
             }
             else {
-                AlignBoltz(pred_tuple, filt_seq_pdbs, 'monomer')
+                AlignBoltz(pred_tuple, designs_for_alignment, 'monomer')
             }
             // Compress output files
             CompressBoltz("boltz", AlignBoltz.out.pdbs_jsons.flatten().collect())
