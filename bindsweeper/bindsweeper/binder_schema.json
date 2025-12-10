@@ -105,5 +105,25 @@
       "maximum": 1.0,
       "example": 0.0
     }
+  },
+  "bindcraft_denovo": {
+    "input_pdb": {
+      "type": "string",
+      "description": "Input PDB file path for target protein",
+      "pattern": ".*\\.pdb$",
+      "example": "/path/to/target.pdb"
+    },
+    "design_length": {
+      "type": "string",
+      "description": "Design length. One or two dash separated values for min-max design length e.g. '60', '60-70'. Pipeline will randomly sample different sizes between these values.",
+      "pattern": "^\\d+(-\\d+)?$",
+      "example": "60-100"
+    },
+    "hotspot_residues": {
+      "type": ["string", "null"],
+      "description": "Hotspot residues on target chain(s) for binder design. Use null for no hotspots",
+      "pattern": "^[A-Z]\\d+(,[A-Z]\\d+)*$",
+      "example": "A56,A115,A123 or null"
+    }
   }
 }

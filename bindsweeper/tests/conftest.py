@@ -45,12 +45,11 @@ sweep_params:
       - null
 
 results_config:
-  rank_dirname: rank
-  extract_dirname: extract
-  results_dirname: results
-  csv_filename: best.csv
-  output_csv: merged_best.csv
-  pdb_output_dir: merged_best_designs
+  rank_dirname: results
+  results_dirname: best_designs
+  csv_filename: best_designs.csv
+  output_csv: sweep_results.csv
+  pdb_output_dir: sweep_designs
   zip_results: true
 """
 

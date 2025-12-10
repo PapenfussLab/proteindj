@@ -1,5 +1,5 @@
 process PrepMPNN {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/mpnn", mode: 'copy', pattern: "mpnn_prep_*.log"
 
     input:
@@ -11,9 +11,6 @@ process PrepMPNN {
 
     script:
     """
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
-    
     python /scripts/prep_mpnn_designs.py \
         --input_dir "./" \
         --out_dir "mpnn_input"
@@ -72,7 +69,7 @@ process RunMPNN {
     """
 }
 process FilterMPNN {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     publishDir "${params.out_dir}/run/filter_mpnn", mode: 'copy', pattern: '*.log'
 

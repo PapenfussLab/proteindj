@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+from importlib.metadata import version
 
 import click
 
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--debug", is_flag=True, help="Enable debug logging")
-@click.version_option(version="0.1.9")
+@click.version_option(version=version("bindsweeper"))
 @click.option("--dry-run", is_flag=True, help="Print commands without executing them")
 @click.option(
     "--skip-sweep", is_flag=True, help="Skip parameter sweep and only process results"
@@ -48,6 +49,22 @@ logger = logging.getLogger(__name__)
     "--quick-test",
     is_flag=True,
     help="Run a quick test with 2 designs and 2 sequences per design before the full run",
+)
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="Add -resume flag to Nextflow commands to use cached tasks where inputs haven't changed",
+)
+@click.option(
+    "--parallel",
+    is_flag=True,
+    help="Execute parameter combinations in parallel (each with isolated Nextflow cache)",
+)
+@click.option(
+    "--max-parallel",
+    type=int,
+    default=4,
+    help="Maximum number of parallel Nextflow runs (default: 4)",
 )
 @click.option(
     "--config",
@@ -76,6 +93,9 @@ def cli(
     continue_on_error: bool,
     yes_to_all: bool,
     quick_test: bool,
+    resume: bool,
+    parallel: bool,
+    max_parallel: int,
     config: str,
     output_dir: str,
     pipeline_path: str,
@@ -95,6 +115,12 @@ def cli(
     try:
         if dry_run:
             click.echo(f"Performing dry run to validate config and preview parameter combinations\n")
+        
+        if resume:
+            click.echo(f"Resume mode enabled - Nextflow will use -resume to cache tasks where inputs haven't changed\n")
+        
+        if parallel:
+            click.echo(f"Parallel mode enabled - executing up to {max_parallel} Nextflow runs concurrently with isolated caches\n")
 
         # Use provided nextflow_config or discover it
         if nextflow_config:
@@ -164,8 +190,8 @@ def cli(
                 sweep_data = yaml.safe_load(f)
             mode = sweep_data.get("mode", "")
 
-            if mode.startswith("binder_"):
-                # Use binder schema for binder modes
+            if mode.startswith("binder_") or mode.startswith("bindcraft_"):
+                # Use binder schema for binder and bindcraft modes
                 schema_path = os.path.join(os.path.dirname(__file__), "binder_schema.json")
             else:
                 # Use nextflow schema for other modes
@@ -200,7 +226,10 @@ def cli(
 
             
             # Initialize sweep engine
-            engine = SweepEngine(config, out_dir, nextflow_config_path)
+            engine = SweepEngine(
+                config, out_dir, nextflow_config_path, 
+                resume=resume, parallel=parallel, max_parallel=max_parallel
+            )
         
         if not skip_sweep:
             # Run quick test if requested
@@ -219,9 +248,10 @@ def cli(
                     )
 
                     if not dry_run:
-                        # Execute quick test
+                        # Execute quick test (don't use resume for quick tests, but allow parallel)
                         quick_results = engine.execute_sweep(
-                            quick_combinations, dry_run, continue_on_error
+                            quick_combinations, dry_run, continue_on_error, 
+                            resume=False, parallel=parallel
                         )
 
                         # Check if quick test passed
@@ -268,7 +298,10 @@ def cli(
                     write_profiles_to_bindsweeper_config(profiles, "bindsweeper.config", dry_run)
 
                     # Execute sweep
-                    results = engine.execute_sweep(combinations, dry_run, continue_on_error)
+                    results = engine.execute_sweep(
+                        combinations, dry_run, continue_on_error, 
+                        resume=resume, parallel=parallel
+                    )
 
         # Process results
         if not dry_run:

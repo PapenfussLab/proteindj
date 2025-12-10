@@ -41,5 +41,5 @@ From: mambaorg/micromamba:1.5.8
 
 %labels
     Author JoshuaHardy, DylanSilke
-    Version 2.0
+    Version 2.1
     Description "Apptainer container for dl_binder_design including SolubleMPNN and HyperMPNN weights"

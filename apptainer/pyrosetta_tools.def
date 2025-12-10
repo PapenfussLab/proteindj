@@ -41,5 +41,5 @@ From: mambaorg/micromamba:1.5.8
 
 %labels
     Author JulieIskander, DylanSilke, JoshuaHardy
-    Version 2.0
+    Version 2.1
     Description "Apptainer container for PyRosetta and other tools for ProteinDJ"

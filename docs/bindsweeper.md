@@ -47,7 +47,7 @@ BindSweeper works by:
    ```bash
    # To update bindsweeper to the latest version use the following commands
    git pull
-   uv tool update bindsweeper --force-reinstall
+   cd bindsweeper && uv tool install --reinstall-package bindsweeper . && cd ..
    ```
 
 ### Basic Usage
@@ -247,6 +247,9 @@ sweep_params:
 ### Execution Options
 - `--skip-sweep`: Skip parameter sweep and only process results
 - `--continue-on-error`: Continue if individual parameter sweeps fail
+- `--resume`: Add -resume flag to Nextflow commands to use cached tasks where inputs haven't changed
+- `--parallel`: Execute parameter combinations in parallel (each with isolated Nextflow cache)
+- `--max-parallel N`: Maximum number of parallel Nextflow runs (default: 4)
 - `--quick-test`: Run quick test with reduced parameters first
 - `--auto-update`: Automatically sync/update dependencies
 
@@ -296,6 +299,73 @@ bindsweeper --debug --config sweep.yaml
 bindsweeper --continue-on-error --config sweep.yaml
 ```
 
+### Resume Interrupted Sweeps
+```bash
+bindsweeper --resume --config sweep.yaml
+```
+
+When using `--resume`, BindSweeper adds the `-resume` flag to all Nextflow commands. This enables Nextflow's caching mechanism, which:
+- Skips tasks that have already completed successfully
+- Re-runs only tasks where inputs, parameters, or scripts have changed
+- Automatically detects parameter changes and re-executes affected tasks
+- Preserves computational resources by avoiding redundant work
+
+**Use cases for `--resume`:**
+- **Interrupted runs**: Cluster timeouts, manual cancellation, or system failures
+- **Iterative development**: Testing bug fixes in later pipeline stages while reusing early stage results
+- **Parameter refinement**: Re-running with modified filtering thresholds while keeping expensive fold/sequence generation cached
+
+**Important notes:**
+- Nextflow determines what to cache based on task hashes (inputs, scripts, parameters, containers)
+- If you modify any parameters (fixed or swept), Nextflow will automatically detect this and re-run affected tasks
+- The `.nextflow/cache/` and `work/` directories must be preserved for resume to work
+- Resume works at the task level within each parameter combination, not at the combination level
+
+### Parallel Execution
+```bash
+# Execute up to 4 combinations in parallel (default)
+bindsweeper --parallel --config sweep.yaml
+
+# Control the maximum number of parallel runs
+bindsweeper --parallel --max-parallel 8 --config sweep.yaml
+
+# Combine with resume for robust parallel execution
+bindsweeper --parallel --resume --max-parallel 6 --config sweep.yaml
+```
+
+When using `--parallel`, BindSweeper executes multiple parameter combinations concurrently, which:
+- Runs multiple independent Nextflow pipelines simultaneously
+- Provides isolated cache directories for each combination (prevents cache conflicts)
+- Improves overall throughput on systems with available GPU and CPU resources
+- Each Nextflow run still internally parallelizes tasks as normal
+- Maintains proper resource allocation through the cluster scheduler
+
+**Benefits of parallel execution:**
+- **Faster completion**: Leverage multiple GPUs and CPUs concurrently across different parameter combinations
+- **Better resource utilization**: Keep GPUs busy while other combinations process CPU tasks
+- **Fault tolerance**: Failed combinations don't block others from completing
+- **Natural batching**: Combinations complete and release resources as they finish
+
+**Use cases for `--parallel`:**
+- **Large parameter sweeps**: When testing 8+ parameter combinations
+- **GPU-rich clusters**: Systems with multiple GPUs available for concurrent use
+- **Mixed GPU/CPU workloads**: Combinations naturally interleave GPU and CPU-intensive stages
+- **Time-sensitive projects**: Need results faster than sequential execution allows
+
+**Resource considerations:**
+- `--max-parallel` should be ≤ number of available GPUs to prevent GPU contention
+- Each combination spawns its own Nextflow session with internal task parallelization
+- Monitor cluster queue status to ensure combinations get scheduled efficiently
+- Disk I/O can become a bottleneck with too many parallel runs
+- Consider available memory: multiple AF2/Boltz runs require significant RAM per GPU
+
+**Important notes:**
+- Each combination uses isolated cache in `<output_dir>/.nextflow_cache/`
+- Combinations are truly independent - no shared state or locks
+- Works seamlessly with `--resume` flag for robust parallel execution
+- Log output is captured per combination in respective output directories
+- Works with `--quick-test` flag for rapid validation of large parameter sweeps
+
 ## File Structure
 
 BindSweeper generates organised output directories:
@@ -327,9 +397,15 @@ BindSweeper automatically:
 
 1. **Start with Quick Tests**: Use `--quick-test` to validate configuration
 2. **Use Dry Runs**: Preview commands with `--dry-run` before execution
-3. **Monitor Resources**: Large parameter sweeps can be resource-intensive
-4. **Organize Results**: Use descriptive output directory names
-5. **Check Dependencies**: Ensure ProteinDJ and required tools are installed
+3. **Use Resume for Long Runs**: Always use `--resume` for multi-hour sweeps to recover from interruptions
+4. **Leverage Parallel Execution**: Use `--parallel` for large sweeps on GPU-rich clusters to improve throughput
+5. **Monitor Resources**: Large parameter sweeps can be resource-intensive, especially when running in parallel
+6. **Optimize `--max-parallel`**: Set to match available GPUs (e.g., `--max-parallel 8` on systems with 8+ GPUs)
+7. **Combine Resume and Parallel**: Use both `--resume --parallel` for robust and efficient large-scale sweeps
+8. **Organize Results**: Use descriptive output directory names
+9. **Check Dependencies**: Ensure ProteinDJ and required tools are installed
+10. **Preserve Cache Directories**: Keep `.nextflow/` and `work/` directories to enable resume functionality
+11. **Monitor Parallel Runs**: Check cluster queue to ensure combinations are being scheduled appropriately
 
 ## Troubleshooting
 
@@ -339,6 +415,8 @@ BindSweeper automatically:
 2. **Invalid parameters**: Check YAML syntax and parameter names
 3. **Resource constraints**: Monitor system resources during execution
 4. **Path issues**: Use absolute paths for input files
+5. **Resume not working**: Ensure `.nextflow/cache/` and `work/` directories exist and haven't been cleaned
+6. **Unexpected re-execution with resume**: Nextflow detects input/parameter/script changes and correctly re-runs affected tasks
 
 ### Debug Information
 

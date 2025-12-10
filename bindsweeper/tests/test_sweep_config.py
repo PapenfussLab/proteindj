@@ -8,7 +8,6 @@ import pytest
 from bindsweeper.sweep_config import (
     ResultsConfig,
     SweepConfig,
-    parse_nextflow_config,
     parse_nextflow_value,
     validate_param_value,
     validate_params_against_schema,
@@ -22,12 +21,11 @@ class TestResultsConfig:
     def test_default_values(self):
         """Test default configuration values."""
         config = ResultsConfig()
-        assert config.rank_dirname == "rank"
-        assert config.extract_dirname == "extract"
-        assert config.results_dirname == "results"
-        assert config.csv_filename == "best.csv"
-        assert config.output_csv == "merged_best.csv"
-        assert config.pdb_output_dir == "merged_best_designs"
+        assert config.rank_dirname == "results"
+        assert config.results_dirname == "best_designs"
+        assert config.csv_filename == "best_designs.csv"
+        assert config.output_csv == "sweep_results.csv"
+        assert config.pdb_output_dir == "sweep_designs"
         assert config.zip_results is True
 
     def test_custom_values(self):
@@ -35,7 +33,7 @@ class TestResultsConfig:
         config = ResultsConfig(rank_dirname="custom_rank", zip_results=False)
         assert config.rank_dirname == "custom_rank"
         assert config.zip_results is False
-        assert config.csv_filename == "best.csv"  # Default preserved
+        assert config.csv_filename == "best_designs.csv"  # Default preserved
 
 
 class TestSweepConfig:
@@ -46,7 +44,8 @@ class TestSweepConfig:
         config = SweepConfig.from_yaml(config_files["sweep_yaml"])
 
         assert config.mode == "binder_denovo"
-        assert "rfd_contigs" in config.fixed_params
+        assert "design_length" in config.fixed_params
+        assert "input_pdb" in config.fixed_params
         assert "rfd_noise_scale" in config.sweep_params
         assert "rfd_ckpt_override" in config.sweep_params
         assert "hotspot_residues" in config.sweep_params
@@ -227,34 +226,6 @@ class TestValidateParamValue:
         """Test validation with no parameter definition."""
         # Should not raise exception
         validate_param_value("test_param", "any_value", None)
-
-
-class TestParseNextflowConfig:
-    """Test parsing Nextflow configuration files."""
-
-    def test_parse_basic_params(self, config_files):
-        """Test parsing basic parameters."""
-        params = parse_nextflow_config(config_files["nextflow_config"])
-
-        # Check that some expected params were parsed
-        # The exact params may vary based on the regex parsing
-        assert isinstance(params, dict)
-        # Check for any numeric params that should be parsed
-        numeric_params = [v for v in params.values() if isinstance(v, (int, float))]
-        assert len(numeric_params) > 0  # Should parse at least some numbers
-
-    def test_parse_nonexistent_file(self):
-        """Test parsing non-existent file."""
-        params = parse_nextflow_config("/nonexistent/path")
-        assert params == {}
-
-    def test_parse_empty_file(self, temp_dir):
-        """Test parsing empty file."""
-        empty_config = Path(temp_dir) / "empty.config"
-        empty_config.write_text("")
-
-        params = parse_nextflow_config(str(empty_config))
-        assert params == {}
 
 
 class TestParseNextflowValue:
