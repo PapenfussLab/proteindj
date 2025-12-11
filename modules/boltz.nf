@@ -85,15 +85,15 @@ process RunBoltz {
             fi
             # Process NPZ file
             if [ -f "\${dir}/pae_\${inputname}_model_0.npz" ]; then
-            mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
+                mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
             fi
         done
     """
 }
 
-process BoltziPSAE {
-    label 'pyrosetta_tools'
-    publishDir "${params.out_dir}/run/iPSAEcalculation", mode: 'copy', pattern: "*.{csv,jsonl}"
+process AnalyseBoltz {
+    label 'python_tools'
+    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.{csv,jsonl}"
 
     input:
     tuple path(pdb_files), path(npz_files)
@@ -105,10 +105,7 @@ process BoltziPSAE {
     script:
 
     """
-    export MAMBA_ROOT_PREFIX=/opt/conda/
-    
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
+
 
     # Step 1: Prepare run.csv from PDBs/NPZs
 
@@ -116,8 +113,6 @@ process BoltziPSAE {
          --input_pdbs ./ \
          --output_dir ./
 
-    # Safety check: ensure run.csv exists
-    test -f run.csv || { echo "Error: run.csv not generated"; exit 1; }
 
     
     # Step 2: Run iPSAE scoring batch

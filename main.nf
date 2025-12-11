@@ -8,7 +8,7 @@ include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
 include { AlignAF2; FilterAF2; RunAF2 } from './modules/af2.nf'
 include { AnalyseBestDesigns } from './modules/analysis.nf'
 include { PublishResults } from './modules/publish.nf'
-include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz; BoltziPSAE } from './modules/boltz.nf'
+include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz; AnalyseBoltz } from './modules/boltz.nf'
 include { CombineMetadata } from './modules/combine_metadata.nf'
 include { Compress as CompressRFD } from './modules/compress'
 include { Compress as CompressMPNN } from './modules/compress'
@@ -433,7 +433,7 @@ workflow {
     // Run Structure Prediction if not skipped
     if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Optional uncropped target PDB merge for binder design
-        if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+        if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo']) {
             // if uncropped target PDB file is provided, merge with designs
             if (params.uncropped_target_pdb) {
                 def uncroppedPDBfile = file(params.uncropped_target_pdb)
@@ -470,7 +470,7 @@ workflow {
             // Filtering of AF2 results
             FilterAF2(af2_tuple)
 
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
                 // Alignment of PDBs to target chain(s). Only need one reference file
                 AlignAF2(FilterAF2.out.pdbs.flatten().collect(), pred_input_pdbs.flatten().last())
                 AlignAF2.out.pdbs
@@ -512,12 +512,12 @@ workflow {
                 .set { ipsae_input_tuple }
 
             // Calculate Boltz-2 iPSAE scores for binders only
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
-            BoltziPSAE(ipsae_input_tuple)
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
+            AnalyseBoltz(ipsae_input_tuple)
             }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
                 AlignBoltz(boltz_tuple, filt_seq_pdbs, 'binder')
             }
             else {

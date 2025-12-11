@@ -1,3 +1,18 @@
+# ipsae.py
+# script for calculating the ipSAE score for scoring pairwise protein-protein interactions in AlphaFold2 and AlphaFold3 models
+# https://www.biorxiv.org/content/10.1101/2025.02.10.637595v1
+
+# Also calculates:
+#    pDockQ: Bryant, Pozotti, and Eloffson. https://www.nature.com/articles/s41467-022-28865-w
+#    pDockQ2: Zhu, Shenoy, Kundrotas, Elofsson. https://academic.oup.com/bioinformatics/article/39/7/btad424/7219714
+#    LIS: Kim, Hu, Comjean, Rodiger, Mohr, Perrimon. https://www.biorxiv.org/content/10.1101/2024.02.19.580970v1
+
+# Roland Dunbrack
+# Fox Chase Cancer Center
+# version 3
+# April 6, 2025
+# MIT license: script can be modified and redistributed for non-commercial and commercial use, as long as this information is reproduced.
+
 
 # It may be necessary to install numpy with the following command:
 #      pip install numpy

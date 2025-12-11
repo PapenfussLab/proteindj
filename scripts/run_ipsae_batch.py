@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
 """
+MIT License
+
+Copyright (c) 2025 Digital Biotechnology Lab
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
 run_ipsae_batch.py — read a run CSV and append ipSAE/pDockQ/LIS/ipae metrics
 
 - Reads **--run-csv** (must contain a `binder_id` column)
@@ -424,13 +446,27 @@ def write_jsonl(data_dict: Dict[str, Dict[str, float]], output_path: str):
     """
     Write metrics to JSONL format.
     Each line is a JSON object with binder_id and all metrics.
+    Extracts fold_id and seq_id from binder_id (e.g., fold_9_seq_19_boltzpred -> fold_id=9, seq_id=19)
     """
     import json
+    import re
     
     records_written = 0
     with open(output_path, 'w') as f:
         for binder_id, metrics in data_dict.items():
             record = {'binder_id': binder_id}
+            
+            # Extract fold_id and seq_id from binder_id
+            # Pattern: fold_X_seq_Y_boltzpred (or any suffix)
+            match = re.match(r'fold_(\d+)_seq_(\d+)', binder_id)
+            if match:
+                record['fold_id'] = int(match.group(1))
+                record['seq_id'] = int(match.group(2))
+            else:
+                # If pattern doesn't match, set to None or log warning
+                record['fold_id'] = None
+                record['seq_id'] = None
+            
             record.update(metrics)
             f.write(json.dumps(record) + '\n')
             records_written += 1
@@ -441,6 +477,7 @@ def write_jsonl(data_dict: Dict[str, Dict[str, float]], output_path: str):
     print(f"  File: {output_path}")
     print(f"  Records: {records_written}")
     print(f"  Format: One JSON object per line")
+    print(f"  Fields: binder_id, fold_id, seq_id, [metrics]")
     print(f"{'='*60}\n")
 
 # -------------------------
