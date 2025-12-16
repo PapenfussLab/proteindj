@@ -93,35 +93,23 @@ process RunBoltz {
 
 process AnalyseBoltz {
     label 'python_tools'
-    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.{csv,jsonl}"
+    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.{jsonl}"
 
     input:
     tuple path(pdb_files), path(npz_files)
 
     output:
-    path "ipsae_and_ipae.csv"
     path ("ipsae_and_ipae.jsonl"), topic: metadata_ch_fold_seq
 
     script:
 
     """
-
-
-    # Step 1: Prepare run.csv from PDBs/NPZs
-
-    python /scripts/process_inputs.py \
-         --input_pdbs ./ \
-         --output_dir ./
-
-
-    
-    # Step 2: Run iPSAE scoring batch
+    # Run iPSAE scoring batch
     python /scripts/run_ipsae_batch.py \
-         --run-csv ./run.csv \
-         --out-csv ./ipsae_and_ipae.csv \
-         --out-jsonl ./ipsae_and_ipae.jsonl \
-         --boltz-dir ./ \
-         --ipsae-script-path /scripts/ipsae_w_ipae.py
+        --boltz-dir ./ \
+        --out-jsonl ipsae_metrics.jsonl \
+        --pae-cutoff 10 \
+        --dist-cutoff 10
     """
 }
 
