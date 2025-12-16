@@ -24,7 +24,9 @@
 #
 # All output files will be in same path/folder as cif or pdb file
 
-import sys, os, math
+import sys
+import os
+import math
 import json
 import numpy as np
 np.set_printoptions(threshold=np.inf)  # for printing out full numpy arrays for debugging
@@ -39,23 +41,30 @@ if len(sys.argv) < 5:
     print("   python ipsae.py pae_AURKA_TPX2_model_0.npz  AURKA_TPX2_model_0.pdb 10 10")
     sys.exit(1)
 
-pae_file_path =    sys.argv[1]
-pdb_path =         sys.argv[2]
-pae_cutoff =       float(sys.argv[3])
-dist_cutoff =      float(sys.argv[4])
-pae_string =       str(int(pae_cutoff))
-if pae_cutoff<10:  pae_string="0"+pae_string
-dist_string =      str(int(dist_cutoff))
-if dist_cutoff<10: dist_string="0"+dist_string
+pae_file_path = sys.argv[1]
+pdb_path      = sys.argv[2]
+
+# Validate and convert cutoff arguments
+try:
+    pae_cutoff = float(sys.argv[3])
+    dist_cutoff = float(sys.argv[4])
+except (ValueError, IndexError) as e:
+    print(f"Error: Invalid cutoff values. Expected floats for PAE and distance cutoffs.")
+    print(f"Usage: python ipsae.py <pae_npz_file> <pdb_file> <pae_cutoff> <dist_cutoff>")
+    sys.exit(1)
+
+pae_string = str(int(pae_cutoff))
+if pae_cutoff < 10:
+    pae_string = "0" + pae_string
+dist_string = str(int(dist_cutoff))
+if dist_cutoff < 10:
+    dist_string = "0" + dist_string
 
 #pae_AURKA_TPX2_model_0.npz
 
 if ".pdb" in pdb_path and pae_file_path.endswith(".npz"):
     pdb_stem=pdb_path.replace(".pdb","")
     path_stem =     f'{pdb_path.replace(".pdb","")}_{pae_string}_{dist_string}'
-    af2 =    False
-    af3 =    False
-    boltz1 = True
     cif =    False
 else:
     print("Wrong PDB or PAE file type ", pdb_path)
@@ -755,9 +764,7 @@ for pair in sorted(chainpairs):
         dist_residues_2 = len(dist_unique_residues_chain2[chain1][chain2])
         pairs = valid_pair_counts[chain1][chain2]
         dist_pairs = dist_valid_pair_counts[chain1][chain2]
-        if af2: iptm_af = iptm_af2  # same for all chain pairs in entry
-        if af3: iptm_af = iptm_af3[chain1][chain2]  # symmetric value for each chain pair
-        if boltz1: iptm_af=iptm_boltz1[chain1][chain2]
+        iptm_af=iptm_boltz1[chain1][chain2]
         
         outstring=f'{chain1}    {chain2}     {pae_string:3}  {dist_string:3}  {"asym":5} ' + (
             f'{ipsae_d0res_asym[chain1][chain2]:8.6f}    '
