@@ -3,19 +3,27 @@ process PrepBoltz {
 
     input:
     path pdb_files
+    path msa_file, stageAs: 'target_msa.a3m'
 
     output:
     path ("output/*.yaml"), emit: yamls
     path ("output/templates"), emit: templates, optional: true
+    path ("output/*.a3m"), emit: msa_file, optional: true
 
     script:
     // Determine template chain based on design mode
     def templateChain = params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff', 'bindcraft_denovo'] ? 'B' : 'A'
     
+    // Determine MSA chain based on design mode (same as template chain)
+    def msaChain = templateChain
+    
     // Build template parameters if enabled
     def templateParams = params.boltz_use_templates ? "--use-template --template-chain ${templateChain}" : ""
     def templateForceParam = params.boltz_use_templates && params.boltz_template_force ? "--template-force" : ""
     def templateThresholdParam = params.boltz_use_templates && params.boltz_template_threshold ? "--template-threshold ${params.boltz_template_threshold}" : ""
+    
+    // Build MSA parameter if provided
+    def msaParam = params.boltz_input_msa ? "--msa-file target_msa.a3m --msa-chain ${msaChain}" : ""
     
     """
     # Generate yaml files containing sequences for Boltz-2 prediction 
@@ -24,7 +32,8 @@ process PrepBoltz {
         --output "output" \
         ${templateParams} \
         ${templateForceParam} \
-        ${templateThresholdParam}
+        ${templateThresholdParam} \
+        ${msaParam}
     """
 }
 
@@ -35,7 +44,7 @@ process RunBoltz {
     tag "B${batch_id}"
 
     input:
-    tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
+    tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates'), path(msa_file)
 
     output:
     tuple path("predictions/*.pdb"), path("predictions/*.json"), emit: pdbs_jsons   // For AlignBoltz

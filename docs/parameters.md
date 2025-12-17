@@ -147,9 +147,10 @@ Advanced parameters to control the behaviour of Full-Atom MPNN
 | `boltz_diffusion_samples`  | 1       | Number of diffusion samples in Boltz-2 predictions.                                                                                                                                  |
 | `boltz_sampling_steps`     | 200     | Number of sampling steps in Boltz-2 predictions.                                                                                                                                     |
 | `boltz_use_potentials`     | false   | Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time.                                   |
-| `boltz_use_templates`      | false   | Enable template-guided structure prediction. In binder modes, the target (chain B) is used as template, similar to AlphaFold2 Initial-Guess. In monomer modes, chain A is templated. |
+| `boltz_use_templates`      | true    | Enable template-guided structure prediction. In binder modes, the target (chain B) is used as template, similar to AlphaFold2 Initial-Guess. In monomer modes, chain A is templated. |
 | `boltz_template_force`     | false   | Enforce template structure with potential during prediction. Requires `boltz_use_templates = true`.                                                                                  |
 | `boltz_template_threshold` | null    | Distance threshold in Angstroms for template deviation. If specified with `boltz_template_force = true`, constrains prediction near template.                                        |
+| `boltz_input_msa` | null | Path to a multiple sequence alignment (.a3m format) for the input PDB. For binder modes, MSA is applied to chain B (target), and for monomer modes, MSA is applied to chain A. MSA must match entire sequence of chain or will be ignored by Boltz. If null, single-sequence mode is used (msa: empty in YAML). e.g. 'lib/pdl1_msa.a3m' |
 | `boltz_extra_config`       | null    | Additional raw parameters for Boltz-2 predictions. e.g. '--msa_pairing_strategy complete'                                                                                            |
 
 ---
