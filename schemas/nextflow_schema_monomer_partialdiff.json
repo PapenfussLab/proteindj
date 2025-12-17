@@ -108,6 +108,11 @@
           "default": true,
           "hidden": true
         },
+        "ranking_metric": {
+          "type": "string",
+          "description": "Structure prediction metric to use for ranking designs (e.g., 'af2_pae_interaction', 'boltz_ipSAE_min', 'boltz_ptm_interface'). Must match the prediction method prefix (af2_* for AlphaFold2, boltz_* for Boltz-2). If null, defaults to 'af2_pae_interaction' for AlphaFold2 or 'boltz_ipSAE_min' for Boltz-2.",
+          "hidden": true
+        },
         "max_designs": {
           "type": "integer",
           "description": "Maximum number of top-ranked designs to output (null = output all ranked designs)",
@@ -355,7 +360,7 @@
         },
         "boltz_use_templates": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Whether to use template structures to guide Boltz-2 predictions. Template is generated from input design structure. For monomer modes: uses chain A as template. For binder modes: uses chain B (target) as template only, similar to AlphaFold2 Initial-Guess.",
           "hidden": true
         },
@@ -368,6 +373,13 @@
         "boltz_template_threshold": {
           "type": "number",
           "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied.",
+          "hidden": true
+        },
+        "boltz_input_msa": {
+          "type": "string",
+          "description": "Path to a multiple sequence alignment (.a3m format) for the input PDB. Applies to chain B in binder modes or chain A in monomer modes. If null, single-sequence mode is used.",
+          "format": "file-path",
+          "pattern": "\\.a3m$",
           "hidden": true
         },
         "boltz_extra_config": {
@@ -488,6 +500,26 @@
           "description": "Maximum predicted distance error for the binder-target interface e.g 12",
           "hidden": true
         },
+        "boltz_min_ipSAE_min": {
+          "type": "number",
+          "description": "Minimum value allowed for the minimum interaction Prediction Score from Aligned Errors (ipSAE) of target and binder chains (0 to 1)",
+          "hidden": true
+        },
+        "boltz_min_LIS": {
+          "type": "number",
+          "description": "Minimum Local Interaction Score (LIS)",
+          "hidden": true
+        },
+        "boltz_min_pDockQ2_min": {
+          "type": "number",
+          "description": "Minimum value allowed for the minimum predicted DockQ Score v2 of target and binder chains (0 to 1)",
+          "hidden": true
+        },
+        "boltz_max_pae_interaction": {
+          "type": "number",
+          "description": "Maximum predicted aligned error at interaction interfaces (0 to ~30 Angstroms)",
+          "hidden": true
+        },
         "pr_min_helices": {
           "type": "integer",
           "description": "Minimum number of alpha-helices in predicted structure",
@@ -536,16 +568,6 @@
         "pr_max_surfhphobics": {
           "type": "number",
           "description": "Maximum percentage of hydrophobic residues exposed on the surface",
-          "hidden": true
-        },
-        "pr_max_sap": {
-          "type": "number",
-          "description": "Maximum mean residue Spatial Aggregation Propensity for monomer/binder (solubility prediction; lower is better)",
-          "hidden": true
-        },
-        "pr_max_sap_complex": {
-          "type": "number",
-          "description": "Maximum mean residue Spatial Aggregation Propensity for binder in complex (solubility prediction; lower is better)",
           "hidden": true
         },
         "seq_min_ext_coef": {
