@@ -52,8 +52,8 @@ process PublishResults {
     def param_combo = params.bindsweeper_param_combo ?: "default"
     def num_processes = task.cpus - 1
     
-    // Determine ranking metric based on prediction method
-    def ranking_metric = params.pred_method == 'boltz' ? 'boltz_ptm_interface' : 'af2_pae_interaction'
+    // Use user-specified ranking metric or default based on prediction method
+    def ranking_metric = params.ranking_metric ?: (params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction')
     
     // Check for placeholder
     if (final_pdbs_exist) {

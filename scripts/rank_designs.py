@@ -42,8 +42,7 @@ def parse_arguments():
     parser.add_argument(
         "--ranking-metric",
         required=True,
-        choices=["af2_pae_interaction", "boltz_ptm_interface"],
-        help="Metric to use for ranking"
+        help="Metric to use for ranking (e.g., 'af2_pae_interaction', 'boltz_ptm_interface', 'boltz_ipSAE_min')"
     )
     parser.add_argument(
         "--max-designs",
@@ -91,14 +90,30 @@ def rank_designs(df, metric, max_seqs_per_fold=None):
         print(f"Error: No designs have valid {metric} values", file=sys.stderr)
         sys.exit(1)
     
-    # Sort by metric
-    # For PAE metrics: lower is better (ascending=True)
-    # For PTM metrics: higher is better (ascending=False)
-    if "pae" in metric.lower():
+    # Determine sort direction based on metric type
+    # Lower is better for: PAE, RMSD, PDE
+    # Higher is better for: PTM, pLDDT, confidence, ipSAE, LIS, pDockQ
+    metric_lower = metric.lower()
+    
+    lower_is_better_keywords = ['pae', 'rmsd', 'pde']
+    higher_is_better_keywords = ['ptm', 'plddt', 'conf', 'ipsae', 'lis', 'pdockq']
+    
+    # Check if metric contains keywords for direction
+    is_lower_better = any(keyword in metric_lower for keyword in lower_is_better_keywords)
+    is_higher_better = any(keyword in metric_lower for keyword in higher_is_better_keywords)
+    
+    # Handle special case where both might match (e.g., unsat_hbonds has 'hbond')
+    # In this case, prioritize the lower_is_better keywords
+    if is_lower_better:
         ascending = True
         print(f"Ranking by {metric} (lower is better)")
-    else:  # ptm, plddt, confidence, etc.
+    elif is_higher_better:
         ascending = False
+        print(f"Ranking by {metric} (higher is better)")
+    else:
+        # Default to higher is better if we can't determine
+        ascending = False
+        print(f"Warning: Could not determine direction for metric '{metric}', assuming higher is better")
         print(f"Ranking by {metric} (higher is better)")
     
     df_sorted = df.sort_values(by=metric, ascending=ascending).reset_index(drop=True)

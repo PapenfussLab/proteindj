@@ -50,6 +50,15 @@ workflow {
         error("Cannot use --run_fold_only with --skip_fold. These options are contradictory.")
     }
 
+    // Validate ranking metric matches prediction method
+    def ranking_metric = null
+    if (params.rank_designs && params.ranking_metric) {
+        ranking_metric = validateranking_metric(params.ranking_metric, params.pred_method)
+    } else if (params.rank_designs && !params.ranking_metric) {
+        // Use default ranking metrics
+        ranking_metric = params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction'
+    }
+
     // Calculate batch size based on maximum GPUs
     def num_batches = Math.min(params.gpus, params.num_designs).intValue()
     def batch_size = Math.ceil(params.num_designs / num_batches).intValue()
@@ -68,6 +77,12 @@ workflow {
     println("* Pipeline Mode: ${params.design_mode}")
     println("* Number of designs: ${num_designs}")
     println("* Number of sequences for each design: ${params.seqs_per_design}")
+    if (params.rank_designs) {
+        println("* Ranking Metric: ${ranking_metric}")
+        if (params.max_designs != null) {
+            println("* Maximum designs output after ranking: ${params.max_designs}")
+        }
+    }
     println("* Output Directory: ${outputDirectory}")
     println("***********************************************************************\n")
 
@@ -701,6 +716,23 @@ def validateDesignLength(design_length){
             throw new IllegalArgumentException("design_length values must be valid: min ≤ max and min ≥ 1.")
         }
     }
+}
+
+def validateranking_metric(ranking_metric, pred_method) {
+    // Validate that ranking_metric matches the prediction method
+    if (pred_method == 'af2' && !ranking_metric.startsWith('af2_')) {
+        throw new IllegalArgumentException(
+            "Ranking metric '${ranking_metric}' does not match prediction method '${pred_method}'. " +
+            "For AlphaFold2 predictions, use metrics with 'af2_' prefix (e.g., 'af2_pae_interaction', 'af2_plddt_overall')."
+        )
+    }
+    if (pred_method == 'boltz' && !ranking_metric.startsWith('boltz_')) {
+        throw new IllegalArgumentException(
+            "Ranking metric '${ranking_metric}' does not match prediction method '${pred_method}'. " +
+            "For Boltz-2 predictions, use metrics with 'boltz_' prefix (e.g., 'boltz_ptm_interface', 'boltz_ipSAE_min', 'boltz_LIS')."
+        )
+    }
+    return ranking_metric
 }
 
 def validateRFDParameters(params) {
