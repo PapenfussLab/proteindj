@@ -1,5 +1,5 @@
 # ipsae.py
-# script for calculating the ipSAE score for scoring pairwise protein-protein interactions in AlphaFold2 and AlphaFold3 models
+# script for calculating the ipSAE score for scoring pairwise protein-protein interactions in Boltz-2 models
 # https://www.biorxiv.org/content/10.1101/2025.02.10.637595v1
 
 # Also calculates:

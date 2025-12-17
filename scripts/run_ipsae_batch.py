@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 run_ipsae_batch.py — compute ipSAE/pDockQ/LIS/ipae metrics from structure files
-
+Modified for ProteinDJ Boltz module usage.
 - Auto-discovers `binder_id` from PDB/NPZ files in `--input-dir`
 - Processes **in parallel** using a process pool (configurable with `--max-workers`)
 - Generates/uses `*_paeXX_distYY.txt` via **ipsae_w_ipae.py**

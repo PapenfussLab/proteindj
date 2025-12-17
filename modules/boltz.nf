@@ -83,7 +83,7 @@ process RunBoltz {
             if [ -f "\${dir}/confidence_\${inputname}_model_0.json" ]; then
                 mv "\${dir}/confidence_\${inputname}_model_0.json" "predictions/\${inputname}_boltzpred.json"
             fi
-            # Process NPZ file
+            # Process PAE NPZ file
             if [ -f "\${dir}/pae_\${inputname}_model_0.npz" ]; then
                 mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
             fi
