@@ -12,16 +12,20 @@ import glob
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Filter designs and copy top hits from PDB files.')
     parser.add_argument('--json-directory', required=True, help='Path to directory containing JSON score files')
-    parser.add_argument('--boltz-max-overall-rmsd', type=float,
+    parser.add_argument('--boltz-max-rmsd-overall', type=float,
                     help='Maximum allowed RMSD value')
-    parser.add_argument('--boltz-max-binder-rmsd', type=float,
+    parser.add_argument('--boltz-max-rmsd-binder', type=float,
                         help='Maximum allowed binder chain RMSD value')
-    parser.add_argument('--boltz-max-target-rmsd', type=float,
+    parser.add_argument('--boltz-max-rmsd-target', type=float,
                         help='Maximum allowed target chain RMSD value')
     parser.add_argument('--boltz-min-conf-score', type=float, 
                     help='Minimum confidence score')
     parser.add_argument('--boltz-min-ptm', type=float, 
                     help='Minimum pTM score')
+    parser.add_argument('--boltz-min-ptm-binder', type=float,
+                    help='Minimum pTM score for binder chain')
+    parser.add_argument('--boltz-min-ptm-target', type=float,
+                    help='Minimum pTM score for target chain')
     parser.add_argument('--boltz-min-ptm-interface', type=float,
                     help='Minimum interface pTM score')
     parser.add_argument('--boltz-min-plddt', type=float,
@@ -126,22 +130,22 @@ def filter_data(data, args):
             failures = []
             
             # Overall RMSD check
-            if args.boltz_max_overall_rmsd:
-                rmsd = entry.get('boltz_overall_rmsd', 1000)
-                if rmsd > args.boltz_max_overall_rmsd:
-                    failures.append(f"overall_rmsd {rmsd:.2f} > {args.boltz_max_overall_rmsd}")
+            if args.boltz_max_rmsd_overall:
+                rmsd = entry.get('boltz_rmsd_overall', 1000)
+                if rmsd > args.boltz_max_rmsd_overall:
+                    failures.append(f"rmsd_overall {rmsd:.2f} > {args.boltz_max_rmsd_overall}")
             
             # Binder RMSD check
-            if args.boltz_max_binder_rmsd:
-                binder_rmsd = entry.get('boltz_binder_rmsd', 1000)
-                if binder_rmsd > args.boltz_max_binder_rmsd:
-                    failures.append(f"binder_rmsd {binder_rmsd:.2f} > {args.boltz_max_binder_rmsd}")
+            if args.boltz_max_rmsd_binder:
+                rmsd_binder = entry.get('boltz_rmsd_binder', 1000)
+                if rmsd_binder > args.boltz_max_rmsd_binder:
+                    failures.append(f"rmsd_binder {rmsd_binder:.2f} > {args.boltz_max_rmsd_binder}")
             
             # Target RMSD check
-            if args.boltz_max_target_rmsd:
-                target_rmsd = entry.get('boltz_target_rmsd', 1000)
-                if target_rmsd > args.boltz_max_target_rmsd:
-                    failures.append(f"target_rmsd {target_rmsd:.2f} > {args.boltz_max_target_rmsd}")
+            if args.boltz_max_rmsd_target:
+                rmsd_target = entry.get('boltz_rmsd_target', 1000)
+                if rmsd_target > args.boltz_max_rmsd_target:
+                    failures.append(f"rmsd_target {rmsd_target:.2f} > {args.boltz_max_rmsd_target}")
 
             # Confidence score check
             if args.boltz_min_conf_score:
@@ -154,6 +158,16 @@ def filter_data(data, args):
                 ptm = entry.get('boltz_ptm', 0)
                 if ptm < args.boltz_min_ptm:
                     failures.append(f"ptm {ptm:.3f} < {args.boltz_min_ptm}")
+            
+            if args.boltz_min_ptm_binder:
+                ptm_binder = entry.get('boltz_ptm_binder', 0)
+                if ptm_binder < args.boltz_min_ptm_binder:
+                    failures.append(f"ptm_binder {ptm_binder:.3f} < {args.boltz_min_ptm_binder}")
+            
+            if args.boltz_min_ptm_target:
+                ptm_target = entry.get('boltz_ptm_target', 0)
+                if ptm_target < args.boltz_min_ptm_target:
+                    failures.append(f"ptm_target {ptm_target:.3f} < {args.boltz_min_ptm_target}")
             
             if args.boltz_min_ptm_interface:
                 ptm_interface = entry.get('boltz_ptm_interface', 0)
@@ -246,11 +260,13 @@ def main():
     
     # Check if any filter is applied
     any_filter_applied = (
-        args.boltz_max_overall_rmsd is not None or
-        args.boltz_max_binder_rmsd is not None or
-        args.boltz_max_target_rmsd is not None or
+        args.boltz_max_rmsd_overall is not None or
+        args.boltz_max_rmsd_binder is not None or
+        args.boltz_max_rmsd_target is not None or
         args.boltz_min_conf_score is not None or
         args.boltz_min_ptm is not None or
+        args.boltz_min_ptm_binder is not None or
+        args.boltz_min_ptm_target is not None or
         args.boltz_min_ptm_interface is not None or
         args.boltz_min_plddt is not None or
         args.boltz_min_plddt_interface is not None or

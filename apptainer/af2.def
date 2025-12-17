@@ -47,7 +47,7 @@ From: nvidia/cuda:12.9.1-base-ubuntu22.04
 
 %labels
     AUTHOR JoshuaHardy
-    Version 2.0
+    Version 2.1
     Description "Apptainer container for AlphaFold2 Initial-Guess"
 
 %help

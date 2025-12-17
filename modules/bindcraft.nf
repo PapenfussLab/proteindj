@@ -1,5 +1,5 @@
 process PrepBC {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     input:
     val(batch_id)
@@ -167,7 +167,7 @@ process RunBC {
     """
 }
 process AnalyseBC {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/bc", mode: 'copy', pattern: "analysis_*.log"
 
     input:
@@ -180,11 +180,6 @@ process AnalyseBC {
 
     script:
     """
-    export MAMBA_ROOT_PREFIX=/opt/conda/
-    
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
-
     # Script to process BindCraft output PDBs and swap chains: A→B, B→A. Will create a new unique fold_id.
     # Also, extracts and renames metadata from CSV to json files
     python /scripts/analyse_bindcraft.py \

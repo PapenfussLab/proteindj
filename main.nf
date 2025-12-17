@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-include { GenerateRFDContigs; GenerateRFDfoldcond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
+include { GenerateRFDContigs; GenerateRFDFoldCond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
 include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { PrepFAMPNN ; FilterFAMPNN; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterMPNN; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
 include { AlignAF2; FilterAF2; RunAF2 } from './modules/af2.nf'
-include { AnalyseBestDesigns } from './modules/analysis.nf'
+include { AnalysePredictions; FilterAnalysis } from './modules/analysis.nf'
 include { PublishResults } from './modules/publish.nf'
 include { AlignBoltz ; FilterBoltz; PrepBoltz ; RunBoltz; AnalyseBoltz } from './modules/boltz.nf'
 include { CombineMetadata } from './modules/combine_metadata.nf'
@@ -191,9 +191,9 @@ workflow {
             }
 
             if(params.design_mode == 'binder_foldcond'){
-                GenerateRFDfoldcond(file(params.input_pdb))
-                GenerateRFDfoldcond.out.target_adj.set{target_adj}
-                GenerateRFDfoldcond.out.target_ss.set{target_ss}
+                GenerateRFDFoldCond(file(params.input_pdb))
+                GenerateRFDFoldCond.out.target_adj.set{target_adj}
+                GenerateRFDFoldCond.out.target_ss.set{target_ss}
             } else {
                 Channel.value(file("${projectDir}/lib/NO_FILE")).set{target_adj}
                 Channel.value(file("${projectDir}/lib/NO_FILE1")).set{target_ss}
@@ -365,7 +365,7 @@ workflow {
                 .combine(mega_csv)
                 .set { fampnn_input }
 
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+            if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 // Perform design and scoring on binder (chain A)
                 RunFAMPNN(fampnn_input, 'A')
             }
@@ -465,12 +465,12 @@ workflow {
             // Batch files for CPUs
             Utils
                 .rebatchTuples(RunAF2.out.pdbs_jsons, 200)
-                .set { af2_tuple }
+                .set { pred_tuple }
 
             // Filtering of AF2 results
-            FilterAF2(af2_tuple)
+            FilterAF2(pred_tuple)
 
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
+            if (params.design_mode in ['bindcraft_denovo', 'binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
                 // Alignment of PDBs to target chain(s). Only need one reference file
                 AlignAF2(FilterAF2.out.pdbs.flatten().collect(), pred_input_pdbs.flatten().last())
                 AlignAF2.out.pdbs
@@ -505,7 +505,10 @@ workflow {
             // Batch files for CPUs
             Utils
                 .rebatchTuples(RunBoltz.out.pdbs_jsons, 200)
-                .set { boltz_tuple }
+                .set { pred_tuple }
+
+            // Convert pred_input_pdbs to value channel for reuse across all batches
+            pred_input_pdbs.collect().set { designs_for_alignment }
 
             Utils
                 .rebatchTuples(RunBoltz.out.pdbs_npz, 200)
@@ -517,11 +520,11 @@ workflow {
             }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
-            if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
-                AlignBoltz(boltz_tuple, filt_seq_pdbs, 'binder')
+            if (params.design_mode in ['bindcraft_denovo','binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
+                AlignBoltz(pred_tuple, designs_for_alignment, 'binder')
             }
             else {
-                AlignBoltz(boltz_tuple, filt_seq_pdbs, 'monomer')
+                AlignBoltz(pred_tuple, designs_for_alignment, 'monomer')
             }
             // Compress output files
             CompressBoltz("boltz", AlignBoltz.out.pdbs_jsons.flatten().collect())
@@ -572,9 +575,13 @@ workflow {
     ////////////////////
     if (!params.run_fold_only) {
         // Analysis of PDBs to generate additional metrics 
-        AnalyseBestDesigns(analysis_input_pdbs)
+        AnalysePredictions(analysis_input_pdbs)
+
+        // Filtering of analysis results
+        FilterAnalysis(AnalysePredictions.out.jsonl, analysis_input_pdbs)
+
         // Use placeholder PDB file if no designs survive filtering
-        analysis_input_pdbs
+        FilterAnalysis.out.pdbs
             .flatten()
             .collect()
             .ifEmpty(file("${projectDir}/lib/placeholder.pdb"))
@@ -609,35 +616,45 @@ workflow {
         Utils.countPdbFiles(final_pdbs).set { filter_fold_count }
         seq_count = 0
         filter_seq_count = 0
+        pred_count = 0
         filter_pred_count = 0
+        filter_analysis_count = 0
     }
     else if (params.skip_fold_seq_pred) {
         fold_count = 0
         filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
+        pred_count = 0
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else if (params.skip_fold_seq) {
         fold_count = 0
         filter_fold_count = 0
         seq_count = 0
         filter_seq_count = 0
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else if (params.skip_fold) {
         fold_count = 0
         filter_fold_count = 0
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
     else {
         Utils.countPdbFiles(fold_tuples).set { fold_count }
         Utils.countPdbFiles(filt_fold_pdbs_jsons).set { filter_fold_count }
         Utils.countPdbFiles(seq_tuple).set { seq_count }
         Utils.countPdbFiles(filt_seq_pdbs).set { filter_seq_count }
+        Utils.countPdbFiles(pred_tuple).set { pred_count }
         Utils.countPdbFiles(analysis_input_pdbs).set { filter_pred_count }
+        Utils.countPdbFiles(FilterAnalysis.out.pdbs).set { filter_analysis_count }
     }
 
     // Generate report and statistics of run
@@ -648,7 +665,9 @@ workflow {
         filter_fold_count,
         seq_count,
         filter_seq_count,
-        filter_pred_count
+        pred_count,
+        filter_pred_count,
+        filter_analysis_count
     )
     
     // Save log file on completion
@@ -846,7 +865,7 @@ def getAdvancedSettingsPath(bc_design_protocol, bc_template_protocol) {
         case "default":
             designProtocolTag = "default_4stage_multimer"
             break
-        case "beta-sheet":
+        case "betasheet":
             designProtocolTag = "betasheet_4stage_multimer"
             break
         case "peptide":
