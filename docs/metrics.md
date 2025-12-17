@@ -69,12 +69,16 @@ Metrics from AlphaFold2 Initial-Guess or Boltz-2 predictions evaluating structur
 | `boltz_rmsd_binder`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
 | `boltz_rmsd_target`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
 | `boltz_conf_score`       | Confidence score for Boltz-2 prediction; higher is more confident.                                                 |
-| `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
-| `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |
-| `boltz_plddt`            | Predicted LDDT score (Boltz-2) for the complex (0-1 scale; higher is better).                                      |
-| `boltz_plddt_interface`  | Interface pLDDT score for the complex (Boltz-2).                                                                   |
+| `boltz_ipSAE_min`       | Minimum interaction Prediction Score from Aligned Errors (ipSAE) of target and binder chains. Higher is better (0 to 1)      |
+| `boltz_LIS`             | Local Interaction Score. Higher is better (> 0)                                           |
+| `boltz_pDockQ2_min`     | Minimum predicted DockQ Score v2 (calculated from PAE) of target and binder chains. Higher is better (0 to 1)                                       |
+| `boltz_pae_interaction`   | Predicted aligned error for interaction interfaces. Lower is better (0 to ~30 Å)                        |
 | `boltz_pde`              | Predicted distance error (Boltz-2); lower is better.                                                               |
 | `boltz_pde_interface`    | Predicted distance error for interface (Boltz-2).                                                                  |
+| `boltz_plddt`            | Predicted LDDT score (Boltz-2) for the complex (0-1 scale; higher is better).                                      |
+| `boltz_plddt_interface`  | Interface pLDDT score for the complex (Boltz-2).                                                                   |
+| `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
+| `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |
 
 ---
 

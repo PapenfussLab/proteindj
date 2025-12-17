@@ -304,7 +304,7 @@ if os.path.exists(plddt_file_path):
     plddt =    plddt_boltz2[np.ix_(token_array.astype(bool))]
     cb_plddt = plddt_boltz2[np.ix_(token_array.astype(bool))]
 else:
-    print("Boltz2 pLDDT file does not exist: ", plddt_file_path,". Setting pLDDT to zero.")
+    print("Boltz2 pLDDT file does not exist: ", plddt_file_path,". Setting pLDDT to zero. pDockQ will be invalid.")
     plddt = np.zeros(ntokens)
     cb_plddt = np.zeros(ntokens)
     

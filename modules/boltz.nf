@@ -38,8 +38,8 @@ process RunBoltz {
     tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
 
     output:
-    tuple path("predictions/*.pdb"), path("predictions/*.npz"), emit: pdbs_npz      // For BoltzIPSAe
     tuple path("predictions/*.pdb"), path("predictions/*.json"), emit: pdbs_jsons   // For AlignBoltz
+    path("predictions/*.npz"), emit: npzs
     path ("*.log"), emit: logs
 
     script:
@@ -84,32 +84,43 @@ process RunBoltz {
             if [ -f "\${dir}/pae_\${inputname}_model_0.npz" ]; then
                 mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
             fi
+            # Process PLDDT NPZ file
+            if [ -f "\${dir}/plddt_\${inputname}_model_0.npz" ]; then
+                mv "\${dir}/plddt_\${inputname}_model_0.npz" "predictions/plddt_\${inputname}_boltzpred.npz"
+            fi
         done
     """
 }
 
 process AnalyseBoltz {
     label 'python_tools'
-    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.{jsonl}"
+    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.log"
 
     input:
-    tuple path(pdb_files), path(npz_files)
+    tuple path(pdb_files), path(json_files)
+    path(npz_files)
 
     output:
-    path ("analyseboltz.jsonl"), topic: metadata_ch_fold_seq
+    tuple path("output/*.pdb"), path("output/*.json"), emit: pdbs_jsons
+    path "analyseboltz_*.log"
 
     script:
-
+    def num_processes = task.cpus - 1
     """
-    # Run iPSAE scoring batch
+    # Copy PDB files to output directory (unchanged)
+    mkdir -p output
+    cp *.pdb output/
+    
+    # Run interface scoring batch to update JSON files with metrics
     python /scripts/analyse_boltz_batch.py \
         --input-dir ./ \
-        --out-jsonl analyseboltz.jsonl \
+        --output-dir output \
         --ipsae-script-path /scripts/analyse_boltz_calc.py \
         --pae-cutoff 10 \
         --dist-cutoff 10 \
-        --max-workers ${task.cpus} \
-        --verbose
+        --max-workers ${num_processes} \
+        --verbose \
+        2>&1 | tee analyseboltz_${task.index}.log
     """
 }
 
@@ -133,7 +144,7 @@ process AlignBoltz {
 
     """
     # Script to align predictions to designs and calculate RMSD
-    # Also, extracts and renames metadata from json files
+    # Also, extracts and renames metadata from json files (includes interface metrics from AnalyseBoltz)
     python /scripts/align_boltz.py \
         --design_dir ./ \
         --boltz_dir ./ \
@@ -179,6 +190,10 @@ process FilterBoltz {
             "min_plddt_interface",
             "max_pde",
             "max_pde_interface",
+            "min_ipSAE_min",
+            "min_LIS",
+            "min_pDockQ2_min",
+            "max_pae_interaction",
         ],
     )
 

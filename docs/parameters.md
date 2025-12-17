@@ -240,6 +240,10 @@ Boltz-2 Filtering Parameters.
 | `boltz_max_rmsd_binder`     | Max C-alpha RMSD between binder chains of Boltz-2 prediction and input design. Binder modes only. |
 | `boltz_max_rmsd_target`     | Max C-alpha RMSD between target chains of Boltz-2 prediction and input design. Binder modes only. |
 | `boltz_min_conf_score`      | Minimum confidence score of the prediction                                                        |
+| `boltz_min_ipSAE_min`       | Minimum value allowed for the minimum interaction prediction Score from Aligned Errors (ipSAE) of target and binder chains (0 to 1).      |
+| `boltz_min_LIS`             | Minimum Local Interaction Score (> 0)                                           |
+| `boltz_min_pDockQ2_min`     | Minimum value allowed for the minimum predicted DockQ Score v2 of target and binder chains (0 to 1).                                       |
+| `boltz_max_pae_interaction`   | Maximum predicted aligned error at interaction interfaces (0 to ~30 Å)                        |
 | `boltz_min_ptm`             | Minimum predicted template modelling score of the prediction                                      |
 | `boltz_min_ptm_binder`      | Minimum predicted template modelling score of the binder chain. Binder modes only.                |
 | `boltz_min_ptm_target`      | Minimum predicted template modelling score of the target chain. Binder modes only.                |

@@ -72,10 +72,12 @@ class MetadataConverter:
             'af2_plddt_overall', 'af2_plddt_binder', 'af2_plddt_target',
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
-            'boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
-            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface','boltz_ptm_binder','boltz_ptm_target',
-            'boltz_plddt', 'boltz_plddt_interface',
+            'boltz_conf_score','boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
+            'boltz_ipSAE_min','boltz_LIS','boltz_pDockQ2_min',
+            'boltz_pae_interaction',
             'boltz_pde', 'boltz_pde_interface',
+            'boltz_plddt', 'boltz_plddt_interface',
+            'boltz_ptm', 'boltz_ptm_interface','boltz_ptm_binder','boltz_ptm_target',
             # PyRosetta Analysis fields
             'pr_helices','pr_strands', 'pr_total_ss','pr_RoG',
             'pr_intface_BSA','pr_intface_shpcomp',

@@ -36,6 +36,14 @@ def parse_arguments():
                     help='Maximum complex PDE score')
     parser.add_argument('--boltz-max-pde-interface', type=float,
                     help='Maximum interface-weighted PDE')
+    parser.add_argument('--boltz-min-ipSAE-min', type=float,
+                    help='Minimum interaction Prediction Score from Aligned Errors (ipSAE)')
+    parser.add_argument('--boltz-min-LIS', type=float,
+                    help='Minimum Local Interaction Score (LIS)')
+    parser.add_argument('--boltz-min-pDockQ2-min', type=float,
+                    help='Minimum predicted DockQ Score v2')
+    parser.add_argument('--boltz-max-pae-interaction', type=float,
+                    help='Maximum predicted aligned error at interface')
     parser.add_argument('--output-directory', default='output', help='Directory to copy passing PDB files to')
     parser.add_argument('--output-score-file', default='filtered.jsonl')
     parser.add_argument('--num-to-extract', type=int, help='Number of designs to extract (extracts all if not specified)')
@@ -195,6 +203,27 @@ def filter_data(data, args):
                 pde_interface = entry.get('boltz_pde_interface', 0)
                 if pde_interface > args.boltz_max_pde_interface:
                     failures.append(f"pde_interface {pde_interface:.2f} > {args.boltz_max_pde_interface}")
+            
+            # Interface interaction metrics
+            if args.boltz_min_ipSAE_min:
+                ipsae_min = entry.get('ipSAE_min', 0)
+                if ipsae_min < args.boltz_min_ipSAE_min:
+                    failures.append(f"ipSAE_min {ipsae_min:.3f} < {args.boltz_min_ipSAE_min}")
+            
+            if args.boltz_min_LIS:
+                lis = entry.get('LIS', 0)
+                if lis < args.boltz_min_LIS:
+                    failures.append(f"LIS {lis:.3f} < {args.boltz_min_LIS}")
+            
+            if args.boltz_min_pDockQ2_min:
+                pdockq2_min = entry.get('pDockQ2_min', 0)
+                if pdockq2_min < args.boltz_min_pDockQ2_min:
+                    failures.append(f"pDockQ2_min {pdockq2_min:.3f} < {args.boltz_min_pDockQ2_min}")
+            
+            if args.boltz_max_pae_interaction:
+                pae_interaction = entry.get('boltz_pae_interaction', 1000)
+                if pae_interaction > args.boltz_max_pae_interaction:
+                    failures.append(f"pae_interaction {pae_interaction:.2f} > {args.boltz_max_pae_interaction}")
 
             if not failures:
                 passed_designs.append(entry['description'])

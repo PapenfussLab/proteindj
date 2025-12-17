@@ -507,24 +507,27 @@ workflow {
                 .rebatchTuples(RunBoltz.out.pdbs_jsons, 200)
                 .set { pred_tuple }
 
+            // Convert npz files to value channel for reuse across all batches
+            RunBoltz.out.npzs.collect().set { npz_files_for_analysis }
+
             // Convert pred_input_pdbs to value channel for reuse across all batches
             pred_input_pdbs.collect().set { designs_for_alignment }
 
-            Utils
-                .rebatchTuples(RunBoltz.out.pdbs_npz, 200)
-                .set { ipsae_input_tuple }
-
-            // Calculate Boltz-2 iPSAE scores for binders only
+            // Calculate Boltz-2 interface scores for binders only
             if (params.design_mode in ['binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff' , 'bindcraft_denovo' ]) {
-            AnalyseBoltz(ipsae_input_tuple)
+                AnalyseBoltz(pred_tuple, npz_files_for_analysis)
+                AnalyseBoltz.out.pdbs_jsons
+                    .set { boltz_with_metrics }
+            } else{
+                pred_tuple.set { boltz_with_metrics }
             }
 
             // Align Boltz Predictions to FAMPNN output and calculate RMSD
             if (params.design_mode in ['bindcraft_denovo','binder_denovo', 'binder_foldcond', 'binder_motifscaff', 'binder_partialdiff']) {
-                AlignBoltz(pred_tuple, designs_for_alignment, 'binder')
+                AlignBoltz(boltz_with_metrics, designs_for_alignment, 'binder')
             }
             else {
-                AlignBoltz(pred_tuple, designs_for_alignment, 'monomer')
+                AlignBoltz(boltz_with_metrics, designs_for_alignment, 'monomer')
             }
             // Compress output files
             CompressBoltz("boltz", AlignBoltz.out.pdbs_jsons.flatten().collect())

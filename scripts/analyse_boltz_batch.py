@@ -56,10 +56,10 @@ from typing import Dict, List, Tuple, Optional
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="Compute ipSAE metrics from structure files and output to JSONL"
+        description="Compute ipSAE metrics and update JSON files in-place or in output directory"
     )
     p.add_argument("--input-dir", required=True, help="Directory containing PDB and NPZ files")
-    p.add_argument("--out-jsonl", required=True, help="Path to write the calculated metrics JSONL")
+    p.add_argument("--output-dir", required=True, help="Directory to write updated JSON files")
     p.add_argument("--ipsae-script-path", default="ipsae_w_ipae.py", help="Path to ipsae_w_ipae.py")
     p.add_argument("--pae-cutoff", type=float, default=10.0, help="PAE cutoff")
     p.add_argument("--dist-cutoff", type=float, default=10.0, help="Distance cutoff")
@@ -80,10 +80,11 @@ def build_file_index(input_dir: str, verbose: bool = False) -> Dict[str, Dict[st
     Expects files like:
     - pae_fold_1_seq_19_boltzpred.npz  -> binder_id: fold_1_seq_19_boltzpred
     - fold_1_seq_19_boltzpred.pdb      -> binder_id: fold_1_seq_19_boltzpred
+    - fold_1_seq_19_boltzpred.json     -> binder_id: fold_1_seq_19_boltzpred
     
     The binder_id is extracted as the base filename without pae_ prefix and without extension.
     
-    Returns: Dict[binder_id, {'structure': path, 'confidence': path}]
+    Returns: Dict[binder_id, {'structure': path, 'confidence': path, 'json': path}]
     """
     if not os.path.isdir(input_dir):
         raise ValueError(f"Input directory does not exist or is not a directory: {input_dir}")
@@ -97,7 +98,7 @@ def build_file_index(input_dir: str, verbose: bool = False) -> Dict[str, Dict[st
         full_path = os.path.join(input_dir, filename)
         
         # Match PDB files
-        if filename.endswith('.pdb'):
+        if filename.endswith('_boltzpred.pdb'):
             # Extract binder_id: just remove .pdb extension
             bid = filename.replace('.pdb', '')
             
@@ -113,14 +114,24 @@ def build_file_index(input_dir: str, verbose: bool = False) -> Dict[str, Dict[st
             index.setdefault(bid, {})['confidence'] = full_path
             if verbose:
                 print(f"DEBUG: Added confidence for '{bid}': {full_path}")
+        
+        # Match JSON files
+        elif filename.endswith('_boltzpred.json'):
+            # Extract binder_id: just remove .json extension
+            bid = filename.replace('.json', '')
+            
+            index.setdefault(bid, {})['json'] = full_path
+            if verbose:
+                print(f"DEBUG: Added JSON for '{bid}': {full_path}")
 
     if verbose:
         print(f"\nDEBUG: File index summary:")
         for bid, files in index.items():
             has_struct = 'structure' in files
             has_conf = 'confidence' in files
-            status = "✓ complete" if (has_struct and has_conf) else "⚠ incomplete"
-            print(f"  {status} | {bid}: struct={has_struct}, conf={has_conf}")
+            has_json = 'json' in files
+            status = "✓ complete" if (has_struct and has_conf and has_json) else "⚠ incomplete"
+            print(f"  {status} | {bid}: struct={has_struct}, conf={has_conf}, json={has_json}")
         print()
     
     return index
@@ -129,22 +140,22 @@ def build_file_index(input_dir: str, verbose: bool = False) -> Dict[str, Dict[st
 # Locate files for a binder
 # -------------------------
 
-def locate_files(bid: str, index: Dict[str, Dict[str, str]]) -> Tuple[Optional[Tuple[str, str]], Optional[str]]:
+def locate_files(bid: str, index: Dict[str, Dict[str, str]]) -> Tuple[Optional[Tuple[str, str, str]], Optional[str]]:
     """
-    Locate structure and confidence files for a binder_id.
+    Locate structure, confidence, and JSON files for a binder_id.
     
     Returns:
-        (structure_path, confidence_path) if both found, else (None, error_message)
+        (structure_path, confidence_path, json_path) if all found, else (None, error_message)
     """
     # try direct + case variants
     variants = [bid, bid.lower(), bid.upper()]
 
     for v in variants:
         files = index.get(v)
-        if files and 'structure' in files and 'confidence' in files:
-            return (files['structure'], files['confidence']), None
+        if files and 'structure' in files and 'confidence' in files and 'json' in files:
+            return (files['structure'], files['confidence'], files['json']), None
 
-    return None, f"[{bid}] missing structure or confidence files"
+    return None, f"[{bid}] missing structure, confidence, or JSON files"
 
 # -------------------------
 # IPSAE invocations & parsing
@@ -361,25 +372,26 @@ def process_binder(bid: str, index: Dict[str, Dict[str, str]], pae_cutoff: float
     files, error = locate_files(bid, index)
     if error:
         notes.append(error)
-        return results, notes
+        return results, notes, None
     
-    struct, conf = files
+    struct, conf, json_path = files
     
     if verbose:
         print(f"  Processing {bid}")
         print(f"    struct={struct}")
         print(f"    conf  ={conf}")
+        print(f"    json  ={json_path}")
     
     try:
         calculate_ipsae(conf, struct, pae_cutoff, dist_cutoff, ipsae_script, overwrite, verbose)
     except subprocess.CalledProcessError as e:
         notes.append(f"[{bid}] IPSAE failed: {e}")
-        return results, notes
+        return results, notes, json_path
     
     txts = find_ipsae_txts(struct, bid)
     if not txts:
         notes.append(f"[{bid}] No .txt found for {struct}")
-        return results, notes
+        return results, notes, json_path
     
     txt = txts[0]
     mn, mx, avg_ipsae_avg, avg_LIS, avg_min_ipsae, avg_ipSAE_d0chn, avg_ipSAE_d0dom, avg_ipae = get_ipsae_min_max(txt)
@@ -400,45 +412,53 @@ def process_binder(bid: str, index: Dict[str, Dict[str, str]], pae_cutoff: float
     results["ipSAE_d0dom"] = avg_ipSAE_d0dom
     results["ipae"] = avg_ipae
     
-    return results, notes
+    return results, notes, json_path
 
 
-def write_jsonl(data_dict: Dict[str, Dict[str, float]], output_path: str):
+def update_json_files(data_dict: Dict[str, Tuple[Dict[str, float], str]], output_dir: str):
     """
-    Write metrics to JSONL format.
-    Each line is a JSON object with binder_id and all metrics.
-    Extracts fold_id and seq_id from binder_id (e.g., fold_9_seq_19_boltzpred -> fold_id=9, seq_id=19)
+    Update JSON files with computed metrics.
+    Reads original JSON, adds metrics, writes to output directory.
+    
+    Args:
+        data_dict: Dict mapping binder_id -> (metrics_dict, original_json_path)
+        output_dir: Directory to write updated JSON files
     """
     import json
-    import re
+    import shutil
+    from pathlib import Path
     
+    os.makedirs(output_dir, exist_ok=True)
     records_written = 0
-    with open(output_path, 'w') as f:
-        for binder_id, metrics in data_dict.items():
-            record = {'binder_id': binder_id}
-            
-            # Extract fold_id and seq_id from binder_id
-            # Pattern: fold_X_seq_Y_boltzpred (or any suffix)
-            match = re.match(r'fold_(\d+)_seq_(\d+)', binder_id)
-            if match:
-                record['fold_id'] = int(match.group(1))
-                record['seq_id'] = int(match.group(2))
-            else:
-                # If pattern doesn't match, set to None or log warning
-                record['fold_id'] = None
-                record['seq_id'] = None
-            
-            record.update(metrics)
-            f.write(json.dumps(record) + '\n')
+    
+    for binder_id, (metrics, original_json_path) in data_dict.items():
+        # Read original JSON
+        try:
+            with open(original_json_path, 'r') as f:
+                json_data = json.load(f)
+        except Exception as e:
+            print(f"Warning: Could not read {original_json_path}: {e}")
+            continue
+        
+        # Add metrics to JSON
+        json_data.update(metrics)
+        
+        # Write to output directory with same filename
+        output_path = os.path.join(output_dir, os.path.basename(original_json_path))
+        try:
+            with open(output_path, 'w') as f:
+                json.dump(json_data, f, indent=2)
             records_written += 1
+        except Exception as e:
+            print(f"Warning: Could not write {output_path}: {e}")
+            continue
     
     print(f"\n{'='*60}")
-    print(f"✓ JSONL output written successfully")
+    print(f"✓ JSON files updated successfully")
     print(f"{'='*60}")
-    print(f"  File: {output_path}")
-    print(f"  Records: {records_written}")
-    print(f"  Format: One JSON object per line")
-    print(f"  Fields: binder_id, fold_id, seq_id, [metrics]")
+    print(f"  Output directory: {output_dir}")
+    print(f"  Files updated: {records_written}")
+    print(f"  Added metrics: {list(metrics.keys()) if metrics else []}")
     print(f"{'='*60}\n")
 
 # -------------------------
@@ -451,18 +471,18 @@ def main():
     # Build file index from input directory
     index = build_file_index(args.input_dir, verbose=args.verbose)
     
-    # Extract binder_ids that have both structure and confidence files
+    # Extract binder_ids that have structure, confidence, and JSON files
     binder_ids = [bid for bid, files in index.items() 
-                  if 'structure' in files and 'confidence' in files]
+                  if 'structure' in files and 'confidence' in files and 'json' in files]
     
     if not binder_ids:
-        raise SystemExit(f"No valid binder_ids found with both structure and confidence files in {args.input_dir}")
+        raise SystemExit(f"No valid binder_ids found with structure, confidence, and JSON files in {args.input_dir}")
     
     print(f"Found {len(binder_ids)} binder_ids to process")
 
     # Process in parallel and collect metrics per binder
     from concurrent.futures import ProcessPoolExecutor, as_completed
-    collected: Dict[str, Dict[str, float]] = {}
+    collected: Dict[str, Tuple[Dict[str, float], str]] = {}
     all_notes: List[str] = []
 
     tasks = []
@@ -474,16 +494,18 @@ def main():
         for fut in as_completed(futures):
             bid = futures[fut]
             try:
-                res, notes = fut.result()
+                res, notes, json_path = fut.result()
             except Exception as e:
                 all_notes.append(f"[{bid}] worker failed: {e}")
                 res = {}
-                notes = []  # <-- ensure defined
-            collected[bid] = res
+                notes = []
+                json_path = None
+            if json_path:
+                collected[bid] = (res, json_path)
             all_notes.extend(notes)
 
-    # Write JSONL output
-    write_jsonl(collected, args.out_jsonl)
+    # Update JSON files with computed metrics
+    update_json_files(collected, args.output_dir)
 
     if all_notes:
         print(f"\n{'='*60}")
