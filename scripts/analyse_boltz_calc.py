@@ -20,7 +20,7 @@
 # Usage:
 
 
-#  python ipsae.py <path_to_boltz1_pae_file.npz>  <path_to_boltz1_cif_file.pdb>  <pae_cutoff> <dist_cutoff>
+#  python ipsae.py <path_to_boltz2_pae_file.npz>  <path_to_boltz2_cif_file.pdb>  <pae_cutoff> <dist_cutoff>
 #
 # All output files will be in same path/folder as cif or pdb file
 
@@ -36,7 +36,7 @@ np.set_printoptions(threshold=np.inf)  # for printing out full numpy arrays for 
 
 # Ensure correct usage
 if len(sys.argv) < 5:
-    print("Usage for Boltz1:")
+    print("Usage for Boltz2:")
     print("   python ipsae.py <path_to_pae_npz_file> <path_to_pdb_file> <pae_cutoff> <dist_cutoff>")
     print("   python ipsae.py pae_AURKA_TPX2_model_0.npz  AURKA_TPX2_model_0.pdb 10 10")
     sys.exit(1)
@@ -288,50 +288,51 @@ for chain1 in unique_chains:
 # Calculate distance matrix using NumPy broadcasting
 distances = np.sqrt(((coordinates[:, np.newaxis, :] - coordinates[np.newaxis, :, :])**2).sum(axis=2))
 
-# Load BOLTZ1 data and extract plddt and pae_matrix (and ptm_matrix if available)
-if boltz1:
-    # Boltz1 filenames:
-    # AURKA_TPX2_model_0.cif
-    # confidence_AURKA_TPX2_model_0.json
-    # pae_AURKA_TPX2_model_0.npz
-    # plddt_AURKA_TPX2_model_0.npz
+# Load BOLTZ2 data and extract plddt and pae_matrix (and ptm_matrix if available)
+
+# Boltz2 filenames:
+# AURKA_TPX2_model_0.cif
+# confidence_AURKA_TPX2_model_0.json
+# pae_AURKA_TPX2_model_0.npz
+# plddt_AURKA_TPX2_model_0.npz
+
+
+plddt_file_path=pae_file_path.replace("pae","plddt")
+if os.path.exists(plddt_file_path):
+    data_plddt=np.load(plddt_file_path)
+    plddt_boltz2=np.array(100.0*data_plddt['plddt'])
+    plddt =    plddt_boltz2[np.ix_(token_array.astype(bool))]
+    cb_plddt = plddt_boltz2[np.ix_(token_array.astype(bool))]
+else:
+    print("Boltz2 pLDDT file does not exist: ", plddt_file_path,". Setting pLDDT to zero.")
+    plddt = np.zeros(ntokens)
+    cb_plddt = np.zeros(ntokens)
     
+if os.path.exists(pae_file_path):
+    data_pae = np.load(pae_file_path)
+    pae_matrix_boltz2=np.array(data_pae['pae'])
+    pae_matrix = pae_matrix_boltz2[np.ix_(token_array.astype(bool), token_array.astype(bool))]
 
-    plddt_file_path=pae_file_path.replace("pae","plddt")
-    if os.path.exists(plddt_file_path):
-        data_plddt=np.load(plddt_file_path)
-        plddt_boltz1=np.array(100.0*data_plddt['plddt'])
-        plddt =    plddt_boltz1[np.ix_(token_array.astype(bool))]
-        cb_plddt = plddt_boltz1[np.ix_(token_array.astype(bool))]
-    else:
-        plddt = np.zeros(ntokens)
-        cb_plddt = np.zeros(ntokens)
-        
-    if os.path.exists(pae_file_path):
-        data_pae = np.load(pae_file_path)
-        pae_matrix_boltz1=np.array(data_pae['pae'])
-        pae_matrix = pae_matrix_boltz1[np.ix_(token_array.astype(bool), token_array.astype(bool))]
+else:
+    print("Boltz2 PAE file does not exist: ", pae_file_path,". Exiting.")
+    sys.exit()
 
-    else:
-        print("Boltz1 PAE file does not exist: ", pae_file_path)
-        sys.exit()
-    
-    summary_file_path=pae_file_path.replace("pae","confidence")
-    summary_file_path=summary_file_path.replace(".npz",".json")
-    iptm_boltz1=   {chain1: {chain2: 0     for chain2 in unique_chains if chain1 != chain2} for chain1 in unique_chains}
-    if os.path.exists(summary_file_path):
-        with open(summary_file_path, 'r') as file:
-            data_summary = json.load(file)
+summary_file_path=pae_file_path.replace("pae","confidence")
+summary_file_path=summary_file_path.replace(".npz",".json")
+iptm_boltz2=   {chain1: {chain2: 0     for chain2 in unique_chains if chain1 != chain2} for chain1 in unique_chains}
+if os.path.exists(summary_file_path):
+    with open(summary_file_path, 'r') as file:
+        data_summary = json.load(file)
 
-            boltz1_chain_pair_iptm_data=data_summary['pair_chains_iptm']
-            for chain1 in unique_chains:
-                nchain1=  ord(chain1) - ord('A')  # map A,B,C... to 0,1,2...
-                for chain2 in unique_chains:
-                    if chain1 == chain2: continue
-                    nchain2=ord(chain2) - ord('A')
-                    iptm_boltz1[chain1][chain2]=boltz1_chain_pair_iptm_data[str(nchain1)][str(nchain2)]
-    else:
-        print("Boltz1 summary file does not exist: ", summary_file_path)
+        boltz2_chain_pair_iptm_data=data_summary['pair_chains_iptm']
+        for chain1 in unique_chains:
+            nchain1=  ord(chain1) - ord('A')  # map A,B,C... to 0,1,2...
+            for chain2 in unique_chains:
+                if chain1 == chain2: continue
+                nchain2=ord(chain2) - ord('A')
+                iptm_boltz2[chain1][chain2]=boltz2_chain_pair_iptm_data[str(nchain1)][str(nchain2)]
+else:
+    print("Boltz2 summary file does not exist: ", summary_file_path,". Setting ipTM to zero.")
 
 
 # Compute chain-pair-specific interchain PTM and PAE, count valid pairs, and count unique residues
@@ -764,7 +765,7 @@ for pair in sorted(chainpairs):
         dist_residues_2 = len(dist_unique_residues_chain2[chain1][chain2])
         pairs = valid_pair_counts[chain1][chain2]
         dist_pairs = dist_valid_pair_counts[chain1][chain2]
-        iptm_af=iptm_boltz1[chain1][chain2]
+        iptm_af=iptm_boltz2[chain1][chain2]
         
         outstring=f'{chain1}    {chain2}     {pae_string:3}  {dist_string:3}  {"asym":5} ' + (
             f'{ipsae_d0res_asym[chain1][chain2]:8.6f}    '
@@ -799,8 +800,7 @@ for pair in sorted(chainpairs):
 
             iptm_af_value=iptm_af
             pDockQ2_value=max(pDockQ2[chain1][chain2], pDockQ2[chain2][chain1])
-            if boltz1:
-                iptm_af_value=max(iptm_boltz1[chain1][chain2], iptm_boltz1[chain2][chain1])
+            iptm_af_value=max(iptm_boltz2[chain1][chain2], iptm_boltz2[chain2][chain1])
 
 
             LIS_Score=(LIS[chain1][chain2]+LIS[chain2][chain1])/2.0

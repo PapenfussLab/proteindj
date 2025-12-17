@@ -96,17 +96,20 @@ process AnalyseBoltz {
     tuple path(pdb_files), path(npz_files)
 
     output:
-    path ("ipsae_and_ipae.jsonl"), topic: metadata_ch_fold_seq
+    path ("analyseboltz.jsonl"), topic: metadata_ch_fold_seq
 
     script:
 
     """
     # Run iPSAE scoring batch
-    python /scripts/run_ipsae_batch.py \
-        --boltz-dir ./ \
-        --out-jsonl ipsae_metrics.jsonl \
+    python /scripts/analyse_boltz_batch.py \
+        --input-dir ./ \
+        --out-jsonl analyseboltz.jsonl \
+        --ipsae-script-path /scripts/analyse_boltz_calc.py \
         --pae-cutoff 10 \
-        --dist-cutoff 10
+        --dist-cutoff 10 \
+        --max-workers ${task.cpus} \
+        --verbose
     """
 }
 
