@@ -55,8 +55,15 @@ workflow {
     if (params.rank_designs && params.ranking_metric) {
         ranking_metric = validateranking_metric(params.ranking_metric, params.pred_method)
     } else if (params.rank_designs && !params.ranking_metric) {
-        // Use default ranking metrics
-        ranking_metric = params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction'
+        // Use default ranking metrics based on mode and prediction method
+        def is_monomer = params.design_mode.startsWith('monomer_')
+        if (is_monomer) {
+            // For monomer modes, use overall quality metrics (no interface)
+            ranking_metric = params.pred_method == 'boltz' ? 'boltz_ptm' : 'af2_plddt_overall'
+        } else {
+            // For binder modes, use interface-specific metrics
+            ranking_metric = params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction'
+        }
     }
 
     // Calculate batch size based on maximum GPUs

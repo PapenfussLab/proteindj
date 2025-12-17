@@ -52,8 +52,18 @@ process PublishResults {
     def param_combo = params.bindsweeper_param_combo ?: "default"
     def num_processes = task.cpus - 1
     
-    // Use user-specified ranking metric or default based on prediction method
-    def ranking_metric = params.ranking_metric ?: (params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction')
+    // Use user-specified ranking metric or default based on mode and prediction method
+    def is_monomer = params.design_mode.startsWith('monomer_')
+    def ranking_metric = params.ranking_metric
+    if (!ranking_metric) {
+        if (is_monomer) {
+            // For monomer modes, use overall quality metrics (no interface)
+            ranking_metric = params.pred_method == 'boltz' ? 'boltz_ptm' : 'af2_plddt_overall'
+        } else {
+            // For binder modes, use interface-specific metrics
+            ranking_metric = params.pred_method == 'boltz' ? 'boltz_ipSAE_min' : 'af2_pae_interaction'
+        }
+    }
     
     // Check for placeholder
     if (final_pdbs_exist) {
