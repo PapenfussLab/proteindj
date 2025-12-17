@@ -2,7 +2,7 @@
 
 # ProteinDJ Metrics and Metadata Guide
 
-ProteinDJ generates and captures various scoring metrics and metadata for all designs throughout the pipeline in output CSV files ('`all_designs.csv`' and '`best_designs.csv`'). Note that when designs are filtered, the metadata from subsequent stages will not be calculated for these designs in `all_designs.csv` so you may see gaps in the CSV file. These metrics are useful for assessing the quality, confidence, and biophysical characteristics of your protein designs. Below is a detailed guide to the key scoring metrics used in ProteinDJ.
+ProteinDJ generates and captures various scoring metrics and metadata for all designs throughout the pipeline in output CSV files ('`all_designs.csv`', '`best_designs.csv`', and '`ranked_designs.csv`'). Note that when designs are filtered, the metadata from subsequent stages will not be calculated for these designs in `all_designs.csv` so you may see gaps in the CSV file. These metrics are useful for assessing the quality, confidence, and biophysical characteristics of your protein designs. Below is a detailed guide to the key scoring metrics used in ProteinDJ.
 
 ---
 
@@ -27,7 +27,7 @@ Metrics calculated on the BindCraft or RFdiffusion generated folds.
 | `rfd_sampled_mask` | Contigs used by RFdiffusion to produce the fold. (e.g., `['E6-155/0', '100-100']`) |
 | `bc_length` | Length of binder selected by BindCraft |
 | `bc_plddt` | Average per-residue confidence score (0-100) for the complex calculated by BindCraft. |
-| `bc_target_rmsd` | The RMSD between the input target structure and the target structure after binder design |
+| `bc_rmsd_target` | The RMSD between the input target structure and the target structure after binder design |
 | `fold_helices`      | Number of alpha-helices in the designed fold (calculated by PyRosetta).         |
 | `fold_strands`      | Number of beta-strands in the designed fold (calculated by PyRosetta).          |
 | `fold_total_ss`     | Total secondary structures (helices + strands) in the designed fold.            |
@@ -65,16 +65,20 @@ Metrics from AlphaFold2 Initial-Guess or Boltz-2 predictions evaluating structur
 | `af2_rmsd_binder_tgtaln` | C-alpha RMSD comparing binder chains only between input design and AF2 prediction, when target chains are aligned. |
 | `af2_rmsd_target`        | C-alpha RMSD comparing target chains only between input design and AF2 prediction.                                 |
 | `af2_time`               | Time taken (seconds) for AF2 prediction.                                                                           |
-| `boltz_overall_rmsd`     | C-alpha RMSD of Boltz-2 prediction vs input design (all chains).                                                   |
-| `boltz_binder_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
-| `boltz_target_rmsd`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
-| `boltz_conf_score`       | Confidence score for Boltz-2 prediction; lower is more confident.                                                  |
-| `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
-| `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |
-| `boltz_plddt`            | Predicted LDDT score (Boltz-2) for the complex (0-1 scale; higher is better).                                      |
-| `boltz_plddt_interface`  | Interface pLDDT score for the complex (Boltz-2).                                                                   |
+| `boltz_rmsd_overall`     | C-alpha RMSD of Boltz-2 prediction vs input design (all chains).                                                   |
+| `boltz_rmsd_binder`      | C-alpha RMSD of Boltz-2 prediction vs input design for binder chains.                                              |
+| `boltz_rmsd_target`      | C-alpha RMSD of Boltz-2 prediction vs input design for target chains.                                              |
+| `boltz_conf_score`       | Confidence score for Boltz-2 prediction; higher is more confident.                                                 |
+| `boltz_ipSAE_min`       | Minimum interaction Prediction Score from Aligned Errors (ipSAE) of target and binder chains. Higher is better (0 to 1)      |
+| `boltz_LIS`             | Local Interaction Score. Higher is better (> 0)                                           |
+| `boltz_pDockQ2_min`     | Minimum predicted DockQ Score v2 (calculated from PAE) of target and binder chains. Higher is better (0 to 1)                                       |
+| `boltz_pae_interaction`   | Predicted aligned error for interaction interfaces. Lower is better (0 to ~30 Å)                        |
 | `boltz_pde`              | Predicted distance error (Boltz-2); lower is better.                                                               |
 | `boltz_pde_interface`    | Predicted distance error for interface (Boltz-2).                                                                  |
+| `boltz_plddt`            | Predicted LDDT score (Boltz-2) for the complex (0-1 scale; higher is better).                                      |
+| `boltz_plddt_interface`  | Interface pLDDT score for the complex (Boltz-2).                                                                   |
+| `boltz_ptm`              | Predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                                       |
+| `boltz_ptm_interface`    | Interface predicted template modeling score for Boltz-2 (0-1 scale; higher is better).                             |
 
 ---
 
@@ -91,10 +95,14 @@ Measures related to protein structure stability and interface interactions.
 | `pr_intface_BSA`      | Buried surface area (Å²) at the binding interface.                     |
 | `pr_intface_shpcomp`  | Shape complementarity of interface (0-1 scale; 1 is optimal).          |
 | `pr_intface_hbonds`   | Number of hydrogen bonds at the interface.                             |
-| `pr_intface_deltaG`   | Solvation free energy gain at interface (kcal/mol).                    |
+| `pr_intface_unsat_hbonds`   | Number of buried, unsatisfied hydrogen bonds at the interface.                             |
+| `pr_intface_deltaG`   | Solvation free energy gain at interface (in Rosetta Energy Units; lower is better).                    |
+| `pr_intface_deltaGtoBSA`   | Ratio of delta-G to buried surface area                    |
 | `pr_intface_packstat` | Packing quality of the interface (0-1 scale; higher is better).        |
-| `pr_TEM`              | Total energy metric score; lower indicates more stable design.         |
-| `pr_surfhphobics_%`   | Percentage of hydrophobic residues exposed on the surface.             |
+| `pr_TEM`              | Total energy metric score (in Rosetta Energy Units; lower indicates more stable designs).         |
+| `pr_surfhphobics`   | Percentage of hydrophobic residues exposed on the surface.             |
+| `pr_SAP`              | Mean residue Spatial Aggregation Propensity of monomer/binder (solubility prediction; lower is better). |
+| `pr_SAP_complex`      | Mean residue Spatial Aggregation Propensity of binder when complexed with target (solubility prediction; lower is better). If hydrophobic residues form part of the binder-target interface, this score will be lower than pr_SAP. |
 
 ---
 

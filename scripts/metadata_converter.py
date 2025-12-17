@@ -62,7 +62,7 @@ class MetadataConverter:
             # RFdiffusion fields
             'rfd_sampled_mask',
             # BindCraft design fields
-            'bc_length','bc_plddt','bc_target_rmsd',
+            'bc_length','bc_plddt','bc_rmsd_target',
             # Fold design secondary structure and RoG
             'fold_helices', 'fold_strands', 'fold_total_ss', 'fold_RoG',
             # MPNN/FAMPNN fields
@@ -72,15 +72,18 @@ class MetadataConverter:
             'af2_plddt_overall', 'af2_plddt_binder', 'af2_plddt_target',
             'af2_rmsd_overall','af2_rmsd_binder_bndaln','af2_rmsd_binder_tgtaln', 'af2_rmsd_target',
             # Boltz fields
-            'boltz_overall_rmsd', 'boltz_binder_rmsd','boltz_target_rmsd',
-            'boltz_conf_score', 'boltz_ptm', 'boltz_ptm_interface',
-            'boltz_plddt', 'boltz_plddt_interface',
+            'boltz_conf_score','boltz_rmsd_overall', 'boltz_rmsd_binder','boltz_rmsd_target',
+            'boltz_ipSAE_min','boltz_LIS','boltz_pDockQ2_min',
+            'boltz_pae_interaction',
             'boltz_pde', 'boltz_pde_interface',
+            'boltz_plddt', 'boltz_plddt_interface',
+            'boltz_ptm', 'boltz_ptm_interface','boltz_ptm_binder','boltz_ptm_target',
             # PyRosetta Analysis fields
             'pr_helices','pr_strands', 'pr_total_ss','pr_RoG',
             'pr_intface_BSA','pr_intface_shpcomp',
-            'pr_intface_hbonds','pr_intface_deltaG',
-            'pr_intface_packstat','pr_TEM','pr_surfhphobics_%',
+            'pr_intface_deltaG','pr_intface_deltaGtoBSA',
+            'pr_intface_hbonds','pr_intface_unsat_hbonds',
+            'pr_intface_packstat','pr_SAP','pr_SAP_complex','pr_surfhphobics','pr_TEM',
             'seq_ext_coef','seq_length','seq_MW','seq_pI',
             # Sequence at the end for readability, followed by time stats
             'sequence','rfd_time','bc_time','af2_time'
@@ -178,6 +181,13 @@ class MetadataConverter:
             logging.info(f"Final output columns: {df.columns.tolist()}")
 
             # File Output
+            # Convert Int64 to regular int for CSV output (preserving empty cells for NA values)
+            # This ensures seq_id is written as integer in CSV, not float
+            if 'seq_id' in df.columns:
+                # Replace NA with empty string for CSV, will be empty cell
+                df['seq_id'] = df['seq_id'].apply(lambda x: '' if pd.isna(x) else int(x))
+                logging.info("Converted seq_id to integer strings for CSV output")
+            
             df.to_csv(output_file, index=False)
             if os.path.exists(output_file):
                 logging.info(f"Successfully wrote output to {output_file} ({df.shape[0]} rows, {df.shape[1]} columns)")
@@ -629,6 +639,7 @@ def main():
             print(f"Successfully created JSONL file with selected metadata at {output_jsonl}")
         else:
             print(f"Failed to create JSONL file at {output_jsonl}")
+        return
     if args.split_by_description:
         logging.info(f"Converting metadata to individual JSON files using {args.converter} converter")
         if isinstance(args.input_files, list):

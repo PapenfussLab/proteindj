@@ -31,7 +31,7 @@ process RunAF2 {
     """
 }
 process AlignAF2 {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/align", mode: 'copy', pattern: "alignment_*.log"
 
     input:
@@ -50,11 +50,6 @@ process AlignAF2 {
     mkdir -p referencepdb
     mv ${reference_pdb} referencepdb/.
 
-    export MAMBA_ROOT_PREFIX=/opt/conda/
-    
-    eval "\$(micromamba shell hook --shell bash)"
-    micromamba activate pyrosetta
-
     python /scripts/align_af2.py \
         --input_dir ./ \
         --output_dir "aligned" \
@@ -65,7 +60,7 @@ process AlignAF2 {
     """
 }
 process FilterAF2 {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/filter_af2", mode: 'copy', pattern: '*.log'
 
     input:

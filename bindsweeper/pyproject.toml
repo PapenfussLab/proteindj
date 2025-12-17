@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bindsweeper"
-version = "0.1.9" 
+version = "2.1.0" 
 authors = [
     { name = "Dylan Silke", email = "silke.dy@wehi.edu.au"},
     { name = "Josh Hardy", email = "hardy.j@wehi.edu.au"}

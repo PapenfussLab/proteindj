@@ -5,6 +5,7 @@ import datetime
 import logging
 import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from itertools import product
 from typing import Any
@@ -51,11 +52,15 @@ class SweepEngine:
     """Engine for executing parameter sweeps."""
 
     def __init__(
-        self, config: SweepConfig, base_output_dir: str, nextflow_config_path: str
+        self, config: SweepConfig, base_output_dir: str, nextflow_config_path: str, 
+        resume: bool = False, parallel: bool = False, max_parallel: int = 4
     ):
         self.config = config
         self.base_output_dir = os.path.expandvars(base_output_dir)
         self.nextflow_config_path = nextflow_config_path
+        self.resume = resume
+        self.parallel = parallel
+        self.max_parallel = max_parallel
 
 
     def generate_combinations(self) -> list[SweepCombination]:
@@ -228,9 +233,12 @@ class SweepEngine:
 
         # Add parameter combination identifier as a custom parameter
         param_combo_arg = f"--bindsweeper_param_combo '{param_combo}'" if param_combo else ""
+        
+        # Add -resume flag if resume mode is enabled
+        resume_arg = "-resume" if self.resume else ""
 
         # Use both nextflow.config and bindsweeper.config with -C flag
-        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} -profile {profile_str} --out_dir '{output_dir}' --zip_pdbs false {param_combo_arg}".strip()
+        return f"nextflow -c bindsweeper.config run {self.config.pipeline_path} {resume_arg} -profile {profile_str} --out_dir '{output_dir}' --zip_pdbs false {param_combo_arg}".strip()
 
     def generate_profiles(self, combinations: list[SweepCombination]) -> list[str]:
         """Generate profile content for all combinations."""
@@ -244,8 +252,13 @@ class SweepEngine:
 
         return profiles
 
-    def execute_combination(self, combination: SweepCombination) -> CommandResult:
-        """Execute a single parameter combination."""
+    def execute_combination(self, combination: SweepCombination, use_isolated_cache: bool = False) -> CommandResult:
+        """Execute a single parameter combination.
+        
+        Args:
+            combination: The parameter combination to execute
+            use_isolated_cache: If True, use isolated cache directory per combination
+        """
         start_time = datetime.datetime.now()
 
         try:
@@ -253,12 +266,21 @@ class SweepEngine:
 
             logger.info(f"Executing: {combination.command}")
 
+            # Set isolated cache directory for parallel execution
+            env = os.environ.copy()
+            if use_isolated_cache:
+                cache_dir = os.path.join(combination.output_dir, ".nextflow_cache")
+                os.makedirs(cache_dir, exist_ok=True)
+                env["NXF_CACHE_DIR"] = cache_dir
+                logger.debug(f"Using isolated cache: {cache_dir}")
+
             process = subprocess.run(
                 combination.command,
                 shell=True,
                 check=True,
                 capture_output=True,
                 text=True,
+                env=env,
             )
 
             end_time = datetime.datetime.now()
@@ -299,35 +321,125 @@ class SweepEngine:
         combinations: list[SweepCombination],
         dry_run: bool = False,
         continue_on_error: bool = False,
+        resume: bool = False,
+        parallel: bool = None,
     ) -> list[CommandResult]:
-        """Execute all parameter combinations."""
+        """Execute all parameter combinations.
+        
+        When resume=True, adds -resume flag to Nextflow commands, allowing
+        Nextflow's caching mechanism to skip cached tasks. Nextflow will
+        automatically detect parameter changes and re-run affected tasks.
+        
+        When parallel=True, executes combinations concurrently using ThreadPoolExecutor
+        with isolated cache directories per combination to prevent conflicts.
+        
+        Args:
+            combinations: List of parameter combinations to execute
+            dry_run: If True, print commands without executing
+            continue_on_error: If True, continue even if combinations fail
+            resume: If True, add -resume flag to Nextflow commands
+            parallel: If True, execute combinations in parallel. If None, uses self.parallel
+        """
+        # Use instance parallel setting if not explicitly provided
+        if parallel is None:
+            parallel = self.parallel
+            
         results = []
 
         logger.info(f"Executing {len(combinations)} parameter combinations")
+        
+        if resume:
+            logger.info("Resume mode: Nextflow will use cached tasks where possible")
+        
+        if parallel and not dry_run:
+            logger.info(f"Parallel mode: Running up to {self.max_parallel} combinations concurrently")
+            logger.info("Each combination uses isolated Nextflow cache to prevent conflicts")
+            results = self._execute_parallel(
+                combinations, continue_on_error
+            )
+        else:
+            # Sequential execution (existing logic)
+            if parallel and dry_run:
+                logger.info("Parallel mode enabled but running in dry-run (sequential preview)")
+            
+            for i, combo in enumerate(combinations, 1):
+                logger.info(f"\nProcessing combination {i}/{len(combinations)}:")
+                logger.info(f"  Mode: {combo.mode}")
 
-        for i, combo in enumerate(combinations, 1):
-            logger.info(f"\nProcessing combination {i}/{len(combinations)}:")
-            logger.info(f"  Mode: {combo.mode}")
+                for param_name, value in combo.swept_params.items():
+                    logger.info(f"  {param_name}: {value}")
 
-            for param_name, value in combo.swept_params.items():
-                logger.info(f"  {param_name}: {value}")
+                logger.info(f"  Output Directory: {combo.output_dir}")
+                logger.info(f"  Profile: {combo.profile_name}")
+                logger.info(f"  Command: {combo.command}")
 
-            logger.info(f"  Output Directory: {combo.output_dir}")
-            logger.info(f"  Profile: {combo.profile_name}")
-            logger.info(f"  Command: {combo.command}")
+                if dry_run:
+                    logger.info("Dry run - skipping execution")
+                    continue
 
-            if dry_run:
-                logger.info("Dry run - skipping execution")
-                continue
+                result = self.execute_combination(combo, use_isolated_cache=False)
+                results.append(result)
 
-            result = self.execute_combination(combo)
-            results.append(result)
+                if not result.success:
+                    logger.error(f"Command failed after {result.duration_str}")
+                    if not continue_on_error:
+                        raise RuntimeError("Sweep execution failed")
+                else:
+                    logger.info(f"Command completed successfully in {result.duration_str}")
 
-            if not result.success:
-                logger.error(f"Command failed after {result.duration_str}")
-                if not continue_on_error:
-                    raise RuntimeError("Sweep execution failed")
-            else:
-                logger.info(f"Command completed successfully in {result.duration_str}")
-
+        return results
+    
+    def _execute_parallel(
+        self,
+        combinations: list[SweepCombination],
+        continue_on_error: bool = False,
+    ) -> list[CommandResult]:
+        """Execute combinations in parallel using ThreadPoolExecutor.
+        
+        Each combination gets an isolated Nextflow cache directory to prevent
+        conflicts between concurrent runs. Uses threads rather than processes
+        since subprocess calls release the GIL, allowing true parallelism.
+        """
+        results = []
+        failed_count = 0
+        
+        # Use ThreadPoolExecutor to run combinations in parallel
+        # Threads work well here since subprocess.run releases GIL
+        with ThreadPoolExecutor(max_workers=self.max_parallel) as executor:
+            # Submit all combinations
+            future_to_combo = {
+                executor.submit(self.execute_combination, combo, use_isolated_cache=True): combo
+                for combo in combinations
+            }
+            
+            # Process results as they complete
+            for i, future in enumerate(as_completed(future_to_combo), 1):
+                combo = future_to_combo[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                    
+                    logger.info(f"\nCompleted {i}/{len(combinations)}: {combo.profile_name}")
+                    
+                    if result.success:
+                        logger.info(f"  ✓ Success in {result.duration_str}")
+                    else:
+                        failed_count += 1
+                        logger.error(f"  ✗ Failed after {result.duration_str}")
+                        if not continue_on_error:
+                            # Cancel remaining futures
+                            for f in future_to_combo:
+                                f.cancel()
+                            raise RuntimeError(f"Combination failed: {combo.profile_name}")
+                    
+                except Exception as e:
+                    failed_count += 1
+                    logger.error(f"\nException in combination {combo.profile_name}: {e}")
+                    if not continue_on_error:
+                        # Cancel remaining futures
+                        for f in future_to_combo:
+                            f.cancel()
+                        raise
+        
+        logger.info(f"\nParallel execution complete: {len(results) - failed_count}/{len(results)} succeeded")
         return results
