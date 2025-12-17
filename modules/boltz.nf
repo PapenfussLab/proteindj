@@ -38,7 +38,8 @@ process RunBoltz {
     tuple val(batch_id), path(yamls), path(templates_dir, stageAs: 'templates')
 
     output:
-    tuple path ("predictions/*.pdb"), path ("predictions/*.json"), emit: pdbs_jsons
+    tuple path("predictions/*.pdb"), path("predictions/*.npz"), emit: pdbs_npz      // For BoltzIPSAe
+    tuple path("predictions/*.pdb"), path("predictions/*.json"), emit: pdbs_jsons   // For AlignBoltz
     path ("*.log"), emit: logs
 
     script:
@@ -66,7 +67,7 @@ process RunBoltz {
             ${params.boltz_extra_config ? params.boltz_extra_config : ''} \
             2>&1 | tee boltz_${batch_id}.log
     
-        # Move output files out of nested directories and rename to fold_X_seq_X_boltzpred.pdb|json
+        # Move output files out of nested directories and rename to fold_X_seq_X_boltzpred.pdb|json|npz
         mkdir -p predictions
         for dir in boltz_results_yamls/predictions/fold_*_seq_*; do
             # Extract input name from directory path
@@ -79,9 +80,36 @@ process RunBoltz {
             if [ -f "\${dir}/confidence_\${inputname}_model_0.json" ]; then
                 mv "\${dir}/confidence_\${inputname}_model_0.json" "predictions/\${inputname}_boltzpred.json"
             fi
+            # Process PAE NPZ file
+            if [ -f "\${dir}/pae_\${inputname}_model_0.npz" ]; then
+                mv "\${dir}/pae_\${inputname}_model_0.npz" "predictions/pae_\${inputname}_boltzpred.npz"
+            fi
         done
     """
 }
+
+process AnalyseBoltz {
+    label 'python_tools'
+    publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.{jsonl}"
+
+    input:
+    tuple path(pdb_files), path(npz_files)
+
+    output:
+    path ("ipsae_and_ipae.jsonl"), topic: metadata_ch_fold_seq
+
+    script:
+
+    """
+    # Run iPSAE scoring batch
+    python /scripts/run_ipsae_batch.py \
+        --boltz-dir ./ \
+        --out-jsonl ipsae_metrics.jsonl \
+        --pae-cutoff 10 \
+        --dist-cutoff 10
+    """
+}
+
 process AlignBoltz {
     label 'python_tools'
     publishDir "${params.out_dir}/run/boltz", mode: 'copy', pattern: "*.log"
