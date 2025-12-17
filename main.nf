@@ -500,18 +500,31 @@ workflow {
             }
         }
         else if (params.pred_method == "boltz") {
+            // Handle MSA file input
+            if (params.boltz_input_msa) {
+                msa_input = file(params.boltz_input_msa, checkIfExists: true)
+            } else {
+                msa_input = file("${projectDir}/lib/NO_FILE")
+            }
+
             // Prep yaml files for Boltz-2
-            PrepBoltz(pred_input_pdbs)
+            PrepBoltz(pred_input_pdbs, msa_input)
 
             // Handle templates - use empty channel if not present
             PrepBoltz.out.templates
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { templates_ch }
 
+            // Handle MSA file - use empty channel if not present
+            PrepBoltz.out.msa_file
+                .ifEmpty(file("${projectDir}/lib/NO_FILE"))
+                .set { msa_ch }
+
             // reallocate batching for GPU
             Utils
                 .rebatchGPU(PrepBoltz.out.yamls, params.gpus)
                 .combine(templates_ch)
+                .combine(msa_ch)
                 .set { pred_input_tuple }
 
             // Perform prediction of designs using Boltz-2
