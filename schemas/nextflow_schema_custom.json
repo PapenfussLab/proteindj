@@ -109,13 +109,7 @@
           "description": "Number of timesteps for partial diffusion. e.g. 20",
           "default": "null"
         }
-      },
-      "required": [
-        "input_pdb",
-        "design_length",
-        "rfd_scaffold_dir",
-        "rfd_partial_diffusion_timesteps"
-      ]
+      }
     },
     "workflow_advanced_parameters": {
       "title": "Mode-Specific Parameters",
