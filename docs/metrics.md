@@ -32,7 +32,8 @@ Metrics calculated on the BindCraft or RFdiffusion generated folds.
 | `fold_strands`      | Number of beta-strands in the designed fold (calculated by PyRosetta).          |
 | `fold_total_ss`     | Total secondary structures (helices + strands) in the designed fold.            |
 | `fold_RoG`          | Radius of gyration (compactness measure) for designed fold.                     |
-| `rfd_time`         | Time taken (seconds) by RFdiffusion to produce a fold.                             |
+| `rfd_time`         | Time taken (seconds) by RFdiffusion to produce a fold.                           |
+| `bc_time`          | Time taken (seconds) by BindCraft to produce a fold.                             |
 
 ---
 
