@@ -2,7 +2,7 @@
 
 <img height="240" src="img/logo.png"><img height="240" alt="bindsweeper_logo" src="img/bindsweeper_logo.png" />
 
-[bioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
+[Link to Publication](https://onlinelibrary.wiley.com/doi/10.1002/pro.70464)
 
 ProteinDJ is a Nextflow pipeline for protein design that installs and utilises multiple external software packages, including:
 
@@ -18,7 +18,7 @@ ProteinDJ is a Nextflow pipeline for protein design that installs and utilises m
 
 BindSweeper provides a convenient wrapper for ProteinDJ, enabling sweeping of different parameters for binder design.
 
-If you find ProteinDJ or BindSweeper useful in your research, please [cite us](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1) and the developers of the software listed above that make protein design pipelines like this possible. We have provided a list of citations [here](#citations).
+If you find ProteinDJ or BindSweeper useful in your research, please [cite us](https://onlinelibrary.wiley.com/doi/10.1002/pro.70464) and the developers of the software listed above that make protein design pipelines like this possible. We have provided a list of citations [here](#citations).
 
 > Please note: PyRosetta requires a license for commercial projects and is used extensively within ProteinDJ, AlphaFold2 Initial Guess, and ProteinMPNN-FastRelax.
 
@@ -227,7 +227,7 @@ We used five structures for testing and benchmarking our pipeline.
 
 ### Citations for software packages used in ProteinDJ <a name="citations"></a>
 
-ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. bioRxiv. https://doi.org/10.1101/2025.09.24.678028
+ProteinDJ - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. ProteinDJ: a high-performance and modular protein design pipeline. Prot Sci (2026). https://doi.org/10.1002/pro.70464
 
 AlphaFold2 Initial Guess and ProteinMPNN-FastRelax - Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023). https://doi.org/10.1038/s41467-023-38328-5
 
