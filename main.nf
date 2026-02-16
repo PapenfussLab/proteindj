@@ -822,7 +822,7 @@ def collectInputFiles(params) {
         }
     }
 
-    if(params.design_mode == 'bindcraft_denovo' & params.bc_advanced_json){
+    if(params.design_mode == 'bindcraft_denovo' && params.bc_advanced_json){
         inputs << file(params.bc_advanced_json)
     }
 
