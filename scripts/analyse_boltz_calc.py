@@ -317,7 +317,7 @@ else:
     print("Boltz2 PAE file does not exist: ", pae_file_path,". Exiting.")
     sys.exit()
 
-summary_file_path=pae_file_path.replace("pae","confidence")
+summary_file_path=pae_file_path.replace("pae_","")
 summary_file_path=summary_file_path.replace(".npz",".json")
 iptm_boltz2=   {chain1: {chain2: 0     for chain2 in unique_chains if chain1 != chain2} for chain1 in unique_chains}
 if os.path.exists(summary_file_path):
