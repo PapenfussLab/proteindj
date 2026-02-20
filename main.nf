@@ -330,19 +330,21 @@ workflow {
             
             // Method specific batching
             if (params.mpnn_relax_max_cycles > 0) {
-                // use smaller batches for fast relax (slow)
+                // use smaller batches for fast relax (slow) - 1 PDB per batch
                 PrepMPNN.out.pdbs
-                    .collect()
                     .flatten()
-                    .buffer( size: 2, remainder: true )
+                    .collate(1)
+                    .toList()
+                    .flatMap { list -> list.withIndex().collect { item, idx -> [idx, item] } }
                     .set { seq_input_pdbs }
             }
             else {
                 // use larger batches without fast relax
                 PrepMPNN.out.pdbs
-                    .collect()
                     .flatten()
-                    .buffer( size: 10, remainder: true )
+                    .collate(10)
+                    .toList()
+                    .flatMap { list -> list.withIndex().collect { item, idx -> [idx, item] } }
                     .set { seq_input_pdbs }
             }
 

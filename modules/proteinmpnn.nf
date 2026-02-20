@@ -23,6 +23,7 @@ process PrepMPNN {
 
 process RunMPNN {
     label 'MPNN'
+    cpus 2
 
     publishDir "${params.out_dir}/run/mpnn", mode: 'copy', pattern: "*.log"
 
@@ -30,11 +31,11 @@ process RunMPNN {
     maxRetries 3
 
     input:
-    path pdbs
+    tuple val(batch_id), path(pdbs)
 
     output:
     tuple path("results/*.pdb"), path("results/*.json"), emit: pdbs_jsons
-    path ("mpnn_metadata_${task.index}.jsonl"), topic: metadata_ch_fold_seq
+    path ("mpnn_metadata_${batch_id}.jsonl"), topic: metadata_ch_fold_seq
     path "*.log"
 
     script:
@@ -62,10 +63,10 @@ process RunMPNN {
         -temperature ${params.mpnn_temperature} \
         -debug \
         ${params.mpnn_extra_config ? params.mpnn_extra_config : ''} \
-        2>&1 | tee mpnn_${task.index}.log
+        2>&1 | tee mpnn_${batch_id}.log
 
     python /scripts/metadata_converter.py --input_dir results --input_ext ".json" \
-        --converter mpnn  --output_file "mpnn_metadata_${task.index}.jsonl"
+        --converter mpnn  --output_file "mpnn_metadata_${batch_id}.jsonl"
     """
 }
 process FilterMPNN {
