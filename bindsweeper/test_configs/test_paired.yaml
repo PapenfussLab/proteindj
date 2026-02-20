@@ -1,0 +1,16 @@
+mode: binder_denovo
+profile: milton
+
+fixed_params:
+  num_designs: 4
+  design_length: "60-100"
+
+sweep_params:
+  input_pdb:
+    values:
+      - "./benchmarkdata/5o45_pd-l1.pdb" 
+      - "./benchmarkdata/1www_trka.pdb"       
+    paired_with:
+      hotspot_residues:
+        - "A56,A115,A123"
+        - "X294,X296,X333"

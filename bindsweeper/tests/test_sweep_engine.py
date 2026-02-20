@@ -8,6 +8,7 @@ import pytest
 
 from bindsweeper.sweep_config import SweepConfig
 from bindsweeper.sweep_engine import CommandResult, SweepCombination, SweepEngine
+from bindsweeper.sweep_types import ListSweep, PairedSweep
 
 
 class TestCommandResult:
@@ -469,3 +470,114 @@ class TestSweepEngine:
         # Should raise RuntimeError when a combination fails
         with pytest.raises(RuntimeError, match="Combination failed"):
             sweep_engine._execute_parallel(combinations, continue_on_error=False)
+
+
+class TestPairedSweepCombinations:
+    """Test combination generation with paired parameters."""
+
+    @pytest.fixture
+    def paired_config(self):
+        """Mock config with paired sweep parameters."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {"skip_fold_seq": True}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
+
+        paired_sweep = PairedSweep(
+            values=["protein1.pdb", "protein2.pdb", "protein3.pdb"],
+            paired_params={
+                "boltz_msa_path": ["protein1.a3m", "protein2.a3m", "protein3.a3m"],
+            },
+        )
+        config.sweep_params = {"uncropped_target_pdb": paired_sweep}
+        return config
+
+    @pytest.fixture
+    def paired_engine(self, paired_config, temp_dir, config_files):
+        """Create engine with paired config."""
+        return SweepEngine(
+            config=paired_config,
+            base_output_dir=temp_dir,
+            nextflow_config_path=config_files["nextflow_config"],
+        )
+
+    def test_paired_combination_count(self, paired_engine):
+        """Test that paired params produce zipped (not Cartesian) combinations."""
+        combos = paired_engine.generate_combinations()
+        # 3 paired values → 3 combinations (not 9)
+        assert len(combos) == 3
+
+    def test_paired_values_are_zipped(self, paired_engine):
+        """Test that paired values are correctly zipped together."""
+        combos = paired_engine.generate_combinations()
+        for combo in combos:
+            pdb = combo.swept_params["uncropped_target_pdb"]
+            msa = combo.swept_params["boltz_msa_path"]
+            # protein1.pdb should pair with protein1.a3m, etc.
+            assert pdb.replace(".pdb", "") == msa.replace(".a3m", "")
+
+    def test_paired_with_unpaired_cartesian(self, temp_dir, config_files):
+        """Test paired + unpaired gives paired × unpaired combinations."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
+
+        paired_sweep = PairedSweep(
+            values=["t1.pdb", "t2.pdb"],
+            paired_params={"boltz_msa_path": ["m1.a3m", "m2.a3m"]},
+        )
+        unpaired_sweep = ListSweep(values=[0.0, 0.1])
+        config.sweep_params = {
+            "uncropped_target_pdb": paired_sweep,
+            "rfd_noise_scale": unpaired_sweep,
+        }
+
+        engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
+        combos = engine.generate_combinations()
+
+        # 2 paired × 2 unpaired = 4 combinations
+        assert len(combos) == 4
+
+        # Verify pairings are maintained across Cartesian expansion:
+        # t1.pdb must always appear with m1.a3m, t2.pdb with m2.a3m
+        expected_pairs = {"t1.pdb": "m1.a3m", "t2.pdb": "m2.a3m"}
+        for combo in combos:
+            pdb = combo.swept_params["uncropped_target_pdb"]
+            msa = combo.swept_params["boltz_msa_path"]
+            assert msa == expected_pairs[pdb], (
+                f"Pairing broken: {pdb} paired with {msa}, expected {expected_pairs[pdb]}"
+            )
+
+    def test_paired_quick_test_combinations(self, paired_engine):
+        """Test quick test generation with paired parameters."""
+        combos = paired_engine.generate_quick_test_combinations()
+        # Should still have 3 zipped combinations
+        assert len(combos) == 3
+        # All should have quick test prefix in profile name
+        for combo in combos:
+            assert "quicktest" in combo.profile_name
+
+    def test_multiple_paired_groups_raises(self, temp_dir, config_files):
+        """Test that multiple paired parameter groups raise an error."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {}
+        config.profile = None
+        config.pipeline_path = "main.nf"
+
+        config.sweep_params = {
+            "param_a": PairedSweep(
+                values=["a1", "a2"], paired_params={"ap": ["x1", "x2"]}
+            ),
+            "param_b": PairedSweep(
+                values=["b1", "b2"], paired_params={"bp": ["y1", "y2"]}
+            ),
+        }
+
+        engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
+
+        with pytest.raises(ValueError, match="only one paired parameter group"):
+            engine.generate_combinations()

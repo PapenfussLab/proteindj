@@ -13,6 +13,7 @@ from typing import Any
 from .parameter_converters import get_converter
 from .profile_generator import generate_profile_content, generate_profile_name
 from .sweep_config import SweepConfig
+from .sweep_types import PairedSweep
 
 logger = logging.getLogger(__name__)
 
@@ -65,20 +66,76 @@ class SweepEngine:
 
     def generate_combinations(self) -> list[SweepCombination]:
         """Generate all parameter combinations for the sweep."""
-        combinations = []
-
         # Get base parameters (only fixed overrides, no nextflow defaults)
         base_params = {**self.config.fixed_params}
 
+        # Separate paired and unpaired sweep parameters
+        paired_params = {}
+        unpaired_params = {}
+        
+        for param_name, sweep in self.config.sweep_params.items():
+            if isinstance(sweep, PairedSweep):
+                paired_params[param_name] = sweep
+            else:
+                unpaired_params[param_name] = sweep
+
+        # Generate combinations differently based on whether we have paired params
+        if paired_params:
+            combinations = self._generate_paired_combinations_internal(base_params, paired_params, unpaired_params)
+        else:
+            combinations = self._generate_cartesian_combinations_internal(base_params, unpaired_params)
+
+        return combinations
+
+    def generate_quick_test_combinations(self) -> list[SweepCombination]:
+        """Generate quick test combinations with reduced designs for preflight testing."""
+        # Get base parameters (only fixed overrides, no nextflow defaults)
+        base_params = {**self.config.fixed_params}
+
+        # Override with quick test parameters
+        quick_test_params = {
+            **base_params,
+            "num_designs": 2,
+            "seqs_per_design": 2,
+        }
+
+        # Separate paired and unpaired sweep parameters
+        paired_params = {}
+        unpaired_params = {}
+        
+        for param_name, sweep in self.config.sweep_params.items():
+            if isinstance(sweep, PairedSweep):
+                paired_params[param_name] = sweep
+            else:
+                unpaired_params[param_name] = sweep
+
+        # Generate combinations differently based on whether we have paired params
+        if paired_params:
+            combinations = self._generate_paired_combinations_internal(
+                quick_test_params, paired_params, unpaired_params, prefix="quicktest_"
+            )
+        else:
+            combinations = self._generate_cartesian_combinations_internal(
+                quick_test_params, unpaired_params, prefix="quicktest_"
+            )
+
+        return combinations
+
+    def _generate_cartesian_combinations_internal(
+        self, base_params: dict, unpaired_params: dict, prefix: str = ""
+    ) -> list[SweepCombination]:
+        """Internal method to generate Cartesian product with optional prefix."""
+        combinations = []
+        
         # Generate values for each sweep parameter
-        param_names = list(self.config.sweep_params.keys())
+        param_names = list(unpaired_params.keys())
         if not param_names:
             # No parameters to sweep
             return []
 
         param_values = []
         for param_name in param_names:
-            sweep = self.config.sweep_params[param_name]
+            sweep = unpaired_params[param_name]
             param_values.append(sweep.generate_values())
 
         # Generate cartesian product
@@ -89,11 +146,11 @@ class SweepEngine:
             # Combine with base params
             all_params = {**base_params, **swept_params}
 
-            # Generate output directory
-            output_dir = self._generate_output_dir(swept_params)
+            # Generate output directory with optional prefix
+            output_dir = self._generate_output_dir(swept_params, prefix=prefix)
 
-            # Generate profile name
-            profile_name = generate_profile_name(self.config.mode, swept_params)
+            # Generate profile name with optional prefix
+            profile_name = generate_profile_name(self.config.mode, swept_params, prefix=prefix)
 
             # Generate parameter combination identifier
             param_combo_id = self._generate_param_combo_id(swept_params)
@@ -114,70 +171,84 @@ class SweepEngine:
 
         return combinations
 
-    def generate_quick_test_combinations(self) -> list[SweepCombination]:
-        """Generate quick test combinations with reduced designs for preflight testing."""
+    def _generate_paired_combinations_internal(
+        self, base_params: dict, paired_params: dict, unpaired_params: dict, prefix: str = ""
+    ) -> list[SweepCombination]:
+        """Internal method to generate paired combinations with optional prefix."""
         combinations = []
-
-        # Get base parameters (only fixed overrides, no nextflow defaults)
-        base_params = {**self.config.fixed_params}
-
-        # Override with quick test parameters
-        quick_test_params = {
-            **base_params,
-            "num_designs": 2,
-            "seqs_per_design": 2,
-        }
-
-        # Generate values for each sweep parameter
-        param_names = list(self.config.sweep_params.keys())
-        if not param_names:
-            # No parameters to sweep
-            return []
-
-        param_values = []
-        for param_name in param_names:
-            sweep = self.config.sweep_params[param_name]
-            param_values.append(sweep.generate_values())
-
-        # Generate cartesian product
-        for value_combo in product(*param_values):
-            # Create swept params dict
-            swept_params = dict(zip(param_names, value_combo))
-
-            # Combine with quick test params
-            all_params = {**quick_test_params, **swept_params}
-
-            # Generate output directory with "quicktest_" prefix
-            output_dir = self._generate_output_dir(swept_params, prefix="quicktest_")
-
-            # Generate profile name with "quicktest_" prefix
-            profile_name = generate_profile_name(
-                self.config.mode, swept_params, prefix="quicktest_"
+        
+        # Currently only support one paired parameter group
+        if len(paired_params) > 1:
+            raise ValueError(
+                "Currently only one paired parameter group is supported. "
+                "Multiple parameters can be paired together using 'paired_with', "
+                "but you cannot have multiple separate paired groups."
             )
-
-            # Generate parameter combination identifier with quicktest prefix
-            param_combo_id = f"quicktest_{self._generate_param_combo_id(swept_params)}"
+        
+        # Get the paired parameter
+        primary_param_name = list(paired_params.keys())[0]
+        paired_sweep = paired_params[primary_param_name]
+        
+        # Cache generated values to avoid repeated generation
+        primary_values = paired_sweep.generate_values()
+        num_paired_combos = len(primary_values)
+        
+        # Generate unpaired cartesian product if any
+        unpaired_combos = []
+        if unpaired_params:
+            param_names = list(unpaired_params.keys())
+            param_values = [unpaired_params[name].generate_values() for name in param_names]
+            for value_combo in product(*param_values):
+                unpaired_combos.append(dict(zip(param_names, value_combo)))
+        else:
+            unpaired_combos = [{}]  # Single empty combo if no unpaired params
+        
+        # Generate combinations: zip paired params, then cartesian with unpaired
+        for i in range(num_paired_combos):
+            # Get paired parameter values for this index
+            paired_swept_params = {
+                primary_param_name: primary_values[i]
+            }
             
-            # Generate command
-            command = self._generate_command(profile_name, output_dir, param_combo_id)
+            # Add all paired parameters
+            for paired_param_name in paired_sweep.paired_params.keys():
+                paired_swept_params[paired_param_name] = paired_sweep.get_paired_value(paired_param_name, i)
+            
+            # Combine with each unpaired combination
+            for unpaired_combo in unpaired_combos:
+                # Merge paired and unpaired swept params
+                swept_params = {**paired_swept_params, **unpaired_combo}
+                
+                # Combine with base params
+                all_params = {**base_params, **swept_params}
 
-            combinations.append(
-                SweepCombination(
-                    mode=self.config.mode,
-                    all_params=all_params,
-                    swept_params=swept_params,
-                    profile_name=profile_name,
-                    output_dir=output_dir,
-                    command=command,
+                # Generate output directory with optional prefix
+                output_dir = self._generate_output_dir(swept_params, prefix=prefix)
+
+                # Generate profile name with optional prefix
+                profile_name = generate_profile_name(self.config.mode, swept_params, prefix=prefix)
+
+                # Generate parameter combination identifier
+                param_combo_id = self._generate_param_combo_id(swept_params)
+                
+                # Generate command
+                command = self._generate_command(profile_name, output_dir, param_combo_id)
+
+                combinations.append(
+                    SweepCombination(
+                        mode=self.config.mode,
+                        all_params=all_params,
+                        swept_params=swept_params,
+                        profile_name=profile_name,
+                        output_dir=output_dir,
+                        command=command,
+                    )
                 )
-            )
-
+        
         return combinations
 
     def _generate_param_combo_id(self, swept_params: dict[str, Any]) -> str:
         """Generate a parameter combination identifier."""
-        from .parameter_converters import get_converter
-        
         components = []
         for param_name, value in sorted(swept_params.items()):
             converter = get_converter(param_name)

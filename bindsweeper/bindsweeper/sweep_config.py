@@ -66,11 +66,36 @@ class SweepConfig:
 
         # Extract sweep parameters
         sweep_params = {}
+        paired_param_names = set()  # Track which params are part of paired sweeps
+        
         for param_name, param_def in data.get("sweep_params", {}).items():
             sweep_params[param_name] = create_sweep(param_def)
+            
+            # Track paired parameters
+            if isinstance(param_def, dict) and "paired_with" in param_def:
+                for paired_param_name in param_def["paired_with"].keys():
+                    paired_param_names.add(paired_param_name)
+        
+        # Validate that paired parameters are not also defined as sweep parameters
+        conflicting_params = paired_param_names & set(sweep_params.keys())
+        if conflicting_params:
+            raise ValueError(
+                f"Parameters {conflicting_params} are defined both as sweep parameters "
+                f"and as paired parameters. Paired parameters should only be defined in "
+                f"'paired_with' sections, not as separate sweep parameters."
+            )
 
         # Extract fixed parameters
         fixed_params = data.get("fixed_params", {})
+
+        # Validate that paired parameters are not also defined as fixed parameters
+        conflicting_fixed = paired_param_names & set(fixed_params.keys())
+        if conflicting_fixed:
+            raise ValueError(
+                f"Parameters {conflicting_fixed} are defined both as fixed parameters "
+                f"and as paired parameters. Paired parameters will vary across "
+                f"combinations, so they should not also be set in 'fixed_params'."
+            )
 
         # Validate that out_dir is not in fixed_params
         if "out_dir" in fixed_params:
@@ -147,6 +172,15 @@ def validate_params_against_schema(config: dict, schema_path: str) -> None:
             sweep = create_sweep(sweep_def)
             for value in sweep.generate_values():
                 validate_param_value(param_name, value, param_def)
+        
+        # Also validate paired parameter values if this is a PairedSweep
+        sweep = create_sweep(sweep_def)
+        if hasattr(sweep, 'paired_params'):
+            for paired_name, paired_values in sweep.paired_params.items():
+                paired_def = param_defs.get(paired_name)
+                if paired_def:
+                    for value in paired_values:
+                        validate_param_value(paired_name, value, paired_def)
 
 
 def validate_param_value(

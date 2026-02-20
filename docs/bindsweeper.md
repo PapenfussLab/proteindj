@@ -161,6 +161,54 @@ sweep_params:
       - "A56"
 ```
 
+#### Paired Parameters
+Paired parameters allow you to sweep multiple parameters in lock-step (zipped), rather than as a Cartesian product. This is useful when parameters are inherently linked — for example, each target PDB has a corresponding MSA file.
+
+```yaml
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "input/protein1.pdb"
+      - "input/protein2.pdb"
+      - "input/protein3.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "input/msas/protein1.a3m"
+        - "input/msas/protein2.a3m"
+        - "input/msas/protein3.a3m"
+```
+
+**Key behaviours:**
+- All lists in `paired_with` must have the same length as the primary `values` list
+- Paired values are **zipped** (not crossed): the first PDB always runs with the first MSA, etc.
+- You can pair multiple secondary parameters at once — just add more keys under `paired_with`
+- Paired parameters are combined via **Cartesian product** with any other (non-paired) sweep parameters
+- A paired parameter cannot also appear as a separate sweep parameter or a fixed parameter
+
+**Example with paired + unpaired:**
+
+With 3 paired targets and 2 noise scale values, BindSweeper generates 3 × 2 = 6 combinations:
+
+```yaml
+sweep_params:
+  uncropped_target_pdb:
+    values: ["protein1.pdb", "protein2.pdb", "protein3.pdb"]
+    paired_with:
+      boltz_msa_path: ["protein1.a3m", "protein2.a3m", "protein3.a3m"]
+  rfd_noise_scale:
+    values: [0.0, 0.1]
+```
+
+This produces:
+| Combination | `uncropped_target_pdb` | `boltz_msa_path` | `rfd_noise_scale` |
+|:-----------:|:----------------------:|:----------------:|:-----------------:|
+| 1           | protein1.pdb              | protein1.a3m        | 0.0               |
+| 2           | protein1.pdb              | protein1.a3m        | 0.1               |
+| 3           | protein2.pdb              | protein2.a3m        | 0.0               |
+| 4           | protein2.pdb              | protein2.a3m        | 0.1               |
+| 5           | protein3.pdb              | protein3.a3m        | 0.0               |
+| 6           | protein3.pdb              | protein3.a3m        | 0.1               |
+
 ## Example Configurations
 
 ### 1. Hotspots Sweep
@@ -230,6 +278,30 @@ sweep_params:
       - "./binderscaffolds/scaffolds_100_HHHH"
 ```
 
+### 4. Multi-Target Paired Sweep
+Sweep across multiple targets, each with a corresponding MSA file:
+
+```yaml
+mode: bindcraft_denovo
+profile: milton
+
+fixed_params:
+  skip_fold_seq: true
+  pred_method: "boltz"
+
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "input/protein1.pdb"
+      - "input/protein2.pdb"
+      - "input/protein3.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "input/msas/protein1.a3m"
+        - "input/msas/protein2.a3m"
+        - "input/msas/protein3.a3m"
+```
+
 ## Command Line Options
 
 ### Basic Options
@@ -281,6 +353,8 @@ For the standard quick test configurations:
 - **Hotspots sweep**: 3 combinations → 12 total sequences (3 × 4) 
 - **Scaffold sweep**: 3 combinations → 12 total sequences (3 × 4)
 - **Multi-dimensional sweep**: 4 combinations → 16 total sequences (4 × 4)
+- **Paired target sweep**: N paired targets → N × 4 total sequences (e.g., 3 targets → 12 sequences)
+- **Paired + unpaired sweep**: N paired × M unpaired → N × M × 4 total sequences
 
 This allows rapid validation of your parameter sweep configuration before committing to a full run with the default number of designs.
 

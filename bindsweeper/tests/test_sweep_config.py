@@ -12,7 +12,7 @@ from bindsweeper.sweep_config import (
     validate_param_value,
     validate_params_against_schema,
 )
-from bindsweeper.sweep_types import ListSweep, RangeSweep
+from bindsweeper.sweep_types import ListSweep, PairedSweep, RangeSweep
 
 
 class TestResultsConfig:
@@ -102,6 +102,75 @@ results_config:
         # Check list sweeps
         assert isinstance(config.sweep_params["rfd_ckpt_override"], ListSweep)
         assert isinstance(config.sweep_params["hotspot_residues"], ListSweep)
+
+    def test_from_yaml_paired_sweep(self, temp_dir):
+        """Test loading YAML with paired sweep parameters."""
+        yaml_content = """
+mode: bindcraft_denovo
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+"""
+        yaml_path = Path(temp_dir) / "paired.yaml"
+        yaml_path.write_text(yaml_content)
+
+        config = SweepConfig.from_yaml(str(yaml_path))
+        assert "uncropped_target_pdb" in config.sweep_params
+        sweep = config.sweep_params["uncropped_target_pdb"]
+        assert isinstance(sweep, PairedSweep)
+        assert sweep.generate_values() == ["target1.pdb", "target2.pdb"]
+        assert sweep.get_paired_value("boltz_msa_path", 0) == "msa1.a3m"
+
+    def test_paired_param_conflicts_with_sweep_param(self, temp_dir):
+        """Test that a paired param name conflicting with a sweep param is rejected."""
+        yaml_content = """
+mode: bindcraft_denovo
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+  boltz_msa_path:
+    values:
+      - "other.a3m"
+"""
+        yaml_path = Path(temp_dir) / "conflict.yaml"
+        yaml_path.write_text(yaml_content)
+
+        with pytest.raises(ValueError, match="defined both as sweep parameters"):
+            SweepConfig.from_yaml(str(yaml_path))
+
+    def test_paired_param_conflicts_with_fixed_param(self, temp_dir):
+        """Test that a paired param name conflicting with a fixed param is rejected."""
+        yaml_content = """
+mode: bindcraft_denovo
+fixed_params:
+  boltz_msa_path: "fixed.a3m"
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+"""
+        yaml_path = Path(temp_dir) / "conflict_fixed.yaml"
+        yaml_path.write_text(yaml_content)
+
+        with pytest.raises(ValueError, match="defined both as fixed parameters"):
+            SweepConfig.from_yaml(str(yaml_path))
 
 
 class TestValidateParamsAgainstSchema:
