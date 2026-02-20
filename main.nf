@@ -125,7 +125,10 @@ workflow {
             }
         }
         // Validate design length
-        if (params.design_mode in ['bindcraft_denovo','binder_denovo', 'monomer_denovo']){
+        // For binder_denovo and monomer_denovo, skip validation when rfd_contigs is provided as it contains the design length
+        if (params.design_mode == 'bindcraft_denovo'){
+            validateDesignLength(params.design_length)
+        } else if (params.design_mode in ['binder_denovo', 'monomer_denovo'] && !params.rfd_contigs){
             validateDesignLength(params.design_length)
         }
         
