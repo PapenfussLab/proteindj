@@ -190,11 +190,6 @@ def copy_and_rename_pdbs(df, pdb_dir, output_dir, max_designs=None):
     """
     os.makedirs(output_dir, exist_ok=True)
     
-    # Limit to top N designs if specified
-    if max_designs is not None:
-        df = df.head(max_designs)
-        print(f"Selecting top {max_designs} designs")
-    
     copied_count = 0
     missing_files = []
     
@@ -249,9 +244,13 @@ def main():
     
     print(f"\nRanked {len(df_ranked)} designs by {args.ranking_metric}")
     
-    # Apply max_designs limit if specified
-    output_count = len(df_ranked) if args.max_designs is None else min(len(df_ranked), args.max_designs)
-    
+    # Apply max_designs as the global cap — takes priority over max_seqs_per_fold
+    if args.max_designs is not None and len(df_ranked) > args.max_designs:
+        print(f"Applying max_designs limit: selecting top {args.max_designs} of {len(df_ranked)} designs")
+        df_ranked = df_ranked.head(args.max_designs)
+
+    output_count = len(df_ranked)
+
     # Save ranked CSV
     output_csv_path = args.output_csv
     df_ranked.to_csv(output_csv_path, index=False)
@@ -275,9 +274,10 @@ def main():
         print("\nError: No PDB files were copied", file=sys.stderr)
         sys.exit(1)
     
-    # Show top 5 designs
-    print(f"\nTop 5 designs by {args.ranking_metric}:")
-    print(df_ranked[['rank', 'fold_id', 'seq_id', args.ranking_metric]].head(5).to_string(index=False))
+    # Show top designs
+    display_count = min(5, len(df_ranked))
+    print(f"\nTop {display_count} designs by {args.ranking_metric}:")
+    print(df_ranked[['rank', 'fold_id', 'seq_id', args.ranking_metric]].head(display_count).to_string(index=False))
 
 
 if __name__ == "__main__":
