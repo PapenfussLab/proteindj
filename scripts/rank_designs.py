@@ -163,8 +163,8 @@ def generate_pdb_filename_from_row(row):
     Returns:
         Expected PDB filename
     """
-    fold_id = row.get('fold_id')
-    seq_id = row.get('seq_id')
+    fold_id = int(row.get('fold_id'))
+    seq_id = int(row.get('seq_id'))
     
     # Handle different prediction methods
     if pd.notna(row.get('boltz_ptm')):
