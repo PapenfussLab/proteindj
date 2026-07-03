@@ -22,7 +22,9 @@ Loads and validates sweep configuration from YAML files. Supports:
 
 #### SweepEngine
 Orchestrates the parameter sweep process:
-- Generates cartesian product of sweep parameters
+- Generates cartesian product of unpaired sweep parameters
+- Generates zipped (lock-step) combinations for paired parameters
+- Combines paired and unpaired via Cartesian product
 - Creates Nextflow profiles for each combination
 - Executes pipeline runs in parallel or sequentially
 - Handles quick test functionality
@@ -140,14 +142,23 @@ parameter_name:
   step: 0.1
 ```
 
-#### Linspace
+#### Paired
+Paired parameters are swept in lock-step (zipped), not as a Cartesian product.
+Useful when parameters are inherently linked (e.g., a target PDB and its MSA).
+
 ```yaml
 parameter_name:
-  type: linspace
-  start: 0.0
-  stop: 1.0
-  num: 11
+  values:
+    - "target1.pdb"
+    - "target2.pdb"
+  paired_with:
+    msa_path:
+      - "target1.a3m"
+      - "target2.a3m"
 ```
+
+All lists under `paired_with` must have the same length as the primary `values` list.
+Paired parameters are combined via Cartesian product with any non-paired sweep parameters.
 
 ### Profile Parameter
 

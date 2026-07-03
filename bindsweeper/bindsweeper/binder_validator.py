@@ -127,13 +127,20 @@ class BinderValidator:
         # Validate sweep parameters
         for param_name, param_def in sweep_params.items():
             # We need to generate values from the sweep definition to validate them
-            from .sweep_types import create_sweep
+            from .sweep_types import create_sweep, PairedSweep
 
             try:
                 sweep = create_sweep(param_def)
                 values = sweep.generate_values()
                 for value in values:
                     self.validate_parameter(mode, param_name, value)
+                
+                # Also validate paired parameter values
+                if isinstance(sweep, PairedSweep):
+                    for paired_name, paired_values in sweep.paired_params.items():
+                        for value in paired_values:
+                            if paired_name in self.schema.get(mode, {}):
+                                self.validate_parameter(mode, paired_name, value)
             except Exception as e:
                 raise ValueError(str(e))
 

@@ -80,7 +80,7 @@ process RunFAMPNN {
     """
 }
 process FilterFAMPNN {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     publishDir "${params.out_dir}/run/filter_fampnn", mode: 'copy', pattern: '*.log'
 

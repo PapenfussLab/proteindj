@@ -8,6 +8,7 @@ import pytest
 
 from bindsweeper.sweep_config import SweepConfig
 from bindsweeper.sweep_engine import CommandResult, SweepCombination, SweepEngine
+from bindsweeper.sweep_types import ListSweep, PairedSweep
 
 
 class TestCommandResult:
@@ -72,6 +73,8 @@ class TestSweepEngine:
         config = Mock(spec=SweepConfig)
         config.mode = "binder_denovo"
         config.fixed_params = {"design_length": "50-100", "num_designs": 4}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
 
         # Mock sweep parameters
         noise_sweep = Mock()
@@ -87,25 +90,20 @@ class TestSweepEngine:
     @pytest.fixture
     def sweep_engine(self, mock_config, temp_dir, config_files):
         """Create a sweep engine with mocked dependencies."""
-        with patch("bindsweeper.sweep_engine.parse_nextflow_config") as mock_parse:
-            mock_parse.return_value = {
-                "design_mode": None,
-                "seqs_per_design": 8,
-                "out_dir": "/default/output",
-            }
-
-            engine = SweepEngine(
-                config=mock_config,
-                base_output_dir=temp_dir,
-                nextflow_config_path=config_files["nextflow_config"],
-            )
-            return engine
+        engine = SweepEngine(
+            config=mock_config,
+            base_output_dir=temp_dir,
+            nextflow_config_path=config_files["nextflow_config"],
+        )
+        return engine
 
     def test_engine_initialization(self, sweep_engine, mock_config, temp_dir):
         """Test sweep engine initialization."""
         assert sweep_engine.config == mock_config
         assert sweep_engine.base_output_dir == temp_dir
-        assert "seqs_per_design" in sweep_engine.nextflow_defaults
+        assert sweep_engine.resume == False
+        assert sweep_engine.parallel == False
+        assert sweep_engine.max_parallel == 4
 
     def test_generate_combinations(self, sweep_engine):
         """Test generating parameter combinations."""
@@ -128,13 +126,13 @@ class TestSweepEngine:
         config.mode = "denovo"
         config.fixed_params = {"num_designs": 4}
         config.sweep_params = {}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
 
-        with patch("bindsweeper.sweep_engine.parse_nextflow_config") as mock_parse:
-            mock_parse.return_value = {}
-            engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
+        engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
 
-            combinations = engine.generate_combinations()
-            assert len(combinations) == 0
+        combinations = engine.generate_combinations()
+        assert len(combinations) == 0
 
     def test_generate_output_dir(self, sweep_engine):
         """Test output directory generation."""
@@ -156,9 +154,10 @@ class TestSweepEngine:
         """Test command generation."""
         command = sweep_engine._generate_command("test_profile", "/test/output")
 
-        assert "nextflow run ./main.nf" in command
-        assert "-profile test_profile" in command
+        assert "nextflow -c bindsweeper.config run main.nf" in command
+        assert "-profile milton,test_profile" in command
         assert "--out_dir '/test/output'" in command
+        assert "--zip_pdbs false" in command
 
     @patch("bindsweeper.sweep_engine.generate_profile_content")
     def test_generate_profiles(self, mock_generate_profile, sweep_engine):
@@ -330,3 +329,255 @@ class TestSweepEngine:
             sweep_engine.execute_sweep(
                 combinations, dry_run=False, continue_on_error=False
             )
+
+    @patch("subprocess.run")
+    @patch("os.makedirs")
+    def test_execute_combination_with_isolated_cache(
+        self, mock_makedirs, mock_subprocess, sweep_engine
+    ):
+        """Test executing combination with isolated cache directory."""
+        mock_subprocess.return_value = Mock(returncode=0)
+
+        combination = SweepCombination(
+            mode="test_mode",
+            all_params={},
+            swept_params={"param": "value"},
+            profile_name="test_profile",
+            output_dir="/test/output",
+            command="test command",
+        )
+
+        result = sweep_engine.execute_combination(combination, use_isolated_cache=True)
+
+        assert result.success is True
+        # Should create both output dir and cache dir
+        assert mock_makedirs.call_count == 2
+        
+        # Check that subprocess was called with env containing NXF_CACHE_DIR
+        call_args = mock_subprocess.call_args
+        assert "env" in call_args.kwargs
+        assert "NXF_CACHE_DIR" in call_args.kwargs["env"]
+        assert call_args.kwargs["env"]["NXF_CACHE_DIR"] == "/test/output/.nextflow_cache"
+
+    @patch.object(SweepEngine, "_execute_parallel")
+    def test_execute_sweep_parallel_mode(self, mock_parallel, sweep_engine):
+        """Test that parallel mode triggers parallel execution."""
+        sweep_engine.parallel = True
+        
+        combinations = [
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "value"},
+                profile_name="test_profile",
+                output_dir="/test/output",
+                command="test command",
+            )
+        ]
+
+        mock_parallel.return_value = []
+
+        sweep_engine.execute_sweep(combinations, dry_run=False, parallel=True)
+
+        # Verify parallel execution was called
+        mock_parallel.assert_called_once_with(combinations, False)
+
+    def test_execute_parallel_success(self, sweep_engine, temp_dir):
+        """Test parallel execution with successful combinations using real commands."""
+        # Use simple shell commands that will actually succeed
+        combinations = [
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": f"value{i}"},
+                profile_name=f"test_profile{i}",
+                output_dir=f"{temp_dir}/output{i}",
+                command=f"echo 'test {i}' > {temp_dir}/test{i}.txt",
+            )
+            for i in range(2)  # Use fewer for faster tests
+        ]
+
+        results = sweep_engine._execute_parallel(combinations, continue_on_error=False)
+
+        assert len(results) == 2
+        assert all(r.success for r in results)
+        # Verify output files were created
+        import os
+        assert os.path.exists(f"{temp_dir}/test0.txt")
+        assert os.path.exists(f"{temp_dir}/test1.txt")
+
+    def test_execute_parallel_with_failure(self, sweep_engine, temp_dir):
+        """Test parallel execution with failure and continue_on_error."""
+        # Mix of successful and failing commands
+        combinations = [
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "success"},
+                profile_name="test_profile_success",
+                output_dir=f"{temp_dir}/output_success",
+                command=f"echo 'success' > {temp_dir}/success.txt",
+            ),
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "failure"},
+                profile_name="test_profile_failure",
+                output_dir=f"{temp_dir}/output_failure",
+                command="exit 1",  # This will fail
+            ),
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "success2"},
+                profile_name="test_profile_success2",
+                output_dir=f"{temp_dir}/output_success2",
+                command=f"echo 'success2' > {temp_dir}/success2.txt",
+            ),
+        ]
+
+        results = sweep_engine._execute_parallel(combinations, continue_on_error=True)
+
+        assert len(results) == 3
+        # Two should succeed, one should fail
+        successful = [r for r in results if r.success]
+        failed = [r for r in results if not r.success]
+        assert len(successful) == 2
+        assert len(failed) == 1
+
+    def test_execute_parallel_stop_on_failure(self, sweep_engine, temp_dir):
+        """Test parallel execution stops on failure when continue_on_error=False."""
+        # Create combinations where at least one will fail
+        combinations = [
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "failure"},
+                profile_name="test_profile_failure",
+                output_dir=f"{temp_dir}/output_failure",
+                command="exit 1",  # This will fail
+            ),
+            SweepCombination(
+                mode="test_mode",
+                all_params={},
+                swept_params={"param": "other"},
+                profile_name="test_profile_other",
+                output_dir=f"{temp_dir}/output_other",
+                command=f"echo 'test'",
+            ),
+        ]
+
+        # Should raise RuntimeError when a combination fails
+        with pytest.raises(RuntimeError, match="Combination failed"):
+            sweep_engine._execute_parallel(combinations, continue_on_error=False)
+
+
+class TestPairedSweepCombinations:
+    """Test combination generation with paired parameters."""
+
+    @pytest.fixture
+    def paired_config(self):
+        """Mock config with paired sweep parameters."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {"skip_fold_seq": True}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
+
+        paired_sweep = PairedSweep(
+            values=["protein1.pdb", "protein2.pdb", "protein3.pdb"],
+            paired_params={
+                "boltz_msa_path": ["protein1.a3m", "protein2.a3m", "protein3.a3m"],
+            },
+        )
+        config.sweep_params = {"uncropped_target_pdb": paired_sweep}
+        return config
+
+    @pytest.fixture
+    def paired_engine(self, paired_config, temp_dir, config_files):
+        """Create engine with paired config."""
+        return SweepEngine(
+            config=paired_config,
+            base_output_dir=temp_dir,
+            nextflow_config_path=config_files["nextflow_config"],
+        )
+
+    def test_paired_combination_count(self, paired_engine):
+        """Test that paired params produce zipped (not Cartesian) combinations."""
+        combos = paired_engine.generate_combinations()
+        # 3 paired values → 3 combinations (not 9)
+        assert len(combos) == 3
+
+    def test_paired_values_are_zipped(self, paired_engine):
+        """Test that paired values are correctly zipped together."""
+        combos = paired_engine.generate_combinations()
+        for combo in combos:
+            pdb = combo.swept_params["uncropped_target_pdb"]
+            msa = combo.swept_params["boltz_msa_path"]
+            # protein1.pdb should pair with protein1.a3m, etc.
+            assert pdb.replace(".pdb", "") == msa.replace(".a3m", "")
+
+    def test_paired_with_unpaired_cartesian(self, temp_dir, config_files):
+        """Test paired + unpaired gives paired × unpaired combinations."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {}
+        config.profile = "milton"
+        config.pipeline_path = "main.nf"
+
+        paired_sweep = PairedSweep(
+            values=["t1.pdb", "t2.pdb"],
+            paired_params={"boltz_msa_path": ["m1.a3m", "m2.a3m"]},
+        )
+        unpaired_sweep = ListSweep(values=[0.0, 0.1])
+        config.sweep_params = {
+            "uncropped_target_pdb": paired_sweep,
+            "rfd_noise_scale": unpaired_sweep,
+        }
+
+        engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
+        combos = engine.generate_combinations()
+
+        # 2 paired × 2 unpaired = 4 combinations
+        assert len(combos) == 4
+
+        # Verify pairings are maintained across Cartesian expansion:
+        # t1.pdb must always appear with m1.a3m, t2.pdb with m2.a3m
+        expected_pairs = {"t1.pdb": "m1.a3m", "t2.pdb": "m2.a3m"}
+        for combo in combos:
+            pdb = combo.swept_params["uncropped_target_pdb"]
+            msa = combo.swept_params["boltz_msa_path"]
+            assert msa == expected_pairs[pdb], (
+                f"Pairing broken: {pdb} paired with {msa}, expected {expected_pairs[pdb]}"
+            )
+
+    def test_paired_quick_test_combinations(self, paired_engine):
+        """Test quick test generation with paired parameters."""
+        combos = paired_engine.generate_quick_test_combinations()
+        # Should still have 3 zipped combinations
+        assert len(combos) == 3
+        # All should have quick test prefix in profile name
+        for combo in combos:
+            assert "quicktest" in combo.profile_name
+
+    def test_multiple_paired_groups_raises(self, temp_dir, config_files):
+        """Test that multiple paired parameter groups raise an error."""
+        config = Mock(spec=SweepConfig)
+        config.mode = "bindcraft_denovo"
+        config.fixed_params = {}
+        config.profile = None
+        config.pipeline_path = "main.nf"
+
+        config.sweep_params = {
+            "param_a": PairedSweep(
+                values=["a1", "a2"], paired_params={"ap": ["x1", "x2"]}
+            ),
+            "param_b": PairedSweep(
+                values=["b1", "b2"], paired_params={"bp": ["y1", "y2"]}
+            ),
+        }
+
+        engine = SweepEngine(config, temp_dir, config_files["nextflow_config"])
+
+        with pytest.raises(ValueError, match="only one paired parameter group"):
+            engine.generate_combinations()

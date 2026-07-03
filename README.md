@@ -2,7 +2,7 @@
 
 <img height="240" src="img/logo.png"><img height="240" alt="bindsweeper_logo" src="img/bindsweeper_logo.png" />
 
-[bioRxiv Preprint](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1)
+[Link to Publication](https://onlinelibrary.wiley.com/doi/10.1002/pro.70464)
 
 ProteinDJ is a Nextflow pipeline for protein design that installs and utilises multiple external software packages, including:
 
@@ -18,7 +18,7 @@ ProteinDJ is a Nextflow pipeline for protein design that installs and utilises m
 
 BindSweeper provides a convenient wrapper for ProteinDJ, enabling sweeping of different parameters for binder design.
 
-If you find ProteinDJ or BindSweeper useful in your research, please [cite us](https://www.biorxiv.org/cgi/content/short/2025.09.24.678028v1) and the developers of the software listed above that make protein design pipelines like this possible. We have provided a list of citations [here](#citations).
+If you find ProteinDJ or BindSweeper useful in your research, please [cite us](https://onlinelibrary.wiley.com/doi/10.1002/pro.70464) and the developers of the software listed above that make protein design pipelines like this possible. We have provided a list of citations [here](#citations).
 
 > Please note: PyRosetta requires a license for commercial projects and is used extensively within ProteinDJ, AlphaFold2 Initial Guess, and ProteinMPNN-FastRelax.
 
@@ -37,7 +37,7 @@ If you find ProteinDJ or BindSweeper useful in your research, please [cite us](h
   - [Seqera Support](#seqera)
   - [Troubleshooting and common errors](#errors)
   - [Data used for benchmarking](#append-bench)
-  - [Citations for software packages used in ProteinDJ](#append-citations)
+  - [Citations for software packages used in ProteinDJ](#citations)
 
 ## Installation <a name="install"></a>
 
@@ -130,14 +130,16 @@ After running the pipeline, you can find all the results as well as intermediate
 
 ```
 out_dir/
-├── configs/              # Config files used for run
-├── inputs/               # Input files used in run e.g. PDB files for binder design
-├── run/                  # Intermediate results and log files with subfolders for each process
-├── results/              # Final results and metadata
-    ├── best_designs/     # Directory containing PDB files of designs that passed all filters
-    ├── all_designs.csv   # CSV file with metadata for all designs
-    └── best_designs.csv  # CSV file with metadata for designs that passed all filters
-└── nextflow.log          # Copy of Nextflow log from run
+├── configs/                # Config files used for run
+├── inputs/                 # Input files used in run e.g. PDB files for binder design
+├── run/                    # Intermediate results and log files with subfolders for each process
+├── results/                # Final results and metadata
+    ├── best_designs/       # Directory containing PDB files of designs that passed all filters
+    ├── ranked_designs/     # Directory containing ranked PDB files of designs that passed all filters
+    ├── all_designs.csv     # CSV file with metadata for all designs
+    ├── best_designs.csv    # CSV file with metadata for designs that passed all filters
+    └── ranked_designs.csv  # CSV file with metadata for ranked designs that passed all filters
+└── nextflow.log            # Copy of Nextflow log from run
 ```
 
 > Tip: If your run gets interrupted you can resume from the last completed step by using the -resume flag e.g. `nextflow run main.nf -profile monomer_denovo -resume`
@@ -148,24 +150,39 @@ We have aimed to provide as much functionality as possible of the underlying sof
 
 ## Filtering Designs <a name="params-filter"></a>
 
-Due to the inherently stochastic nature of protein design, often we see problematic results during the pipeline. It can save computation time to discard designs mid-pipeline that fail to meet success criteria. We have implemented three filtering stages that can be used to reject poor designs:
+Due to the inherently stochastic nature of protein design, often we see problematic results during the pipeline. It can save computation time to discard designs mid-pipeline that fail to meet success criteria. We have implemented four filtering stages that can be used to reject poor designs:
 
-- Fold Filtering - Filters designs according to the number of secondary structure elements and radius of gyration.
-- Sequence Filtering - Filters designs according to the score of the generated sequence
-- AlphaFold2/Boltz-2 Filtering - Filters designs according to the quality of the structure prediction
+- **Fold Filtering** - Filters designs according to the number of secondary structure elements and radius of gyration.
+- **Sequence Filtering** - Filters designs according to the score of the generated sequence
+- **AlphaFold2/Boltz-2 Filtering** - Filters designs according to the quality of the structure prediction
+- **Analysis Filtering** - Filters designs according to detailed biophysical metrics calculated by PyRosetta and BioPython, including interface quality, energy, and sequence properties
 
 The most powerful predictors of experimental success are structure prediction metrics, but some metrics are more effective than others. Here are some recommended filters for binder design from the literature and their corresponding parameters in ProteinDJ:
 
-| Parameter                  | RFdiffusion paper<sup>1</sup> | AlphaProteo whitepaper<sup>2</sup> |
-| -------------------------- | --------------------- | ---------------------- |
-| af2_max_pae_interaction    | 10                    | 7                      |
-| af2_min_plddt_overall      | 80                    | 90                     |
-| af2_max_rmsd_binder_bndaln | 1                     | 1.5                    |
+| Parameter                     | RFdiffusion paper<sup>1</sup> | BindCraft paper <sup>2</sup> | AlphaProteo whitepaper<sup>3</sup> |
+| ----------------------------- | ----------------------------- | ---------------------------- | ---------------------------------- |
+| `af2_max_pae_interaction`     | 10                            | 10.5                         | 7                                  |
+| `af2_min_plddt_overall`       | 80                            | 80                           | 90                                 |
+| `af2_max_rmsd_binder_bndaln`  | 1                             |                              | 1.5                                |
+| `af2_max_rmsd_binder_tgtaln`  |                               | 6                            |                                    |
+| `boltz_max_rmsd_overall`      |                               |                              | 2.5                                |
+| `boltz_min_ptm_binder`        |                               |                              | 0.8                                |
+| `pr_min_intface_shpcomp`      |                               | 0.6                          |                                    |
+| `pr_min_intface_hbonds`       |                               | 3                            |                                    |
+| `pr_max_intface_unsat_hbonds` |                               | 4                            |                                    |
+| `pr_max_surfhphobics`         |                               | 35                           |                                    |
 
-<sup> 1. Watson, J.L. et al. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8; 2. Zambaldi, V. et al. arXiv (2024). https://doi.org/10.48550/arXiv.2409.08022
+<sup> 1. Watson, J.L. et al. Nature 620, 1089–1100 (2023). https://doi.org/10.1038/s41586-023-06415-8; 2. Pacesa, M. et al. Nature 646, 483-492 (2025). https://doi.org/10.1038/s41586-025-09429-6 3. Zambaldi, V. et al. arXiv (2024). https://doi.org/10.48550/arXiv.2409.08022
 </sup>
 
-We recommend disabling other filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs. We have prepared a [Filtering Guide](docs/parameters.md/#filtering-parameters) on all the filters available in ProteinDJ with recommended values for each.
+We recommend disabling other filters for small-scale and pilot experiments, and using these results to decide on values to use for filtering large-scale runs. Note that BindCraft has built-in filtering of designs and will automatically reject designs that meet any of the following criteria:
+
+- Low confidence (pLDDT < 0.7)
+- Severe clashes (clashes detected between C-alpha atoms)
+- Insufficient contact between binder and target (less than three residues contacting the target)
+
+If a design fails to meet these criteria, BindCraft will generate a new design until it finds one that passes. This can lead to long run times compared to RFdiffusion but tends to give binder designs that are more likely to succeed in the subsequent Structure Prediction stage.
+We have prepared a [Filtering Guide](docs/parameters.md/#filtering-parameters) on all the filters available in ProteinDJ with recommended values for each.
 
 ## Metrics and metadata <a name="metrics"></a>
 
@@ -208,9 +225,9 @@ We used five structures for testing and benchmarking our pipeline.
 | PD-L1             | 5O45   | 5o45_pd-l1.pdb | [A17-131/0]                                            | [A56, A115, A123]  |
 | TrkA              | 1WWW   | 1www_trka.pdb  | [X282-382/0]                                           | [X294, X296, X333] |
 
-### Citations for software packages used in ProteinDJ <a name="append-citations"></a>
+### Citations for software packages used in ProteinDJ <a name="citations"></a>
 
-ProteinDJ: a high-performance and modular protein design pipeline - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. bioRxiv. https://doi.org/10.1101/2025.09.24.678028
+ProteinDJ - Silke, D., Iskander, J., Pan, J., Thompson, A.P., Papenfuss, A.T., Lucet, I.S., Hardy, J.M. ProteinDJ: a high-performance and modular protein design pipeline. Prot Sci (2026). https://doi.org/10.1002/pro.70464
 
 AlphaFold2 Initial Guess and ProteinMPNN-FastRelax - Bennett, N.R., Coventry, B., Goreshnik, I. et al. Improving de novo protein binder design with deep learning. Nat Commun 14, 2625 (2023). https://doi.org/10.1038/s41467-023-38328-5
 
@@ -231,3 +248,5 @@ RFdiffusion - Watson, J.L., Juergens, D., Bennett, N.R. et al. De novo design of
 ProteinMPNN - Dauparas, J., et al. Robust deep learning–based protein sequence design using ProteinMPNN. Science 378, 49-56 (2022). https://doi.org/10.1126/science.add2187
 
 PyRosetta - S. Chaudhury, S. Lyskov & J. J. Gray, "PyRosetta: a script-based interface for implementing molecular modeling algorithms using Rosetta," Bioinformatics, 26(5), 689-691 (2010)
+
+iPSAE score scripts - Digital Biotechnology Lab. (2025). Overath, M. D., Rygaard, A., Jacobsen, C. P., Brasas, V., Morell, O., Sormanni, P., & Jenkins, T. P. (2025). Predicting Experimental Success in De Novo Binder Design: A Meta-Analysis of 3,766 Experimentally Characterised Binders. bioRxiv. https://doi.org/10.1101/2025.08.14.670059v1

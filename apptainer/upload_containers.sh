@@ -14,6 +14,7 @@ CONTAINERS=(
     "dl_binder_design"
     "fampnn"
     "pyrosetta_tools"
+    "python_tools"
     "rfdiffusion"
 )
 

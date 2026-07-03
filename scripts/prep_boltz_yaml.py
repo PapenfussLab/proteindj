@@ -65,17 +65,31 @@ def add_seqres_to_pdb(input_pdb, output_pdb):
         out_file.write('END\n')
 
 
-def extract_sequences(pdb_path):
-    """Extract sequences from PDB file, returns list of {id, sequence} dicts."""
+def extract_sequences(pdb_path, msa_file=None, msa_chain=None):
+    """
+    Extract sequences from PDB file, returns list of {id, sequence, msa} dicts.
+    
+    Args:
+        pdb_path: Path to PDB file
+        msa_file: Optional path to .a3m MSA file
+        msa_chain: Chain ID to apply MSA to (default None applies to all)
+    """
     sequences = []
     
     for record in SeqIO.parse(pdb_path, 'pdb-atom'):
         chain_id = record.annotations.get('chain', '')
         sequence = str(record.seq)
+        
+        # Determine MSA value for this chain
+        if msa_file and (msa_chain is None or chain_id == msa_chain):
+            msa_value = os.path.basename(msa_file)
+        else:
+            msa_value = 'empty'
+        
         sequences.append({
             'id': chain_id,
             'sequence': sequence,
-            'msa': 'empty'
+            'msa': msa_value
         })
     
     return sequences
@@ -128,9 +142,9 @@ def generate_yaml_config(sequences, use_template=False, pdb_filename=None,
 
 
 def process_pdb_files(input_dir, output_dir, use_template=False, template_chain='B',
-                      template_force=False, template_threshold=None):
+                      template_force=False, template_threshold=None, msa_file=None, msa_chain=None):
     """
-    Process PDB files and generate YAML configs with optional PDB templates.
+    Process PDB files and generate YAML configs with optional PDB templates and MSA.
     
     Args:
         input_dir: Input directory containing PDB files
@@ -139,6 +153,8 @@ def process_pdb_files(input_dir, output_dir, use_template=False, template_chain=
         template_chain: Chain ID to use as template (default 'B' for target in binder mode)
         template_force: Whether to enforce template with potential
         template_threshold: Distance threshold in Angstroms for template deviation
+        msa_file: Path to MSA file (.a3m format) to use for specified chain
+        msa_chain: Chain ID to apply MSA to (default None)
     """
     # Create output directory for YAMLs
     os.makedirs(output_dir, exist_ok=True)
@@ -149,12 +165,19 @@ def process_pdb_files(input_dir, output_dir, use_template=False, template_chain=
         templates_dir = os.path.join(output_dir, 'templates')
         os.makedirs(templates_dir, exist_ok=True)
     
+    # Copy MSA file to output directory if provided
+    if msa_file:
+        import shutil
+        msa_dest = os.path.join(output_dir, os.path.basename(msa_file))
+        shutil.copy2(msa_file, msa_dest)
+        print(f'Copied MSA file: {msa_file} -> {os.path.basename(msa_file)}\n')
+    
     for filename in os.listdir(input_dir):
         if filename.startswith('fold_') and filename.endswith('.pdb'):
             pdb_path = os.path.join(input_dir, filename)
             
             # Extract sequences from PDB
-            sequences = extract_sequences(pdb_path)
+            sequences = extract_sequences(pdb_path, msa_file=msa_file, msa_chain=msa_chain)
             
             # Check if template chain exists when using templates
             if use_template:
@@ -194,7 +217,7 @@ def process_pdb_files(input_dir, output_dir, use_template=False, template_chain=
 def main():
     """Command-line interface setup"""
     parser = argparse.ArgumentParser(
-        description='Generate Boltz-2 YAML configs with optional PDB templates',
+        description='Generate Boltz-2 YAML configs with optional PDB templates and MSA',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('-i', '--input', required=True,
@@ -209,9 +232,16 @@ def main():
                         help='Use potential to enforce template structure')
     parser.add_argument('--template-threshold', type=float, default=None,
                         help='Distance threshold (Angstroms) for template deviation')
+    parser.add_argument('--msa-file', default=None,
+                        help='Path to MSA file (.a3m format) to use for specified chain')
+    parser.add_argument('--msa-chain', default=None,
+                        help='Chain ID to apply MSA to (default: same as template-chain)')
     
     args = parser.parse_args()
     output_dir = args.output if args.output else args.input
+    
+    # If MSA chain not specified but MSA file provided, use template chain
+    msa_chain = args.msa_chain if args.msa_chain else args.template_chain
     
     process_pdb_files(
         args.input, 
@@ -219,7 +249,9 @@ def main():
         use_template=args.use_template,
         template_chain=args.template_chain,
         template_force=args.template_force,
-        template_threshold=args.template_threshold
+        template_threshold=args.template_threshold,
+        msa_file=args.msa_file,
+        msa_chain=msa_chain if args.msa_file else None
     )
 
 

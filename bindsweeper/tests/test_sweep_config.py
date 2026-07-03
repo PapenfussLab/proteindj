@@ -8,12 +8,11 @@ import pytest
 from bindsweeper.sweep_config import (
     ResultsConfig,
     SweepConfig,
-    parse_nextflow_config,
     parse_nextflow_value,
     validate_param_value,
     validate_params_against_schema,
 )
-from bindsweeper.sweep_types import ListSweep, RangeSweep
+from bindsweeper.sweep_types import ListSweep, PairedSweep, RangeSweep
 
 
 class TestResultsConfig:
@@ -22,12 +21,11 @@ class TestResultsConfig:
     def test_default_values(self):
         """Test default configuration values."""
         config = ResultsConfig()
-        assert config.rank_dirname == "rank"
-        assert config.extract_dirname == "extract"
-        assert config.results_dirname == "results"
-        assert config.csv_filename == "best.csv"
-        assert config.output_csv == "merged_best.csv"
-        assert config.pdb_output_dir == "merged_best_designs"
+        assert config.rank_dirname == "results"
+        assert config.results_dirname == "best_designs"
+        assert config.csv_filename == "best_designs.csv"
+        assert config.output_csv == "sweep_results.csv"
+        assert config.pdb_output_dir == "sweep_designs"
         assert config.zip_results is True
 
     def test_custom_values(self):
@@ -35,7 +33,7 @@ class TestResultsConfig:
         config = ResultsConfig(rank_dirname="custom_rank", zip_results=False)
         assert config.rank_dirname == "custom_rank"
         assert config.zip_results is False
-        assert config.csv_filename == "best.csv"  # Default preserved
+        assert config.csv_filename == "best_designs.csv"  # Default preserved
 
 
 class TestSweepConfig:
@@ -46,7 +44,8 @@ class TestSweepConfig:
         config = SweepConfig.from_yaml(config_files["sweep_yaml"])
 
         assert config.mode == "binder_denovo"
-        assert "rfd_contigs" in config.fixed_params
+        assert "design_length" in config.fixed_params
+        assert "input_pdb" in config.fixed_params
         assert "rfd_noise_scale" in config.sweep_params
         assert "rfd_ckpt_override" in config.sweep_params
         assert "hotspot_residues" in config.sweep_params
@@ -103,6 +102,75 @@ results_config:
         # Check list sweeps
         assert isinstance(config.sweep_params["rfd_ckpt_override"], ListSweep)
         assert isinstance(config.sweep_params["hotspot_residues"], ListSweep)
+
+    def test_from_yaml_paired_sweep(self, temp_dir):
+        """Test loading YAML with paired sweep parameters."""
+        yaml_content = """
+mode: bindcraft_denovo
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+"""
+        yaml_path = Path(temp_dir) / "paired.yaml"
+        yaml_path.write_text(yaml_content)
+
+        config = SweepConfig.from_yaml(str(yaml_path))
+        assert "uncropped_target_pdb" in config.sweep_params
+        sweep = config.sweep_params["uncropped_target_pdb"]
+        assert isinstance(sweep, PairedSweep)
+        assert sweep.generate_values() == ["target1.pdb", "target2.pdb"]
+        assert sweep.get_paired_value("boltz_msa_path", 0) == "msa1.a3m"
+
+    def test_paired_param_conflicts_with_sweep_param(self, temp_dir):
+        """Test that a paired param name conflicting with a sweep param is rejected."""
+        yaml_content = """
+mode: bindcraft_denovo
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+  boltz_msa_path:
+    values:
+      - "other.a3m"
+"""
+        yaml_path = Path(temp_dir) / "conflict.yaml"
+        yaml_path.write_text(yaml_content)
+
+        with pytest.raises(ValueError, match="defined both as sweep parameters"):
+            SweepConfig.from_yaml(str(yaml_path))
+
+    def test_paired_param_conflicts_with_fixed_param(self, temp_dir):
+        """Test that a paired param name conflicting with a fixed param is rejected."""
+        yaml_content = """
+mode: bindcraft_denovo
+fixed_params:
+  boltz_msa_path: "fixed.a3m"
+sweep_params:
+  uncropped_target_pdb:
+    values:
+      - "target1.pdb"
+      - "target2.pdb"
+    paired_with:
+      boltz_msa_path:
+        - "msa1.a3m"
+        - "msa2.a3m"
+"""
+        yaml_path = Path(temp_dir) / "conflict_fixed.yaml"
+        yaml_path.write_text(yaml_content)
+
+        with pytest.raises(ValueError, match="defined both as fixed parameters"):
+            SweepConfig.from_yaml(str(yaml_path))
 
 
 class TestValidateParamsAgainstSchema:
@@ -227,34 +295,6 @@ class TestValidateParamValue:
         """Test validation with no parameter definition."""
         # Should not raise exception
         validate_param_value("test_param", "any_value", None)
-
-
-class TestParseNextflowConfig:
-    """Test parsing Nextflow configuration files."""
-
-    def test_parse_basic_params(self, config_files):
-        """Test parsing basic parameters."""
-        params = parse_nextflow_config(config_files["nextflow_config"])
-
-        # Check that some expected params were parsed
-        # The exact params may vary based on the regex parsing
-        assert isinstance(params, dict)
-        # Check for any numeric params that should be parsed
-        numeric_params = [v for v in params.values() if isinstance(v, (int, float))]
-        assert len(numeric_params) > 0  # Should parse at least some numbers
-
-    def test_parse_nonexistent_file(self):
-        """Test parsing non-existent file."""
-        params = parse_nextflow_config("/nonexistent/path")
-        assert params == {}
-
-    def test_parse_empty_file(self, temp_dir):
-        """Test parsing empty file."""
-        empty_config = Path(temp_dir) / "empty.config"
-        empty_config.write_text("")
-
-        params = parse_nextflow_config(str(empty_config))
-        assert params == {}
 
 
 class TestParseNextflowValue:

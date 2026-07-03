@@ -20,6 +20,7 @@ from pyrosetta.rosetta.core.scoring import dssp
 import os
 import traceback
 import re
+import numpy as np
 
 # setup logging - file and stream
 logging.basicConfig(
@@ -66,9 +67,11 @@ def calculate_interface_metrics(pose, chain1='A', chain2='B'):
     return {
         f'pr_intface_BSA{suffix}': round(metrics.dSASA[1] / 2),
         f'pr_intface_shpcomp{suffix}': round(metrics.sc_value, 3),
-        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
         f'pr_intface_deltaG{suffix}': round(metrics.dG[1], 1),
-        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3),
+        f'pr_intface_deltaGtoBSA{suffix}': round(metrics.dG_dSASA_ratio, 3),
+        f'pr_intface_hbonds{suffix}': metrics.interface_hbonds,
+        f'pr_intface_unsat_hbonds{suffix}': metrics.delta_unsat_hbonds,
+        f'pr_intface_packstat{suffix}': round(metrics.packstat, 3)
     }
 
 def get_chain_ids(pose):
@@ -86,6 +89,59 @@ def get_chain_ids(pose):
         # Fallback to numeric chain indices
         chain_ids = [str(i) for i in range(1, pose.num_chains() + 1)]
     return chain_ids
+
+def calculate_sap_scores(pose, chain_id='A'):
+    """
+    Calculate Spatial Aggregation Propensity (SAP) scores
+
+    For monomer: Returns pr_SAP only
+    For complex: Returns pr_SAP (alone) and pr_SAP_complex (with target shielding)
+    """
+    from pyrosetta.rosetta.core.select.residue_selector import TrueResidueSelector
+
+    metrics = {}
+
+    # ===== CALCULATE pr_SAP (binder/monomer alone) =====
+    # Find chain index
+    chain_index = 1
+    if pose.pdb_info():
+        for i in range(1, pose.num_chains() + 1):
+            if pose.pdb_info().chain(pose.chain_begin(i)) == chain_id:
+                chain_index = i
+                break
+
+    # Split and get isolated chain
+    chains = pose.split_by_chain()
+    chain_pose = chains[chain_index]
+
+    # Calculate SAP for isolated chain
+    per_res_sap = pr.rosetta.core.pack.guidance_scoreterms.sap.PerResidueSapScoreMetric()
+    sap_scores = per_res_sap.calculate(chain_pose)
+
+    # Convert to numpy array
+    alone_scores = np.array([float(v) for v in sap_scores.values()])
+
+    # Calculate mean SAP
+    metrics['pr_SAP'] = round(float(np.mean(alone_scores)), 3)
+
+    # ===== CALCULATE pr_SAP_complex (if multi-chain complex) =====
+    if pose.num_chains() >= 2:
+        # Use TrueResidueSelector to include all residues as neighbors
+        all_residues = TrueResidueSelector()
+        per_res_complex = pr.rosetta.core.pack.guidance_scoreterms.sap.PerResidueSapScoreMetric(all_residues)
+        sap_complex_all = per_res_complex.calculate(pose)
+
+        # Filter to chain A only
+        complex_scores = []
+        for res_idx in sap_complex_all.keys():
+            if pose.pdb_info() and pose.pdb_info().chain(res_idx) == chain_id:
+                complex_scores.append(float(sap_complex_all[res_idx]))
+
+        # Calculate mean SAP in complex
+        if complex_scores:
+            metrics['pr_SAP_complex'] = round(float(np.mean(complex_scores)), 3)
+
+    return metrics
 
 def calculate_chain_metrics(pose, chain_id, pdb_path):
     """Calculate all metrics for a single chain"""
@@ -170,7 +226,7 @@ def calculate_surface_chemistry(pose):
             total_count += 1
 
     return {
-        'pr_surfhphobics_%': round(surface_hydrophobic_count * 100 / total_count, 1)
+        'pr_surfhphobics': round(surface_hydrophobic_count * 100 / total_count, 1)
     }
 
 def calculate_tem(pose):
@@ -267,7 +323,7 @@ def calculate_whole_pose_metrics(pose):
     
     return {
         'pr_RoG_total': round(rog, 2),
-        **{f'pr_surfhphobics_total_%': surface_metrics['pr_surfhphobics_%']},
+        **{f'pr_surfhphobics_total': surface_metrics['pr_surfhphobics']},
         **tem_metrics
     }
 
@@ -293,6 +349,10 @@ def process_single_pdb(pdb_path):
             chain_metrics = calculate_chain_metrics(pose, primary_chain, pdb_path)
             metrics.update(chain_metrics)
 
+            # Calculate SAP scores for monomer
+            sap_metrics = calculate_sap_scores(pose, primary_chain)
+            metrics.update(sap_metrics)
+
         elif len(chain_ids) == 2:
             # Calculate binder chain (A) sequence metrics
             sequence = get_chain_sequence(pdb_path, 'A')
@@ -308,6 +368,10 @@ def process_single_pdb(pdb_path):
             chain_metrics = calculate_chain_metrics(pose, 'A', pdb_path)
             metrics.update(chain_metrics)
             
+            # Calculate SAP scores for binder (alone and complex)
+            sap_metrics = calculate_sap_scores(pose, 'A')
+            metrics.update(sap_metrics)
+
         elif len(chain_ids) >= 3:
             # Oligomer design: Handle any number of chains, calculate all interfaces
             
@@ -339,6 +403,14 @@ def process_single_pdb(pdb_path):
             whole_pose_metrics = calculate_whole_pose_metrics(pose)
             all_chain_metrics.update(whole_pose_metrics)
             
+            # Calculate SAP for each chain
+            for chain_id in chain_ids:
+                sap_metrics = calculate_sap_scores(pose, chain_id)
+                # Add suffix if not chain A
+                if chain_id != 'A':
+                    sap_metrics = {f'{k}_{chain_id}': v for k, v in sap_metrics.items()}
+                all_chain_metrics.update(sap_metrics)
+
             # Add aggregated secondary structure metrics
             all_chain_metrics.update({
                 'pr_helices_allchains': total_helices,

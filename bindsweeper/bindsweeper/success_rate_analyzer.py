@@ -23,9 +23,11 @@ class SuccessMetrics:
     fold_filtered: int
     seq_generated: int
     seq_filtered: int
+    pred_generated: int
     pred_filtered: int
+    analysis_filtered: int
     timestamp: str
-    pipeline_metrics: Dict[str, float]
+    pipeline_metrics: Dict[str, Optional[float]]
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SuccessMetrics":
@@ -39,7 +41,9 @@ class SuccessMetrics:
             fold_filtered=data["fold_filtered"],
             seq_generated=data["seq_generated"],
             seq_filtered=data["seq_filtered"],
+            pred_generated=data["pred_generated"],
             pred_filtered=data["pred_filtered"],
+            analysis_filtered=data["analysis_filtered"],
             timestamp=data["timestamp"],
             pipeline_metrics=data.get("pipeline_metrics", {})
         )
@@ -55,7 +59,9 @@ class SuccessMetrics:
             "fold_filtered": self.fold_filtered,
             "seq_generated": self.seq_generated,
             "seq_filtered": self.seq_filtered,
+            "pred_generated": self.pred_generated,
             "pred_filtered": self.pred_filtered,
+            "analysis_filtered": self.analysis_filtered,
             "timestamp": self.timestamp,
             "pipeline_metrics": self.pipeline_metrics
         }
@@ -142,15 +148,18 @@ class SuccessRateAnalyzer:
         # Create DataFrame
         summary_data = []
         for i, metrics in enumerate(sorted_metrics, 1):
+            # Use empty string for None values (skipped stages) instead of 0.0
+            # This makes it clear in the CSV that the stage wasn't run
             row = {
                 'rank': i,
                 'parameter_combination': metrics.parameter_combination,
                 'success_rate': metrics.success_rate,
                 'successful_designs': metrics.successful_designs,
                 'total_designs': metrics.total_designs,
-                'fold_retention_rate': metrics.pipeline_metrics.get('fold_retention_rate', 0.0),
-                'seq_retention_rate': metrics.pipeline_metrics.get('seq_retention_rate', 0.0),
-                'pred_retention_rate': metrics.pipeline_metrics.get('pred_retention_rate', 0.0),
+                'fold_retention_rate': metrics.pipeline_metrics.get('fold_retention_rate', ''),
+                'seq_retention_rate': metrics.pipeline_metrics.get('seq_retention_rate', ''),
+                'pred_retention_rate': metrics.pipeline_metrics.get('pred_retention_rate', ''),
+                'analysis_retention_rate': metrics.pipeline_metrics.get('analysis_retention_rate', ''),
                 'overall_retention_rate': metrics.pipeline_metrics.get('overall_retention_rate', 0.0),
                 'timestamp': metrics.timestamp
             }

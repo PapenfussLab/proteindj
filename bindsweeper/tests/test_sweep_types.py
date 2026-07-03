@@ -2,7 +2,7 @@
 
 import pytest
 
-from bindsweeper.sweep_types import ListSweep, RangeSweep, create_sweep
+from bindsweeper.sweep_types import ListSweep, PairedSweep, RangeSweep, create_sweep
 
 
 class TestListSweep:
@@ -151,3 +151,149 @@ class TestCreateSweep:
 
         with pytest.raises(ValueError, match="Cannot create sweep from data"):
             create_sweep(42)
+
+    def test_create_paired_from_dict_with_type(self):
+        """Test creating paired sweep from dict with explicit type."""
+        data = {
+            "type": "paired",
+            "values": ["a.pdb", "b.pdb"],
+            "paired_with": {"msa_path": ["a.a3m", "b.a3m"]},
+        }
+        sweep = create_sweep(data)
+        assert isinstance(sweep, PairedSweep)
+
+    def test_create_paired_from_dict_inferred(self):
+        """Test creating paired sweep inferred from paired_with key."""
+        data = {
+            "values": ["a.pdb", "b.pdb"],
+            "paired_with": {"msa_path": ["a.a3m", "b.a3m"]},
+        }
+        sweep = create_sweep(data)
+        assert isinstance(sweep, PairedSweep)
+
+    def test_paired_with_takes_precedence_over_type_list(self):
+        """Test that paired_with takes precedence even if type='list' is specified."""
+        data = {
+            "type": "list",
+            "values": ["a.pdb", "b.pdb"],
+            "paired_with": {"msa_path": ["a.a3m", "b.a3m"]},
+        }
+        sweep = create_sweep(data)
+        # Should create PairedSweep, not ListSweep, to avoid silently dropping pairing
+        assert isinstance(sweep, PairedSweep)
+        assert sweep.generate_values() == ["a.pdb", "b.pdb"]
+        assert sweep.get_paired_value("msa_path", 0) == "a.a3m"
+
+
+class TestPairedSweep:
+    """Test PairedSweep functionality."""
+
+    def test_create_paired_sweep(self):
+        """Test creating a paired sweep."""
+        sweep = PairedSweep(
+            values=["target1.pdb", "target2.pdb", "target3.pdb"],
+            paired_params={
+                "msa_path": ["msa1.a3m", "msa2.a3m", "msa3.a3m"],
+            },
+        )
+        assert sweep.values == ["target1.pdb", "target2.pdb", "target3.pdb"]
+        assert len(sweep.paired_params) == 1
+
+    def test_generate_values(self):
+        """Test generating values returns primary values only."""
+        sweep = PairedSweep(
+            values=["a.pdb", "b.pdb"],
+            paired_params={"msa": ["a.a3m", "b.a3m"]},
+        )
+        assert sweep.generate_values() == ["a.pdb", "b.pdb"]
+
+    def test_get_paired_value(self):
+        """Test retrieving paired values by index."""
+        sweep = PairedSweep(
+            values=["t1.pdb", "t2.pdb", "t3.pdb"],
+            paired_params={
+                "msa": ["m1.a3m", "m2.a3m", "m3.a3m"],
+                "chain": ["A", "B", "C"],
+            },
+        )
+        assert sweep.get_paired_value("msa", 0) == "m1.a3m"
+        assert sweep.get_paired_value("msa", 2) == "m3.a3m"
+        assert sweep.get_paired_value("chain", 1) == "B"
+
+    def test_length_mismatch_raises(self):
+        """Test that mismatched lengths raise ValueError."""
+        with pytest.raises(ValueError, match="must have the same length"):
+            PairedSweep(
+                values=["a.pdb", "b.pdb", "c.pdb"],
+                paired_params={"msa": ["a.a3m", "b.a3m"]},  # 2 != 3
+            )
+
+    def test_empty_paired_params_raises(self):
+        """Test that empty paired_with raises ValueError."""
+        with pytest.raises(ValueError, match="at least one parameter"):
+            PairedSweep(values=["a.pdb", "b.pdb"], paired_params={})
+
+    def test_scalar_paired_value_raises(self):
+        """Test that scalar (non-list) paired value raises ValueError."""
+        with pytest.raises(ValueError, match="must be a list"):
+            PairedSweep(
+                values=["a.pdb", "b.pdb"],
+                paired_params={"msa": "single_value.a3m"},
+            )
+
+    def test_to_dict(self):
+        """Test converting paired sweep to dictionary."""
+        sweep = PairedSweep(
+            values=["a.pdb", "b.pdb"],
+            paired_params={"msa": ["a.a3m", "b.a3m"]},
+        )
+        expected = {
+            "type": "paired",
+            "values": ["a.pdb", "b.pdb"],
+            "paired_with": {"msa": ["a.a3m", "b.a3m"]},
+        }
+        assert sweep.to_dict() == expected
+
+    def test_from_dict(self):
+        """Test creating paired sweep from dictionary."""
+        data = {
+            "values": ["x.pdb", "y.pdb"],
+            "paired_with": {"chain": ["A", "B"]},
+        }
+        sweep = PairedSweep.from_dict(data)
+        assert sweep.values == ["x.pdb", "y.pdb"]
+        assert sweep.paired_params == {"chain": ["A", "B"]}
+
+    def test_roundtrip(self):
+        """Test to_dict/from_dict roundtrip."""
+        original = PairedSweep(
+            values=["a.pdb", "b.pdb", "c.pdb"],
+            paired_params={
+                "msa": ["a.a3m", "b.a3m", "c.a3m"],
+                "chain": ["A", "B", "C"],
+            },
+        )
+        restored = PairedSweep.from_dict(original.to_dict())
+        assert restored.values == original.values
+        assert restored.paired_params == original.paired_params
+
+    def test_multiple_paired_params(self):
+        """Test pairing with multiple secondary parameters."""
+        sweep = PairedSweep(
+            values=["t1.pdb", "t2.pdb"],
+            paired_params={
+                "msa_path": ["m1.a3m", "m2.a3m"],
+                "target_chain": ["A", "B"],
+            },
+        )
+        assert sweep.get_paired_value("msa_path", 0) == "m1.a3m"
+        assert sweep.get_paired_value("target_chain", 1) == "B"
+
+    def test_single_value_paired(self):
+        """Test paired sweep with single value still works."""
+        sweep = PairedSweep(
+            values=["only.pdb"],
+            paired_params={"msa": ["only.a3m"]},
+        )
+        assert sweep.generate_values() == ["only.pdb"]
+        assert sweep.get_paired_value("msa", 0) == "only.a3m"

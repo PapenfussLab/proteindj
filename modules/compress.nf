@@ -1,5 +1,5 @@
 process Compress {
-    label 'pyrosetta_tools'
+    label 'python_tools'
     publishDir "${params.out_dir}/run/${program}", mode: 'copy', pattern: "*.tar.gz"
 
     input:

@@ -4,6 +4,20 @@ import json
 import copy
 from pathlib import Path
 
+# Define required parameters for each mode based on the table in parameters.md
+MODE_REQUIRED_PARAMS = {
+    'monomer_denovo': ['design_length'],
+    'monomer_foldcond': ['rfd_scaffold_dir'],
+    'monomer_motifscaff': ['input_pdb', 'rfd_contigs'],
+    'monomer_partialdiff': ['input_pdb', 'rfd_partial_diffusion_timesteps'],
+    'binder_denovo': ['input_pdb', 'design_length'],
+    'binder_foldcond': ['input_pdb', 'rfd_scaffold_dir'],
+    'binder_motifscaff': ['input_pdb', 'rfd_contigs'],
+    'binder_partialdiff': ['input_pdb', 'rfd_partial_diffusion_timesteps'],
+    'bindcraft_denovo': ['input_pdb', 'design_length'],
+    'custom': []  # Custom mode has no required mode-specific parameters
+}
+
 def parse_csv(csv_file):
     """
     Parse the CSV into a dict of {mode: {param: value or None}}
@@ -65,7 +79,7 @@ def build_mode_schema(main_schema, mode, overrides):
     schema['$id'] = main_schema['$id'].rsplit('/', 1)[0] + f"/nextflow_schema_{mode}.json"
 
     # For each definition section, filter and override defaults as needed
-    for defn in schema['definitions'].values():
+    for defn_name, defn in schema['definitions'].items():
         if 'properties' not in defn:
             continue
         filtered = {}
@@ -77,11 +91,25 @@ def build_mode_schema(main_schema, mode, overrides):
                     prop['default'] = convert_value(override_val, prop)
                 filtered[param] = prop
         defn['properties'] = filtered
+        
         # Update required list
-        if 'required' in defn:
-            defn['required'] = [p for p in defn['required'] if p in filtered]
-            if not defn['required']:
+        if defn_name == 'mode_specific_parameters':
+            # Set required parameters based on mode
+            if mode in MODE_REQUIRED_PARAMS:
+                required = [p for p in MODE_REQUIRED_PARAMS[mode] if p in filtered]
+                if required:
+                    defn['required'] = required
+                elif 'required' in defn:
+                    del defn['required']
+            elif 'required' in defn:
+                # For modes not in mapping, remove required
                 del defn['required']
+        else:
+            # For other definitions, keep existing required list filtering
+            if 'required' in defn:
+                defn['required'] = [p for p in defn['required'] if p in filtered]
+                if not defn['required']:
+                    del defn['required']
 
     # Special handling for design_mode
     for defn in schema['definitions'].values():

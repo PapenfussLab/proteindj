@@ -176,7 +176,7 @@ if [ -d "mols" ]; then
     print_success "Boltz-2 mols directory already extracted, skipping..."
 else
     print_status "Extracting Boltz-2 molecular data... (only amino acids are needed for protein design)"
-    tar -tf mols.tar | grep -E 'mols/(ALA|ARG|ASN|ASP|CYS|GLU|GLN|GLY|HIS|ILE|LEU|LYS|MET|PHE|PRO|SER|THR|TRP|TYR|VAL|UNK)\.pkl$' | xargs -d '\n' -I {} tar -xvf mols.tar "{}" || exit 1
+    tar -tf mols.tar | grep -E 'mols/(ALA|ARG|ASN|ASP|CYS|GLU|GLN|GLY|HIS|ILE|LEU|LYS|MET|PHE|PRO|SER|THR|TRP|TYR|VAL|UNK)\.pkl$' | tr '\n' '\0' | xargs -0 -I {} tar -xvf mols.tar "{}" || exit 1
     rm -f mols.tar
     print_success "Boltz-2 molecular data extracted!"
 fi

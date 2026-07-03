@@ -1,5 +1,5 @@
 process GenerateRFDContigs {
-    label 'pyrosetta_tools'
+    label 'python_tools'
 
     input:
     path(input_pdb)
@@ -17,7 +17,7 @@ process GenerateRFDContigs {
     export CONTIGS
     """
 }
-process GenerateRFDfoldcond {
+process GenerateRFDFoldCond {
     label 'pyrosetta_tools'
 
     input:
