@@ -1055,118 +1055,114 @@ def validateFileNaming(pdbFiles, jsonFiles = null, validationType = 'fold_seq') 
     def jsonIndices = [] as Set
     
     // Define patterns based on validation type
-    switch (validationType) {
-        case 'fold_only':
-            // Pattern: fold_x.pdb and fold_x.json
-            pdbPattern = ~/^fold_(\d+)\.pdb$/
-            jsonPattern = ~/^fold_(\d+)\.json$/
-            
-            // Validate PDBs
-            pdbFiles.each { pdbFile ->
-                def matcher = pdbFile.name =~ pdbPattern
+    if (validationType == 'fold_only') {
+        // Pattern: fold_x.pdb and fold_x.json
+        pdbPattern = ~/^fold_(\d+)\.pdb$/
+        jsonPattern = ~/^fold_(\d+)\.json$/
+
+        // Validate PDBs
+        pdbFiles.each { pdbFile ->
+            def matcher = pdbFile.name =~ pdbPattern
+            if (matcher.matches()) {
+                pdbIndices.add(matcher[0][1] as Integer)
+            } else {
+                invalidPdbs.add(pdbFile.name)
+            }
+        }
+
+        // Validate JSONs
+        if (jsonFiles) {
+            jsonFiles.each { jsonFile ->
+                def matcher = jsonFile.name =~ jsonPattern
                 if (matcher.matches()) {
-                    pdbIndices.add(matcher[0][1] as Integer)
+                    jsonIndices.add(matcher[0][1] as Integer)
                 } else {
-                    invalidPdbs.add(pdbFile.name)
+                    invalidJsons.add(jsonFile.name)
                 }
             }
-            
-            // Validate JSONs
-            if (jsonFiles) {
-                jsonFiles.each { jsonFile ->
-                    def matcher = jsonFile.name =~ jsonPattern
-                    if (matcher.matches()) {
-                        jsonIndices.add(matcher[0][1] as Integer)
-                    } else {
-                        invalidJsons.add(jsonFile.name)
-                    }
-                }
+        }
+
+        // Report PDB errors
+        if (!invalidPdbs.isEmpty()) {
+            def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x.pdb' where x is an integer.\n"
+            errorMsg += "Invalid files found:"
+            invalidPdbs.each { errorMsg += " ${it}" }
+            errorMsg += "\nExample valid names: fold_0.pdb, fold_1.pdb, fold_10.pdb"
+            throw new IllegalArgumentException(errorMsg)
+        }
+
+        // Report JSON errors
+        if (!invalidJsons.isEmpty()) {
+            def errorMsg = "Invalid JSON filename(s) detected. Files must follow the naming convention 'fold_x.json' where x is an integer.\n"
+            errorMsg += "Invalid files found: "
+            invalidJsons.each { errorMsg += " ${it}" }
+            errorMsg += "\nExample valid names: fold_0.json, fold_1.json, fold_10.json"
+            throw new IllegalArgumentException(errorMsg)
+        }
+
+        // Validate pairing
+        def missingJsons = pdbIndices - jsonIndices
+        def missingPdbs = jsonIndices - pdbIndices
+
+        if (!missingJsons.isEmpty() || !missingPdbs.isEmpty()) {
+            def errorMsg = "Mismatch between PDB and JSON files. Each fold_x.pdb must have a corresponding fold_x.json file.\n"
+            if (!missingJsons.isEmpty()) {
+                errorMsg += "PDB files missing corresponding JSON files:\n"
+                missingJsons.sort().each { errorMsg += "  - fold_${it}.pdb (missing fold_${it}.json)\n" }
             }
-            
-            // Report PDB errors
-            if (!invalidPdbs.isEmpty()) {
-                def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x.pdb' where x is an integer.\n"
-                errorMsg += "Invalid files found:"
-                invalidPdbs.each { errorMsg += " ${it}" }
-                errorMsg += "\nExample valid names: fold_0.pdb, fold_1.pdb, fold_10.pdb"
-                throw new IllegalArgumentException(errorMsg)
+            if (!missingPdbs.isEmpty()) {
+                errorMsg += "JSON files missing corresponding PDB files:\n"
+                missingPdbs.sort().each { errorMsg += "  - fold_${it}.json (missing fold_${it}.pdb)\n" }
             }
-            
-            // Report JSON errors
-            if (!invalidJsons.isEmpty()) {
-                def errorMsg = "Invalid JSON filename(s) detected. Files must follow the naming convention 'fold_x.json' where x is an integer.\n"
-                errorMsg += "Invalid files found: "
-                invalidJsons.each { errorMsg += " ${it}" }
-                errorMsg += "\nExample valid names: fold_0.json, fold_1.json, fold_10.json"
-                throw new IllegalArgumentException(errorMsg)
+            throw new IllegalArgumentException(errorMsg)
+        }
+
+        println("All PDB and JSON files passed naming validation")
+        println("Found ${pdbIndices.size()} properly paired fold files\n")
+
+    } else if (validationType == 'fold_seq') {
+        // Pattern: fold_x_seq_y.pdb
+        pdbPattern = ~/^fold_\d+_seq_\d+\.pdb$/
+
+        pdbFiles.each { pdbFile ->
+            if (!(pdbFile.name =~ pdbPattern)) {
+                invalidPdbs.add(pdbFile.name)
             }
-            
-            // Validate pairing
-            def missingJsons = pdbIndices - jsonIndices
-            def missingPdbs = jsonIndices - pdbIndices
-            
-            if (!missingJsons.isEmpty() || !missingPdbs.isEmpty()) {
-                def errorMsg = "Mismatch between PDB and JSON files. Each fold_x.pdb must have a corresponding fold_x.json file.\n"
-                if (!missingJsons.isEmpty()) {
-                    errorMsg += "PDB files missing corresponding JSON files:\n"
-                    missingJsons.sort().each { errorMsg += "  - fold_${it}.pdb (missing fold_${it}.json)\n" }
-                }
-                if (!missingPdbs.isEmpty()) {
-                    errorMsg += "JSON files missing corresponding PDB files:\n"
-                    missingPdbs.sort().each { errorMsg += "  - fold_${it}.json (missing fold_${it}.pdb)\n" }
-                }
-                throw new IllegalArgumentException(errorMsg)
+        }
+
+        if (!invalidPdbs.isEmpty()) {
+            def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x_seq_y.pdb' where x and y are integers.\n"
+            errorMsg += "Invalid files found:"
+            invalidPdbs.each { errorMsg += " ${it}" }
+            errorMsg += "\nExample valid names: fold_0_seq_1.pdb, fold_10_seq_25.pdb"
+            throw new IllegalArgumentException(errorMsg)
+        }
+
+        println("All PDB files passed naming validation (fold_x_seq_y.pdb)")
+
+    } else if (validationType == 'fold_seq_pred') {
+        // Pattern: fold_x_seq_y_*.pdb (with any suffix after the last underscore)
+        pdbPattern = ~/^fold_\d+_seq_\d+_.+\.pdb$/
+
+        pdbFiles.each { pdbFile ->
+            if (!(pdbFile.name =~ pdbPattern)) {
+                invalidPdbs.add(pdbFile.name)
             }
-            
-            println("All PDB and JSON files passed naming validation")
-            println("Found ${pdbIndices.size()} properly paired fold files\n")
-            break
-            
-        case 'fold_seq':
-            // Pattern: fold_x_seq_y.pdb
-            pdbPattern = ~/^fold_\d+_seq_\d+\.pdb$/
-            
-            pdbFiles.each { pdbFile ->
-                if (!(pdbFile.name =~ pdbPattern)) {
-                    invalidPdbs.add(pdbFile.name)
-                }
-            }
-            
-            if (!invalidPdbs.isEmpty()) {
-                def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x_seq_y.pdb' where x and y are integers.\n"
-                errorMsg += "Invalid files found:"
-                invalidPdbs.each { errorMsg += " ${it}" }
-                errorMsg += "\nExample valid names: fold_0_seq_1.pdb, fold_10_seq_25.pdb"
-                throw new IllegalArgumentException(errorMsg)
-            }
-            
-            println("All PDB files passed naming validation (fold_x_seq_y.pdb)")
-            break
-            
-        case 'fold_seq_pred':
-            // Pattern: fold_x_seq_y_*.pdb (with any suffix after the last underscore)
-            pdbPattern = ~/^fold_\d+_seq_\d+_.+\.pdb$/
-            
-            pdbFiles.each { pdbFile ->
-                if (!(pdbFile.name =~ pdbPattern)) {
-                    invalidPdbs.add(pdbFile.name)
-                }
-            }
-            
-            if (!invalidPdbs.isEmpty()) {
-                def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x_seq_y_*.pdb' where x and y are integers and * is any suffix.\n"
-                errorMsg += "Invalid files found:"
-                invalidPdbs.each { errorMsg += " ${it}" }
-                errorMsg += "\nExample valid names: fold_0_seq_1_af2pred.pdb, fold_10_seq_25_boltzpred.pdb"
-                throw new IllegalArgumentException(errorMsg)
-            }
-            
-            println("All PDB files passed naming validation (fold_x_seq_y_*.pdb)")
-            break
-            
-        default:
-            throw new IllegalArgumentException("Invalid validation type: ${validationType}. Must be one of: 'fold_only', 'fold_seq', 'fold_seq_pred'")
+        }
+
+        if (!invalidPdbs.isEmpty()) {
+            def errorMsg = "Invalid PDB filename(s) detected. Files must follow the naming convention 'fold_x_seq_y_*.pdb' where x and y are integers and * is any suffix.\n"
+            errorMsg += "Invalid files found:"
+            invalidPdbs.each { errorMsg += " ${it}" }
+            errorMsg += "\nExample valid names: fold_0_seq_1_af2pred.pdb, fold_10_seq_25_boltzpred.pdb"
+            throw new IllegalArgumentException(errorMsg)
+        }
+
+        println("All PDB files passed naming validation (fold_x_seq_y_*.pdb)")
+
+    } else {
+        throw new IllegalArgumentException("Invalid validation type: ${validationType}. Must be one of: 'fold_only', 'fold_seq', 'fold_seq_pred'")
     }
-    
+
     return validationResults
 }

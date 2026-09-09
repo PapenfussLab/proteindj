@@ -1,6 +1,6 @@
 process Compress {
     label 'python_tools'
-    publishDir "${params.out_dir}/run/${program}", mode: 'copy', pattern: "*.tar.gz"
+    publishDir { "${params.out_dir}/run/${program}" }, mode: 'copy', pattern: "*.tar.gz"
 
     input:
     val program

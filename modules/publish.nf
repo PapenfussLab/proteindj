@@ -31,7 +31,7 @@ process PublishResults {
     path "filter_best_designs.log"
     path ("rank_designs.log"), optional: true
     path "success_metrics.json"
-    env FINAL_DESIGNS_COUNT, emit: final_designs_count
+    env 'FINAL_DESIGNS_COUNT', emit: final_designs_count
 
     script:
 

@@ -7,7 +7,7 @@ process GenerateRFDContigs {
     val(is_binder_mode)
     
     output:
-    env CONTIGS
+    env 'CONTIGS'
     
     script:
     """
