@@ -128,6 +128,11 @@ def calculate_overall_success_rate(args) -> tuple:
     if args.seq_count > 0:
         # full pipeline or skip_fold=true - denominator is always n sequences not fold
         total = args.seq_count
+    elif args.af2_count > 0:
+        # af2_boltz cascade: af2_count is the true entry point into prediction, since
+        # pred_count only reflects the Boltz sub-stage (which may be 0 if AF2 filtered
+        # out everything, and otherwise undercounts designs already dropped by AF2)
+        total = args.af2_count
     elif args.pred_count > 0:
         # skip_fold_seq=true - start from prediction stage (unfiltered)
         total = args.pred_count

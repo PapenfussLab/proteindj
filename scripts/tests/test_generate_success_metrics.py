@@ -82,6 +82,27 @@ class TestCalculateOverallSuccessRate:
         _, total = calculate_overall_success_rate(args)
         assert total == 30
 
+    def test_af2_boltz_all_filtered_uses_af2_count(self):
+        # Regression: all designs failing AF2 filtering left pred_count=0, previously raising
+        args = _base_args(af2_count=10, af2_filter_count=0, boltz_count=0,
+                           boltz_filter_count=0, final_designs_count=0)
+        rate, total = calculate_overall_success_rate(args)
+        assert total == 10
+        assert rate == 0.0
+
+    def test_af2_boltz_partial_filter_uses_af2_count_not_pred_count(self):
+        # af2_count is the true entry point; pred_count only reflects the Boltz sub-stage
+        # and must not be used as the denominator when af2_count is available
+        args = _base_args(af2_count=10, af2_filter_count=6, pred_count=6, final_designs_count=2)
+        rate, total = calculate_overall_success_rate(args)
+        assert total == 10
+        assert rate == pytest.approx(0.2)
+
+    def test_seq_count_still_takes_precedence_over_af2_count(self):
+        args = _base_args(seq_count=10, af2_count=10, final_designs_count=1)
+        _, total = calculate_overall_success_rate(args)
+        assert total == 10
+
 
 class TestGenerateSuccessMetrics:
     def test_stages_not_run_report_none_retention_rate(self):
@@ -124,3 +145,13 @@ class TestGenerateSuccessMetrics:
         # Just confirm it round-trips as an ISO 8601 string, not exact value (uses real clock)
         from datetime import datetime
         datetime.fromisoformat(metrics["timestamp"])
+
+    def test_af2_boltz_all_filtered_does_not_raise(self):
+        # End-to-end reproduction of the reported crash: skip_fold_seq=true, af2_boltz,
+        # every design fails AF2 filtering so the Boltz stage never runs
+        args = _base_args(af2_count=10, af2_filter_count=0, boltz_count=0,
+                           boltz_filter_count=0, final_designs_count=0)
+        metrics = generate_success_metrics(args)
+        assert metrics["total_designs"] == 10
+        assert metrics["pipeline_metrics"]["af2_retention_rate"] == 0.0
+        assert metrics["pipeline_metrics"]["boltz_retention_rate"] is None
