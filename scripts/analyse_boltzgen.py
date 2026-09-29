@@ -3,8 +3,10 @@
 BoltzGen Design Processor
 Processes BoltzGen `design` step output (.cif + .npz sidecar pairs) for downstream compatibility.
 - Converts CIF -> PDB (BioPython)
-- Relabels chains A, B, C... in file order, so the first entity declared in the
-  BoltzGen YAML spec (the designed binder, or chain A for redesign) becomes chain A
+- Relabels chains A, B, C..., placing BoltzGen's own chain 'A' (the designed binder,
+  or chain A for redesign) first regardless of its physical position in the CIF -
+  BoltzGen preserves original chain IDs but does not reorder chains by role, so for
+  boltzgen_motifscaff the designed chain can legitimately appear anywhere in the file
 - Extracts the `design_mask` array from the .npz sidecar and inverts it into
   `bg_inpaint_seq` (True = fixed/not to be redesigned by ProteinMPNN/FAMPNN,
   False = designable). This follows the same per-tool naming convention as
@@ -24,21 +26,34 @@ from Bio.PDB import Chain, MMCIFParser, Model, PDBIO, Structure
 
 def get_protein_chains_in_order(model):
     """
-    Return chains (in file order) that contain at least one standard residue.
+    Return chains that contain at least one standard residue, with BoltzGen's own
+    chain 'A' (the designed chain) placed first and all others kept in file order.
+
+    BoltzGen preserves the original author chain ID on write but does not reorder
+    chains by role, so chain 'A' can appear anywhere in the file - relabeling by raw
+    file order would silently swap the designed chain with a fixed context chain.
 
     Args:
         model: BioPython Model object
 
     Returns:
-        list: Chain objects in file order
+        list: Chain objects, chain 'A' first, remaining chains in file order
     """
-    return [chain for chain in model if any(res.id[0] == ' ' for res in chain)]
+    chains = [chain for chain in model if any(res.id[0] == ' ' for res in chain)]
+    if not chains:
+        return chains
+    chain_a = [chain for chain in chains if chain.id == 'A']
+    if not chain_a:
+        raise ValueError("No chain 'A' (the designed chain) found among protein chains")
+    others = [chain for chain in chains if chain.id != 'A']
+    return chain_a + others
 
 
 def cif_to_relabelled_pdb(cif_path, pdb_path):
     """
     Convert a BoltzGen-generated CIF file to a PDB file, relabeling chains
-    A, B, C... in file order. HETATM/non-standard residues are dropped.
+    A, B, C... with BoltzGen's chain 'A' first (see get_protein_chains_in_order)
+    and remaining chains in file order. HETATM/non-standard residues are dropped.
     Residues are renumbered sequentially and continuously across chains
     (chain A: 1..n_res_A, chain B: n_res_A+1..n_res_A+n_res_B, etc.) so residue
     numbers don't overlap between chains - this matches the convention used by

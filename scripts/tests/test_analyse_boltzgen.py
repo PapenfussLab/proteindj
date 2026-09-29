@@ -129,9 +129,7 @@ class TestGetProteinChainsInOrder:
 class TestCifToRelabelledPdb:
     def test_relabels_chains_in_file_order_and_renumbers_sequentially(self, tmp_path):
         cif_path = tmp_path / "fold_0.cif"
-        # First chain in file is 'X' (the designed binder), second is 'Y' (target) -
-        # both should be relabelled A, B in file order regardless of original chain IDs.
-        _write_cif(cif_path, [('X', [1, 2, 3]), ('Y', [10, 11])])
+        _write_cif(cif_path, [('A', [1, 2, 3]), ('B', [10, 11])])
 
         pdb_path = tmp_path / "fold_0.pdb"
         chain_lengths = cif_to_relabelled_pdb(cif_path, pdb_path)
@@ -146,6 +144,33 @@ class TestCifToRelabelledPdb:
         # Residues renumbered continuously: chain A = 1..3, chain B = 4..5
         assert [r.id[1] for r in model['A']] == [1, 2, 3]
         assert [r.id[1] for r in model['B']] == [4, 5]
+
+    def test_chain_a_is_placed_first_regardless_of_file_order(self, tmp_path):
+        cif_path = tmp_path / "fold_0.cif"
+        # Chain B's ATOM records precede chain A's - BoltzGen preserves this file order
+        # but does not reorder by role, so 'A' must still map to new chain 'A'.
+        _write_cif(cif_path, [('B', [10, 11]), ('A', [1, 2, 3])])
+
+        pdb_path = tmp_path / "fold_0.pdb"
+        chain_lengths = cif_to_relabelled_pdb(cif_path, pdb_path)
+
+        assert chain_lengths == [3, 2]
+
+        parser = PDBParser(QUIET=True)
+        structure = parser.get_structure('p', str(pdb_path))
+        model = structure[0]
+        assert [c.id for c in model] == ['A', 'B']
+        # Original chain A's 3 residues must land in new chain A, not chain B
+        assert [r.id[1] for r in model['A']] == [1, 2, 3]
+        assert [r.id[1] for r in model['B']] == [4, 5]
+
+    def test_missing_chain_a_raises_value_error(self, tmp_path):
+        cif_path = tmp_path / "fold_0.cif"
+        _write_cif(cif_path, [('X', [1, 2, 3]), ('Y', [10, 11])])
+
+        pdb_path = tmp_path / "fold_0.pdb"
+        with pytest.raises(ValueError):
+            cif_to_relabelled_pdb(cif_path, pdb_path)
 
     def test_hetatm_residues_are_dropped(self, tmp_path):
         cif_path = tmp_path / "fold_0.cif"
