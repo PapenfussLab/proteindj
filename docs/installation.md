@@ -87,22 +87,21 @@ nextflow -version
 
 > **💡 Tip:** This step downloads ~18 GB of model files. Consider doing this in a shared location so that other users can access the files.
 
-### RFD4-Proteina (optional, for `rfd4_denovo`)
+### RFD4-Proteina Models (~1.7 GB)
 
-The `RFD4` process label uses the `${params.container_registry}/rfd4:${params.container_version}` image, built from `apptainer/rfd4.def`. `scripts/download_models.sh` downloads the pinned `nvidia/RFD4-Proteina` model bundle into `models/rfd4`, the default `rfd4_models` directory. Set `rfd4_models` to another prepopulated directory when models are stored centrally. cuEquivariance tuning data and compiled Triton kernels are shared between tasks through `rfd4_triton_cache`, which defaults to `$HOME/.cache/proteindj/rfd4` and is created automatically. See the [upstream installation guide](https://rfd4-proteina.org/latest/installation.html) for driver and model requirements.
-
-To populate a shared cache directly, install the Hugging Face CLI and download the same pinned snapshot:
+To run RFD4-Proteina, you will require the model checkpoint files. If you have not already downloaded the models, use the commands below, and update the `rfd4_models` variable in `nextflow.config` to the location of the model directory (e.g. './models/rfd4'):
 
 ```bash
-RFD4_MODELS=/path/to/shared/rfd4/models
-mkdir -p "$RFD4_MODELS"
+mkdir -p models/rfd4
+
+# Download required model files
 hf download nvidia/RFD4-Proteina \
     config.json model.safetensors \
     --revision a06e2509c7033b010fc43614e9fd840303588502 \
-    --local-dir "$RFD4_MODELS"
+    --local-dir models/rfd4
 ```
 
-Set `rfd4_models` to the value of `RFD4_MODELS`. The pipeline bind-mounts that directory and passes it to RFD4 as a local model bundle, so inference does not contact Hugging Face.
+RFD4 also uses cuEquivariance tuning data and compiled Triton kernels, which are shared between tasks in `rfd4_triton_cache` (default: `$HOME/.cache/proteindj/rfd4`). This cache directory is created automatically. 
 
 ### RFdiffusion Models (~3.7 GB)
 
