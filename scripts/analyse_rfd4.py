@@ -51,7 +51,7 @@ def convert(samples_dir, target_cif, start_id, output_dir):
         writer = PDBIO()
         writer.set_structure(result)
         writer.save(str(pdb))
-        record = {"fold_id": fold_id, "rfd4_source": sample.name, "rfd4_binder_sequence": sequence(binder)}
+        record = {"fold_id": fold_id, "rfd4_source": sample.name, "sequence": sequence(binder)}
         (output_dir / f"fold_{fold_id}.json").write_text(json.dumps(record))
         metadata.append(record)
     with (output_dir / "rfd4_metadata.jsonl").open("w") as handle:
