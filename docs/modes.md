@@ -659,6 +659,22 @@ rfd4_denovo {
 }
 ```
 
+If part of the target is disordered or flexible, use `flexible_residues` to leave that region's
+structure unconditioned. As in RFdiffusion binder design, this changes structural conditioning only:
+the target sequence remains fixed while RFD4 generates the selected residues' conformation in the
+complex.
+
+```groovy
+rfd4_denovo {
+    params {
+        design_mode = 'rfd4_denovo'
+        input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
+        design_length = '60-100'
+        flexible_residues = 'A17-20'
+    }
+}
+```
+
 RFD4 designs the binder sequence and structure together, so set `seqs_per_design = 1`. You can select AF2 or Boltz-2 for structure prediction with `pred_method`.
 
 [⬅️ Back to Main README](../README.md)

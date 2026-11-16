@@ -11,6 +11,9 @@ class RFD4Engine extends DesignEngine {
         if (params.hotspot_residues && !params.hotspot_residues.matches(Utils.RESIDUE_SPEC_REGEX)) {
             throw new IllegalArgumentException("hotspot_residues format invalid. Acceptable: 'A56,A115-120,B'.")
         }
+        if (params.flexible_residues && !params.flexible_residues.matches(Utils.RESIDUE_SPEC_REGEX)) {
+            throw new IllegalArgumentException("flexible_residues format invalid. Acceptable: 'A10-13,A16,B'.")
+        }
         if (params.seqs_per_design != 1) {
             throw new IllegalArgumentException('rfd4_denovo generates one sequence per structure; set seqs_per_design=1')
         }
@@ -31,7 +34,11 @@ class RFD4Engine extends DesignEngine {
     }
 
     List<String> startupMessages() {
-        return ["Using RFD4-Proteina to co-design binder sequence and structure; refolding with ${params.pred_method}."]
+        def messages = ["Using RFD4-Proteina to co-design binder sequence and structure; refolding with ${params.pred_method}."]
+        if (params.flexible_residues) {
+            messages << "* Flexible target residues = ${params.flexible_residues} (structure unconditioned; sequence fixed)"
+        }
+        return messages
     }
 
     List<String> collectInputFiles() { return [params.input_pdb] }

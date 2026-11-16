@@ -12,6 +12,7 @@ process PrepRFD4 {
     python /scripts/prepare_rfd4.py --input-pdb ${input_pdb} \
         --length '${params.design_length}' \
         --hotspots '${params.hotspot_residues ?: ''}' \
+        --flexible-residues '${params.flexible_residues ?: ''}' \
         --output-dir prepared
     """
 }

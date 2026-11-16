@@ -39,6 +39,7 @@ nextflow_pipeline {
                 design_length = "60-100"
                 input_pdb = "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
                 hotspot_residues = "A56,A115"
+                flexible_residues = "A17-20"
                 seqs_per_design = 1
                 pred_method = "boltz"
             }
