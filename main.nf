@@ -264,19 +264,18 @@ workflow {
                 .set { fold_tuples }
 
         } else if (params.design_mode == 'rfd4_denovo') {
-            if (!params.rfd4_triton_cache) {
-                throw new IllegalArgumentException('rfd4_triton_cache must be set to an absolute path')
-            }
-            def rfd4TritonCacheDir = file(params.rfd4_triton_cache)
-            if (!rfd4TritonCacheDir.isAbsolute()) {
-                throw new IllegalArgumentException('rfd4_triton_cache must be an absolute path')
-            }
-            if (rfd4TritonCacheDir.exists() && !rfd4TritonCacheDir.isDirectory()) {
-                throw new IllegalArgumentException("rfd4_triton_cache (${rfd4TritonCacheDir}) exists but is not a directory")
-            }
-            rfd4TritonCacheDir.mkdirs()
-            if (!rfd4TritonCacheDir.isDirectory()) {
-                throw new IllegalArgumentException("Failed to create rfd4_triton_cache (${rfd4TritonCacheDir}). Check parent directory permissions.")
+            if (params.rfd4_triton_cache) {
+                def rfd4TritonCacheDir = file(params.rfd4_triton_cache)
+                if (!rfd4TritonCacheDir.isAbsolute()) {
+                    throw new IllegalArgumentException('rfd4_triton_cache must be an absolute path, or null to use the task work directory')
+                }
+                if (rfd4TritonCacheDir.exists() && !rfd4TritonCacheDir.isDirectory()) {
+                    throw new IllegalArgumentException("rfd4_triton_cache (${rfd4TritonCacheDir}) exists but is not a directory")
+                }
+                rfd4TritonCacheDir.mkdirs()
+                if (!rfd4TritonCacheDir.isDirectory()) {
+                    throw new IllegalArgumentException("Failed to create rfd4_triton_cache (${rfd4TritonCacheDir}). Check parent directory permissions.")
+                }
             }
             def inputFiles = engine.collectInputFiles().collect { file(it) }
             inputFiles.each { inputFile -> inputFile.copyTo(inputsDir.resolve(inputFile.name)) }

@@ -195,9 +195,9 @@
                     "description": "Directory containing the RFD4-Proteina config.json and model.safetensors files, populated by scripts/download_models.sh."
                 },
                 "rfd4_triton_cache": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "format": "directory-path",
-                    "description": "Persistent cache shared by RFD4 tasks for cuEquivariance tuning data and compiled Triton kernels. Defaults to $HOME/.cache/proteindj/rfd4."
+                    "description": "Persistent cache shared by RFD4 tasks for cuEquivariance tuning data and compiled Triton kernels. Defaults to $HOME/.cache/proteindj/rfd4. Set to null to store the cache in each task's work directory."
                 },
                 "rfd4_inference_batch_size": {
                     "type": "integer",

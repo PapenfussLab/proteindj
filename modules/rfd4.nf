@@ -34,12 +34,13 @@ process RunRFD4 {
     // num_replicates is the pipeline's designs per GPU. RFD4's own batch_size
     // controls concurrent inference within this job and cannot exceed that count.
     def inference_batch_size = Math.min(Integer.parseInt(params.rfd4_inference_batch_size.toString()), designs_per_gpu.intValue())
+    def triton_cache_dir = params.rfd4_triton_cache ? '/rfd4_triton_cache' : '.rfd4_triton_cache'
     """
     set -o pipefail
-    mkdir -p rfd4_run /rfd4_triton_cache/cuequivariance /rfd4_triton_cache/nvrtc /rfd4_triton_cache/triton
-    export CUEQ_TRITON_CACHE_DIR=/rfd4_triton_cache/cuequivariance
-    export CUEQUIVARIANCE_OPS_NVRTC_CACHE_DIR=/rfd4_triton_cache/nvrtc
-    export TRITON_CACHE_DIR=/rfd4_triton_cache/triton
+    mkdir -p rfd4_run ${triton_cache_dir}/cuequivariance ${triton_cache_dir}/nvrtc ${triton_cache_dir}/triton
+    export CUEQ_TRITON_CACHE_DIR=${triton_cache_dir}/cuequivariance
+    export CUEQUIVARIANCE_OPS_NVRTC_CACHE_DIR=${triton_cache_dir}/nvrtc
+    export TRITON_CACHE_DIR=${triton_cache_dir}/triton
     rfd4-generate hf_ckpt_path=/rfd4_models inputs=${spec} num_replicates=${designs_per_gpu} \
         batch_size=${inference_batch_size} out_dir=rfd4_run \
         compile_lengths=null '~metrics' 2>&1 | tee rfd4_${batch_id}.log

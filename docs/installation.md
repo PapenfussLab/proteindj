@@ -101,7 +101,7 @@ hf download nvidia/RFD4-Proteina \
     --local-dir models/rfd4
 ```
 
-RFD4 also uses cuEquivariance tuning data and compiled Triton kernels, which are shared between tasks in `rfd4_triton_cache` (default: `$HOME/.cache/proteindj/rfd4`). This cache directory is created automatically. 
+RFD4 also uses cuEquivariance tuning data and compiled Triton kernels, which are shared between tasks in `rfd4_triton_cache` (default: `$HOME/.cache/proteindj/rfd4`). This cache directory is created automatically. Set `rfd4_triton_cache = null` in `nextflow.config` to keep a separate cache in each task's work directory.
 
 ### RFdiffusion Models (~3.7 GB)
 

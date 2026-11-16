@@ -139,7 +139,7 @@ Advanced parameters to control the behaviour of BindCraft.
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `rfd4_models` | `${projectDir}/models/rfd4` | Directory containing `config.json` and `model.safetensors`, populated by `scripts/download_models.sh` and mounted into the RFD4 container. |
-| `rfd4_triton_cache` | `$HOME/.cache/proteindj/rfd4` | Persistent cache shared by RFD4 tasks for cuEquivariance tuning data and compiled Triton kernels. The directory is created automatically and mounted into the container. |
+| `rfd4_triton_cache` | `$HOME/.cache/proteindj/rfd4` | Persistent cache shared by RFD4 tasks for cuEquivariance tuning data and compiled Triton kernels. The directory is created automatically and mounted into the container. Set to `null` to store the cache in each task's work directory. |
 | `rfd4_inference_batch_size` | 1 | Designs sampled simultaneously by RFD4 within each GPU task; capped at the number of designs allocated to that task. |
 
 See the [RFD4 design mode guide](modes.md#rfd4design) for usage.
