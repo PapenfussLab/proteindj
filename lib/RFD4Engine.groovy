@@ -35,6 +35,10 @@ class RFD4Engine extends DesignEngine {
 
     List<String> startupMessages() {
         def messages = ["Using RFD4-Proteina to co-design binder sequence and structure; refolding with ${params.pred_method}."]
+        messages << "* Design length = ${params.design_length}"
+        if (params.hotspot_residues) {
+            messages << "* Hotspot residues = ${params.hotspot_residues}"
+        }
         if (params.flexible_residues) {
             messages << "* Flexible target residues = ${params.flexible_residues} (structure unconditioned; sequence fixed)"
         }
