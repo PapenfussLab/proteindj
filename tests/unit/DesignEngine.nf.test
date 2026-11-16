@@ -500,7 +500,7 @@ nextflow_function {
             // examplebinder.pdb: chain A residues 1-88 (binder), chain B residues 89-203 (target)
             def params = [design_mode: "rfd_motifscaff", is_binder_mode: true, input_pdb: "${projectDir}/lib/examplebinder.pdb", motifscaff_spec: "5-10,A1-88,10-20"]
             def cmd = new RFDiffusionParams(params).generateCommandString(RFDiffusionParams.AUTO_CONTIGS_SENTINEL)
-            assert cmd.contains("contigmap.contigs=[5-10 A1-88 10-20/0 B89-203]")
+            assert cmd.contains("contigmap.contigs=[5-10/A1-88/10-20/0 B89-203]")
         }
     }
 
@@ -614,8 +614,24 @@ nextflow_function {
             assert function.success
             def params = [design_mode: "rfd_motifscaff", is_binder_mode: false, input_pdb: "${projectDir}/lib/examplebinder.pdb", motifscaff_spec: "5-10,A1-88,10-20"]
             def cmd = new RFDiffusionParams(params).generateCommandString(RFDiffusionParams.AUTO_CONTIGS_SENTINEL)
-            assert cmd.contains("contigmap.contigs=[5-10 A1-88 10-20]")
+            assert cmd.contains("contigmap.contigs=[5-10/A1-88/10-20]")
             assert !cmd.contains("/0 B")
+        }
+    }
+
+    test("RFDiffusionParams writes single-residue motifscaff_spec tokens as explicit ranges") {
+        when {
+            function {
+                """
+                input[0] = "[A1-88/0]"
+                """
+            }
+        }
+        then {
+            assert function.success
+            def params = [design_mode: "rfd_motifscaff", is_binder_mode: false, input_pdb: "${projectDir}/lib/examplebinder.pdb", motifscaff_spec: "5-10,A60,10-20"]
+            def cmd = new RFDiffusionParams(params).generateCommandString(RFDiffusionParams.AUTO_CONTIGS_SENTINEL)
+            assert cmd.contains("contigmap.contigs=[5-10/A60-60/10-20]")
         }
     }
 
@@ -678,7 +694,7 @@ nextflow_function {
             // examplebinder.pdb: chain A residues 1-88 (binder), chain B residues 89-203 (target)
             def params = [design_mode: "rfd_partialdiff", is_binder_mode: true, input_pdb: "${projectDir}/lib/examplebinder.pdb", rfd_partialdiff_spec: "A1-19,59", rfd_partialdiff_timesteps: 20]
             def cmd = new RFDiffusionParams(params).generateCommandString(RFDiffusionParams.AUTO_PARTIALDIFF_SENTINEL)
-            assert cmd.contains("contigmap.contigs=[A1-19 59/0 B89-203]")
+            assert cmd.contains("contigmap.contigs=[A1-19/59/0 B89-203]")
         }
     }
 
@@ -694,7 +710,7 @@ nextflow_function {
             assert function.success
             def params = [design_mode: "rfd_partialdiff", is_binder_mode: false, input_pdb: "${projectDir}/lib/examplebinder.pdb", rfd_partialdiff_spec: "A1-19,59", rfd_partialdiff_timesteps: 20]
             def cmd = new RFDiffusionParams(params).generateCommandString(RFDiffusionParams.AUTO_PARTIALDIFF_SENTINEL)
-            assert cmd.contains("contigmap.contigs=[A1-19 59]")
+            assert cmd.contains("contigmap.contigs=[A1-19/59]")
             assert !cmd.contains("/0 B")
         }
     }

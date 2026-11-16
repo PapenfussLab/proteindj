@@ -104,27 +104,35 @@ public class RFDiffusionParams extends HashMap<String, Object> {
             } else if (resNum == rangeEnd + 1) {
                 rangeEnd = resNum
             } else {
-                ranges << (rangeStart == rangeEnd ? "${chainId}${rangeStart}" : "${chainId}${rangeStart}-${rangeEnd}")
+                ranges << "${chainId}${rangeStart}-${rangeEnd}"
                 rangeStart = resNum
                 rangeEnd = resNum
             }
         }
         if (rangeStart != null) {
-            ranges << (rangeStart == rangeEnd ? "${chainId}${rangeStart}" : "${chainId}${rangeStart}-${rangeEnd}")
+            ranges << "${chainId}${rangeStart}-${rangeEnd}"
         }
         return ranges.join('/')
     }
 
+    // Translate a comma-separated keep/diffuse spec for the design chain into RFdiffusion's '/'-joined
+    // segments. In RFdiffusion contigs, '/' joins segments within ONE chain while whitespace separates
+    // chains, so commas must become '/' (never spaces). RFdiffusion also requires every fixed residue
+    // segment to be an explicit range, so a single residue 'A60' is written 'A60-60'.
+    private String specToContigSegments(String spec) {
+        return spec.split(',').collect { token ->
+            token =~ /^[A-Za-z]\d+$/ ? "${token}-${token.substring(1)}" : token
+        }.join('/')
+    }
+
     // Auto-generate an rfd_motifscaff contigmap.contigs string from motifscaff_spec (BoltzGen-style
-    // keep/insert grammar, comma-separated) plus the input PDB's chains. motifscaff_spec's grammar is
-    // structurally identical to RFdiffusion's own contig segment syntax (comma vs space separated),
-    // so translation is a simple comma->space substitution. Target chain(s), in binder mode, are
+    // keep/insert grammar, comma-separated) plus the input PDB's chains. Target chain(s), in binder mode, are
     // auto-detected and appended with full-range notation joined by '/0', exactly as the existing
     // rfd_denovo/rfd_partialdiff binder auto-contig generation does.
     private String resolveMotifScaffContigs() {
         def pdbFile = new File(this.input_pdb.toString())
         def designChain = this.is_binder_mode ? 'A' : Utils.getPdbChainIds(pdbFile).sort().first()
-        def chainASegment = this.motifscaff_spec ? this.motifscaff_spec.replace(',', ' ') : formatChainRanges(pdbFile, designChain)
+        def chainASegment = this.motifscaff_spec ? specToContigSegments(this.motifscaff_spec) : formatChainRanges(pdbFile, designChain)
         if (!this.is_binder_mode) {
             return "[${chainASegment}]"
         }
@@ -142,7 +150,7 @@ public class RFDiffusionParams extends HashMap<String, Object> {
     private String resolvePartialDiffContigs() {
         def pdbFile = new File(this.input_pdb.toString())
         def designChain = this.is_binder_mode ? 'A' : Utils.getPdbChainIds(pdbFile).sort().first()
-        def chainASegment = this.rfd_partialdiff_spec.replace(',', ' ')
+        def chainASegment = specToContigSegments(this.rfd_partialdiff_spec)
         if (!this.is_binder_mode) {
             return "[${chainASegment}]"
         }
