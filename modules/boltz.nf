@@ -3,7 +3,7 @@ process PrepBoltz {
 
     input:
     path pdb_files
-    path msa_file, stageAs: 'target_msa.a3m'
+    path msa_files
     val(is_binder_mode)
     val(binder_only)
 
@@ -13,19 +13,23 @@ process PrepBoltz {
     path ("output/*.a3m"), emit: msa_file, optional: true
 
     script:
-    // Determine template chain based on auto-detected binder/monomer status
-    def templateChain = is_binder_mode ? 'B' : 'A'
-    
-    // Determine MSA chain based on design mode (same as template chain)
-    def msaChain = templateChain
-    
+    // Binder mode templates/MSAs ALL target chain(s) (every chain except binder chain A,
+    // however many there are); monomer mode templates/MSAs the sole chain A.
+    def templateChainParam = is_binder_mode ? "--template-exclude-chain A" : "--template-chain A"
+    def msaChainParam = is_binder_mode ? "--msa-exclude-chain A" : "--msa-chain A"
+
     // Build template parameters if enabled (unbound/binder-only prediction never uses templates)
-    def templateParams = (params.boltz_use_templates && !binder_only) ? "--use-template --template-chain ${templateChain}" : ""
+    def templateParams = (params.boltz_use_templates && !binder_only) ? "--use-template ${templateChainParam}" : ""
     def templateForceParam = (params.boltz_use_templates && !binder_only && params.boltz_template_force) ? "--template-force" : ""
     def templateThresholdParam = (params.boltz_use_templates && !binder_only && params.boltz_template_threshold) ? "--template-threshold ${params.boltz_template_threshold}" : ""
-    
-    // Build MSA parameter if provided (unbound/binder-only prediction never uses an MSA)
-    def msaParam = (params.boltz_input_msa && !binder_only) ? "--msa-file target_msa.a3m --msa-chain ${msaChain}" : ""
+
+    // msa_files may contain the NO_FILE sentinel (when boltz_input_msa is unset) or one-or-more
+    // real .a3m files (one per target chain, matched positionally in chain order; a single file
+    // is broadcast to all target chains). Filter the sentinel out and build a comma-separated
+    // --msa-files argument from the real staged filenames (unbound/binder-only prediction never
+    // uses an MSA).
+    def realMsaFiles = msa_files instanceof List ? msa_files.findAll { it.name != 'NO_FILE' } : (msa_files.name != 'NO_FILE' ? [msa_files] : [])
+    def msaParam = (realMsaFiles && !binder_only) ? "--msa-files ${realMsaFiles.collect { it.name }.join(',')} ${msaChainParam}" : ""
 
     // Restrict the YAML to just the binder chain (A) for a target-free unbound prediction
     def binderOnlyParam = binder_only ? "--binder-only-chain A" : ""

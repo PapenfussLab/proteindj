@@ -25,40 +25,41 @@ def setup_logging():
     )
     return logging.getLogger(__name__)
 
-def get_sequence_from_structure(structure, chain_id):
-    """Extract sequence from structure"""
+def get_sequence_and_atoms(structure, chain_ids, atom_type="CA"):
+    """Extract concatenated sequence and matching atoms across the given chain(s), in order.
+
+    Supports multiple chain IDs (e.g. all of a design's own target chains: ['B', 'C']) so
+    alignment can use every target chain, not just one hardcoded chain. Residues missing
+    the requested atom_type are skipped from both outputs together, so sequence[i] always
+    corresponds to atoms[i].
+    """
     aa_dict = {
         'ALA': 'A', 'CYS': 'C', 'ASP': 'D', 'GLU': 'E', 'PHE': 'F',
         'GLY': 'G', 'HIS': 'H', 'ILE': 'I', 'LYS': 'K', 'LEU': 'L',
         'MET': 'M', 'ASN': 'N', 'PRO': 'P', 'GLN': 'Q', 'ARG': 'R',
         'SER': 'S', 'THR': 'T', 'VAL': 'V', 'TRP': 'W', 'TYR': 'Y'
     }
-    
-    try:
-        chain = structure[0][chain_id]
-        sequence = ""
-        for residue in chain:
-            if residue.id[0] == ' ':  # Standard amino acid
-                res_name = residue.get_resname()
-                sequence += aa_dict.get(res_name, 'X')
-        return sequence
-    except KeyError:
-        return ""
 
-def get_chain_atoms(structure, chain_id, atom_type="CA"):
-    """Get specified atoms from a chain"""
-    try:
-        chain = structure[0][chain_id]
-        atoms = []
+    sequence = ""
+    atoms = []
+    for chain_id in chain_ids:
+        try:
+            chain = structure[0][chain_id]
+        except KeyError:
+            continue
         for residue in chain:
-            if residue.id[0] == ' ':  # Standard amino acid
-                for atom in residue:
-                    if atom.get_name() == atom_type:
-                        atoms.append(atom)
-                        break
-        return atoms
-    except KeyError:
-        return []
+            if residue.id[0] != ' ':  # Standard amino acid only
+                continue
+            atom = next((a for a in residue if a.get_name() == atom_type), None)
+            if atom is None:
+                continue
+            sequence += aa_dict.get(residue.get_resname(), 'X')
+            atoms.append(atom)
+    return sequence, atoms
+
+def get_target_chain_ids(structure, binder_chain='A'):
+    """Return all chain IDs in structure except the binder chain, in structure order."""
+    return [chain.id for chain in structure[0] if chain.id != binder_chain]
 
 def find_best_alignment_region(ref_seq, target_seq, min_overlap=10):
     """Find the best alignment region between two sequences"""
@@ -137,11 +138,16 @@ def merge_chains_to_single_chain(pdb_path, output_path, target_chain='B'):
         
         f_out.write("END\n")
 
-def align_structures_by_sequence(reference_structure, target_structure, ref_chain='B', target_chain='B'):
-    """Align structures using sequence-based matching"""
+def align_structures_by_sequence(reference_structure, target_structure, ref_chains, target_chain='B'):
+    """Align structures using sequence-based matching.
+
+    ref_chains: chain ID(s) in reference_structure to use, concatenated in order (e.g. all of
+                the design's own target chains, ['B'] or ['B', 'C', ...] for multi-target-chain
+                designs), so the alignment fit accounts for every target chain.
+    """
     # Get sequences
-    ref_seq = get_sequence_from_structure(reference_structure, ref_chain)
-    target_seq = get_sequence_from_structure(target_structure, target_chain)
+    ref_seq, ref_atoms = get_sequence_and_atoms(reference_structure, ref_chains, "CA")
+    target_seq, target_atoms = get_sequence_and_atoms(target_structure, [target_chain], "CA")
     
     logger = logging.getLogger(__name__)
     logger.info(f"Reference sequence length: {len(ref_seq)}")
@@ -156,11 +162,7 @@ def align_structures_by_sequence(reference_structure, target_structure, ref_chai
     
     logger.info(f"Alignment score: {score}, aligned residues: {len(ref_indices)}")
     
-    # Get CA atoms for aligned regions
-    ref_atoms = get_chain_atoms(reference_structure, ref_chain, "CA")
-    target_atoms = get_chain_atoms(target_structure, target_chain, "CA")
-    
-    # Select atoms based on alignment
+    # Select atoms based on alignment (ref_atoms/target_atoms already line up with their sequences)
     aligned_ref_atoms = [ref_atoms[i] for i in ref_indices if i < len(ref_atoms)]
     aligned_target_atoms = [target_atoms[i] for i in target_indices if i < len(target_atoms)]
     
@@ -285,9 +287,14 @@ def process_single_rf_file(args):
         # Load current RFdiffusion file
         rf_structure = parser.get_structure("rf", rf_file)
         
-        # Align uncropped structure to this specific RFdiffusion file's chain B
+        # Align uncropped structure to this design's full set of target chain(s) (everything
+        # except the binder chain 'A'), not just a single hardcoded chain
+        target_chain_ids = get_target_chain_ids(rf_structure, binder_chain='A')
+        if not target_chain_ids:
+            raise ValueError(f"No target chain(s) found in {rf_file.name} (only binder chain 'A')")
+        
         aligned_uncropped, rmsd = align_structures_by_sequence(
-            rf_structure, uncropped_structure, 'B', 'B'
+            rf_structure, uncropped_structure, target_chain_ids, 'B'
         )
         
         # Save aligned uncropped structure temporarily

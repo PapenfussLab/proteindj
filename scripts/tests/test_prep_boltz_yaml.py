@@ -13,6 +13,7 @@ from prep_boltz_yaml import (
     add_seqres_to_pdb,
     generate_yaml_config,
     get_chain_ids,
+    extract_sequences,
 )
 
 
@@ -40,6 +41,20 @@ def _write_broken_chain_pdb(tmp_path, pdb_atom_line):
 def _parse(path):
     parser = PDBParser(QUIET=True)
     return parser.get_structure('s', path)
+
+
+def _write_three_chain_pdb(tmp_path, pdb_atom_line):
+    # Two-residue chains A, B, C, each a standalone (unbroken) peptide.
+    lines = []
+    lines += _res_atom_lines(pdb_atom_line, 'A', 1, (0, 0, 0), (1, 0, 0), serial_start=1)
+    lines += _res_atom_lines(pdb_atom_line, 'A', 2, (1.3, 0, 0), (2, 0, 0), serial_start=3)
+    lines += _res_atom_lines(pdb_atom_line, 'B', 1, (20, 0, 0), (21, 0, 0), serial_start=5)
+    lines += _res_atom_lines(pdb_atom_line, 'B', 2, (21.3, 0, 0), (22, 0, 0), serial_start=7)
+    lines += _res_atom_lines(pdb_atom_line, 'C', 1, (40, 0, 0), (41, 0, 0), serial_start=9)
+    lines += _res_atom_lines(pdb_atom_line, 'C', 2, (41.3, 0, 0), (42, 0, 0), serial_start=11)
+    path = tmp_path / "input.pdb"
+    path.write_text("\n".join(lines) + "\n")
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -137,3 +152,41 @@ def test_generate_yaml_config_template_requires_all_fields():
     # use_template True but no pdb_filename/template_chains -> no templates block
     config = generate_yaml_config(sequences, use_template=True)
     assert 'templates' not in config
+
+
+# ---------------------------------------------------------------------------
+# extract_sequences - MSA file matching
+# ---------------------------------------------------------------------------
+
+def _msa_by_id(sequences):
+    return {seq['id']: seq['msa'] for seq in sequences}
+
+
+def test_extract_sequences_single_msa_broadcasts_to_all_target_chains(tmp_path, pdb_atom_line):
+    pdb_path = _write_three_chain_pdb(tmp_path, pdb_atom_line)
+    sequences, _ = extract_sequences(pdb_path, msa_files=['target.a3m'], msa_exclude_chain='A')
+    assert _msa_by_id(sequences) == {'A': 'empty', 'B': 'target.a3m', 'C': 'target.a3m'}
+
+
+def test_extract_sequences_multiple_msa_matched_positionally(tmp_path, pdb_atom_line):
+    pdb_path = _write_three_chain_pdb(tmp_path, pdb_atom_line)
+    sequences, _ = extract_sequences(
+        pdb_path, msa_files=['b_target.a3m', 'c_target.a3m'], msa_exclude_chain='A'
+    )
+    assert _msa_by_id(sequences) == {'A': 'empty', 'B': 'b_target.a3m', 'C': 'c_target.a3m'}
+
+
+def test_extract_sequences_mismatched_msa_count_matches_best_effort(tmp_path, pdb_atom_line, capsys):
+    pdb_path = _write_three_chain_pdb(tmp_path, pdb_atom_line)
+    # Only one file for two eligible target chains (B, C) -> positional match, C left unmatched
+    sequences, _ = extract_sequences(
+        pdb_path, msa_files=['b_target.a3m', 'extra.a3m', 'unused.a3m'], msa_exclude_chain='A'
+    )
+    assert _msa_by_id(sequences) == {'A': 'empty', 'B': 'b_target.a3m', 'C': 'extra.a3m'}
+    assert 'WARNING' in capsys.readouterr().out
+
+
+def test_extract_sequences_no_msa_files_all_empty(tmp_path, pdb_atom_line):
+    pdb_path = _write_three_chain_pdb(tmp_path, pdb_atom_line)
+    sequences, _ = extract_sequences(pdb_path, msa_files=None, msa_exclude_chain='A')
+    assert _msa_by_id(sequences) == {'A': 'empty', 'B': 'empty', 'C': 'empty'}

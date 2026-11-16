@@ -571,11 +571,12 @@ workflow {
             }
         }
         else if (params.pred_method == "boltz") {
-            // Handle MSA file input
+            // Handle MSA file input - one-or-more comma-separated .a3m files (one per target
+            // chain, matched positionally in chain order by PrepBoltz)
             if (params.boltz_input_msa) {
-                msa_input = file(params.boltz_input_msa, checkIfExists: true)
+                msa_input = params.boltz_input_msa.toString().split(',').collect { file(it.trim(), checkIfExists: true) }
             } else {
-                msa_input = file("${projectDir}/lib/NO_FILE")
+                msa_input = [file("${projectDir}/lib/NO_FILE")]
             }
 
             // Prep yaml files for Boltz-2
@@ -736,11 +737,12 @@ workflow {
 
             // --- Stage 2: Boltz-2 predict + filter on AF2 survivors ---
 
-            // Handle MSA file input
+            // Handle MSA file input - one-or-more comma-separated .a3m files (one per target
+            // chain, matched positionally in chain order by PrepBoltz)
             if (params.boltz_input_msa) {
-                msa_input = file(params.boltz_input_msa, checkIfExists: true)
+                msa_input = params.boltz_input_msa.toString().split(',').collect { file(it.trim(), checkIfExists: true) }
             } else {
-                msa_input = file("${projectDir}/lib/NO_FILE")
+                msa_input = [file("${projectDir}/lib/NO_FILE")]
             }
 
             // Prep yaml files for Boltz-2
