@@ -3,6 +3,7 @@ process AnalysePredictions {
 
     publishDir "${params.out_dir}/results", mode: 'copy', pattern: "*.csv"
     publishDir "${params.out_dir}/run/analysis", mode: 'copy', pattern: "analysis.log"
+    publishDir "${params.out_dir}/run/analysis", mode: 'copy', pattern: "best_designs.jsonl"
 
     input:
     path pdbs
@@ -26,6 +27,7 @@ process AnalysePredictions {
 process FilterAnalysis {
     label 'python_tools'
     publishDir "${params.out_dir}/run/filter_analysis", mode: 'copy', pattern: '*.log'
+    publishDir "${params.out_dir}/run/filter_analysis", mode: 'copy', pattern: 'filtered.jsonl'
 
     input:
     path(jsonl_file)
