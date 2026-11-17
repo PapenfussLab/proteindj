@@ -148,6 +148,44 @@ def _restore_bfactors(relaxed_pdb_path, residue_bfactors):
     io.save(str(relaxed_pdb_path))
 
 
+def _reorder_chains_alphabetically(pdb_path):
+    """Rewrite pdb_path with chain blocks physically reordered to match alphabetical ID order.
+
+    OpenMM's PDBFile.writeFile() assigns output chain IDs by physical position (1st
+    chain in the topology -> 'A', 2nd -> 'B', ...), ignoring the original chain.id
+    string. Boltz can write its split multi-chain target sub-chains in a different
+    physical order than their alphabetical labels (e.g. grouping identical-sequence
+    chains together), so without this normalization, relaxation silently swaps which
+    residues end up under which chain ID downstream.
+    """
+    pdb_path = Path(pdb_path)
+    with open(pdb_path) as fin:
+        lines = fin.readlines()
+
+    chain_lines = {}
+    chain_order = []
+    other_lines = []
+    for line in lines:
+        if line.startswith(('ATOM', 'HETATM', 'TER', 'ANISOU')):
+            chain_id = line[21]
+            chain_lines.setdefault(chain_id, []).append(line)
+            if chain_id not in chain_order:
+                chain_order.append(chain_id)
+        elif not line.startswith('END'):
+            other_lines.append(line)
+
+    if chain_order == sorted(chain_order):
+        return pdb_path
+
+    out_path = pdb_path.parent / f'{pdb_path.stem}_chainsorted.pdb'
+    with open(out_path, 'w') as fout:
+        fout.writelines(other_lines)
+        for chain_id in sorted(chain_order):
+            fout.writelines(chain_lines[chain_id])
+        fout.write('END\n')
+    return out_path
+
+
 def _relax_structure(pdb_path, ph=7.0, restraint_k=1000.0):
     """Add hydrogens and energy-minimize a PDB file, preserving B-factors.
 
@@ -164,7 +202,8 @@ def _relax_structure(pdb_path, ph=7.0, restraint_k=1000.0):
     pdb_path = Path(pdb_path)
     residue_bfactors = _get_residue_bfactors(pdb_path)
 
-    fixer = PDBFixer(filename=str(pdb_path))
+    fixer_input_path = _reorder_chains_alphabetically(pdb_path)
+    fixer = PDBFixer(filename=str(fixer_input_path))
     # Boltz/AF2-predicted PDBs often omit OXT atoms at genuine chain termini,
     # which otherwise makes ForceField unable to tell whether a chain's last
     # residue is an internal residue (expects a peptide bond onward) or a
@@ -368,8 +407,16 @@ def calculate_shape_complementarity(pdb_path, chain1, chain2):
     (Lawrence & Colman 1993 algorithm), implemented in Rust and bundled with
     the same `arpeggia` package used elsewhere in this script -- no external
     binary required.
+
+    Returns None if the two chains have no interface close enough for SC's
+    own (stricter than the BSA dSASA check) contact dot generation.
     """
-    sc_val = arpeggia.sc(str(pdb_path), groups=f'{chain1}/{chain2}')
+    try:
+        sc_val = arpeggia.sc(str(pdb_path), groups=f'{chain1}/{chain2}')
+    except RuntimeError as e:
+        if "No molecular dots generated" in str(e):
+            return None
+        raise
     if not (0.0 <= sc_val <= 1.0):
         raise ValueError(f"arpeggia.sc returned out-of-range value {sc_val} for {pdb_path}")
     return sc_val
@@ -601,7 +648,8 @@ def calculate_interface_metrics(model, pdb_path, chain1='A', chain2='B'):
             f'pr_intface_unsat_hbonds{suffix}': 0,
         }
 
-    sc = round(calculate_shape_complementarity(pdb_path, chain1, chain2), 3)
+    sc_val = calculate_shape_complementarity(pdb_path, chain1, chain2)
+    sc = round(sc_val, 3) if sc_val is not None else 0.0
 
     # Binding affinity (Prodigy IC-NIS model); None if no contacts found
     pg = compute_prodigy_scores(pdb_path, chain1, chain2)
