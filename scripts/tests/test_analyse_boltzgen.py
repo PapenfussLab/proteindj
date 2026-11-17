@@ -1,7 +1,7 @@
 """Tier A unit tests for analyse_boltzgen.py."""
 import numpy as np
 import pytest
-from Bio.PDB import Atom, Chain, Model, PDBParser, Residue, Structure
+from Bio.PDB import Atom, Chain, MMCIFParser, Model, PDBParser, Residue, Structure
 from Bio.PDB.mmcifio import MMCIFIO
 
 from analyse_boltzgen import (
@@ -9,6 +9,7 @@ from analyse_boltzgen import (
     load_design_mask,
     collect_design_pairs,
     get_protein_chains_in_order,
+    compute_residue_permutation,
     cif_to_relabelled_pdb,
 )
 
@@ -132,9 +133,11 @@ class TestCifToRelabelledPdb:
         _write_cif(cif_path, [('A', [1, 2, 3]), ('B', [10, 11])])
 
         pdb_path = tmp_path / "fold_0.pdb"
-        chain_lengths = cif_to_relabelled_pdb(cif_path, pdb_path)
+        chain_lengths, permutation = cif_to_relabelled_pdb(cif_path, pdb_path)
 
         assert chain_lengths == [3, 2]
+        # Chain A already first in file order -> permutation is the identity
+        assert permutation == [0, 1, 2, 3, 4]
 
         parser = PDBParser(QUIET=True)
         structure = parser.get_structure('p', str(pdb_path))
@@ -152,9 +155,12 @@ class TestCifToRelabelledPdb:
         _write_cif(cif_path, [('B', [10, 11]), ('A', [1, 2, 3])])
 
         pdb_path = tmp_path / "fold_0.pdb"
-        chain_lengths = cif_to_relabelled_pdb(cif_path, pdb_path)
+        chain_lengths, permutation = cif_to_relabelled_pdb(cif_path, pdb_path)
 
         assert chain_lengths == [3, 2]
+        # Physical order was B(2) then A(3): new chain A (output 0-2) pulls from
+        # physical indices 2-4, new chain B (output 3-4) pulls from physical indices 0-1
+        assert permutation == [2, 3, 4, 0, 1]
 
         parser = PDBParser(QUIET=True)
         structure = parser.get_structure('p', str(pdb_path))
@@ -186,8 +192,9 @@ class TestCifToRelabelledPdb:
         io.save(str(cif_path))
 
         pdb_path = tmp_path / "fold_0.pdb"
-        chain_lengths = cif_to_relabelled_pdb(cif_path, pdb_path)
+        chain_lengths, permutation = cif_to_relabelled_pdb(cif_path, pdb_path)
         assert chain_lengths == [1]
+        assert permutation == [0]
 
     def test_no_protein_chains_raises_value_error(self, tmp_path):
         cif_path = tmp_path / "fold_0.cif"
@@ -204,3 +211,44 @@ class TestCifToRelabelledPdb:
         pdb_path = tmp_path / "fold_0.pdb"
         with pytest.raises(ValueError):
             cif_to_relabelled_pdb(cif_path, pdb_path)
+
+
+class TestDesignMaskRealignment:
+    """Regression coverage: BoltzGen's design_mask (.npz) is in physical file order and
+    is NOT reordered by cif_to_relabelled_pdb's chain-A-first relabeling, so it must be
+    permuted via compute_residue_permutation before being matched up with the relabeled
+    PDB's residue order."""
+
+    def test_permutation_is_identity_when_chain_a_already_first(self, tmp_path):
+        cif_path = tmp_path / "fold_0.cif"
+        _write_cif(cif_path, [('A', [1, 2, 3]), ('B', [10, 11])])
+        parser = MMCIFParser(QUIET=True)
+        model = next(parser.get_structure('s', str(cif_path)).get_models())
+        assert compute_residue_permutation(model) == [0, 1, 2, 3, 4]
+
+    def test_permutation_reorders_when_chain_b_precedes_chain_a(self, tmp_path):
+        cif_path = tmp_path / "fold_0.cif"
+        # Physical order: B (2 residues) then A (3 residues)
+        _write_cif(cif_path, [('B', [10, 11]), ('A', [1, 2, 3])])
+        parser = MMCIFParser(QUIET=True)
+        model = next(parser.get_structure('s', str(cif_path)).get_models())
+        assert compute_residue_permutation(model) == [2, 3, 4, 0, 1]
+
+    def test_design_mask_realigns_to_designed_chain_a_when_file_order_is_swapped(self, tmp_path):
+        # Mirrors a real BoltzGen motifscaff run where the input target was chain B
+        # before chain A: design_mask (physical order) marks B's 2 residues as fixed
+        # (False = not redesigned) and A's 3 residues as designed (True).
+        cif_path = tmp_path / "fold_0.cif"
+        _write_cif(cif_path, [('B', [10, 11]), ('A', [1, 2, 3])])
+        design_mask = np.array([False, False, True, True, True])  # B, B, A, A, A
+
+        pdb_path = tmp_path / "fold_0.pdb"
+        chain_lengths, permutation = cif_to_relabelled_pdb(cif_path, pdb_path)
+        assert sum(chain_lengths) == len(design_mask)
+
+        realigned = design_mask[permutation]
+        metadata = build_metadata(fold_id=0, design_mask=realigned, design_mode='boltzgen_motifscaff')
+
+        # New PDB order is chain A (3 residues) then chain B (2 residues): the designed
+        # chain A must come out as NOT fixed (bg_inpaint_seq False), chain B as fixed (True)
+        assert metadata['bg_inpaint_seq'] == [False, False, False, True, True]

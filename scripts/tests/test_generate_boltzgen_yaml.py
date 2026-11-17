@@ -94,6 +94,31 @@ def test_clean_pdb_for_boltzgen_strips_header_metadata(tmp_path, pdb_atom_line):
     assert out_lines == [atom_line]
 
 
+def test_clean_pdb_for_boltzgen_no_reorder_by_default(tmp_path, pdb_atom_line):
+    """Chain B physically precedes chain A - without reordering, order is preserved."""
+    b_line = pdb_atom_line(chain='B', resnum=1)
+    a_line = pdb_atom_line(chain='A', resnum=1)
+    input_path = tmp_path / "in.pdb"
+    input_path.write_text(f"{b_line}\n{a_line}\n")
+    output_path = tmp_path / "out.pdb"
+    clean_pdb_for_boltzgen(input_path, output_path)
+    assert output_path.read_text().splitlines() == [b_line, a_line]
+
+
+def test_clean_pdb_for_boltzgen_reorders_chain_a_first(tmp_path, pdb_atom_line):
+    """Chain B physically precedes chain A in the input - reorder_chain_a_first must
+    move chain A's records to the front, keeping other chains in their relative order."""
+    b_line = pdb_atom_line(serial=1, chain='B', resnum=1)
+    b_ter = "TER     796      GLY B   1"
+    a_line = pdb_atom_line(serial=2, chain='A', resnum=1)
+    a_ter = "TER     797      GLY A   1"
+    input_path = tmp_path / "in.pdb"
+    input_path.write_text(f"{b_line}\n{b_ter}\n{a_line}\n{a_ter}\n")
+    output_path = tmp_path / "out.pdb"
+    clean_pdb_for_boltzgen(input_path, output_path, reorder_chain_a_first=True)
+    assert output_path.read_text().splitlines() == [a_line, a_ter, b_line, b_ter]
+
+
 # ---------------------------------------------------------------------------
 # parse_design_length
 # ---------------------------------------------------------------------------

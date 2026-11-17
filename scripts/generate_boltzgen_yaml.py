@@ -98,13 +98,47 @@ _PDB_HEADER_METADATA_PREFIXES = (
 )
 
 
-def clean_pdb_for_boltzgen(input_path, output_path):
-    """Write a copy of input_path with stale sequence/molecule header records stripped."""
-    with open(input_path) as fin, open(output_path, 'w') as fout:
-        for line in fin:
-            if line.startswith(_PDB_HEADER_METADATA_PREFIXES):
-                continue
-            fout.write(line)
+def clean_pdb_for_boltzgen(input_path, output_path, reorder_chain_a_first=False):
+    """
+    Write a copy of input_path with stale sequence/molecule header records stripped.
+
+    If reorder_chain_a_first is True, also move chain A's ATOM/HETATM/TER records to
+    the front of the file (other chains keep their original relative order). For
+    boltzgen_motifscaff, BoltzGen's design-step writer assigns output chain letters by
+    the physical order chains appear in this input file, not by author chain ID - if
+    chain A isn't physically first, BoltzGen can write the fixed context chain as its
+    own output chain 'A' and the actually-redesigned chain as 'B', silently swapping
+    binder/target roles for every downstream stage that assumes chain A = binder.
+    """
+    with open(input_path) as fin:
+        lines = [line for line in fin if not line.startswith(_PDB_HEADER_METADATA_PREFIXES)]
+
+    if not reorder_chain_a_first:
+        with open(output_path, 'w') as fout:
+            fout.writelines(lines)
+        return
+
+    chain_lines = {}
+    chain_order = []
+    header_lines = []  # must precede the coordinate section (e.g. HELIX, SHEET, CRYST1)
+    trailer_lines = []  # must follow the coordinate section (e.g. CONECT, MASTER, END)
+    for line in lines:
+        if line.startswith(('ATOM', 'HETATM', 'TER', 'ANISOU')):
+            chain_id = line[21]
+            chain_lines.setdefault(chain_id, []).append(line)
+            if chain_id not in chain_order:
+                chain_order.append(chain_id)
+        elif line.startswith(('CONECT', 'MASTER', 'END')):
+            trailer_lines.append(line)
+        else:
+            header_lines.append(line)
+
+    ordered_chains = ['A'] + [c for c in chain_order if c != 'A']
+    with open(output_path, 'w') as fout:
+        fout.writelines(header_lines)
+        for chain_id in ordered_chains:
+            fout.writelines(chain_lines[chain_id])
+        fout.writelines(trailer_lines)
 
 
 def parse_design_length(design_length):
@@ -476,7 +510,10 @@ def main():
     output_stem = Path(args.input_pdb).stem if args.input_pdb else 'placeholder'
     cleaned_pdb_path = Path(args.output).parent / f"{output_stem}_boltzgen.pdb"
     if args.input_pdb:
-        clean_pdb_for_boltzgen(args.input_pdb, cleaned_pdb_path)
+        clean_pdb_for_boltzgen(
+            args.input_pdb, cleaned_pdb_path,
+            reorder_chain_a_first=(args.design_mode == 'boltzgen_motifscaff'),
+        )
     else:
         cleaned_pdb_path.touch()
     for entity in spec['entities']:
