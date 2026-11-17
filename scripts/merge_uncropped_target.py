@@ -9,8 +9,7 @@ import argparse
 from multiprocessing import Pool
 from Bio.PDB import PDBParser, PDBIO, Superimposer
 from Bio.PDB.Selection import unfold_entities
-from Bio import pairwise2
-from Bio.pairwise2 import format_alignment
+from Bio.Align import PairwiseAligner
 
 def setup_logging():
     """Setup logging configuration"""
@@ -63,33 +62,34 @@ def get_target_chain_ids(structure, binder_chain='A'):
 
 def find_best_alignment_region(ref_seq, target_seq, min_overlap=10):
     """Find the best alignment region between two sequences"""
-    alignments = pairwise2.align.localms(ref_seq, target_seq, 2, -1, -0.5, -0.1)
-    
-    if not alignments:
+    aligner = PairwiseAligner()
+    aligner.mode = 'local'
+    aligner.match_score = 2
+    aligner.mismatch_score = -1
+    aligner.open_gap_score = -0.5
+    aligner.extend_gap_score = -0.1
+    alignments = aligner.align(ref_seq, target_seq)
+
+    try:
+        best_alignment = alignments[0]
+    except IndexError:
         return None, None, None
-    
-    best_alignment = alignments[0]
-    aligned_ref, aligned_target, score, start, end = best_alignment
-    
-    # Find the alignment region without gaps
+
+    score = best_alignment.score
+
+    # best_alignment.aligned gives matching (ref_ranges, target_ranges) blocks of
+    # equal length without gaps (may include mismatches within a block)
     ref_indices = []
     target_indices = []
-    ref_pos = 0
-    target_pos = 0
-    
-    for i in range(len(aligned_ref)):
-        if aligned_ref[i] != '-' and aligned_target[i] != '-':
-            ref_indices.append(ref_pos)
-            target_indices.append(target_pos)
-        
-        if aligned_ref[i] != '-':
-            ref_pos += 1
-        if aligned_target[i] != '-':
-            target_pos += 1
-    
+    ref_ranges, target_ranges = best_alignment.aligned
+    for (r_start, r_end), (t_start, t_end) in zip(ref_ranges, target_ranges):
+        for offset in range(r_end - r_start):
+            ref_indices.append(r_start + offset)
+            target_indices.append(t_start + offset)
+
     if len(ref_indices) < min_overlap:
         return None, None, None
-    
+
     return ref_indices, target_indices, score
 
 def merge_chains_to_single_chain(pdb_path, output_path, target_chain='B'):
