@@ -3,14 +3,17 @@
 BoltzGen Design Processor
 Processes BoltzGen `design` step output (.cif + .npz sidecar pairs) for downstream compatibility.
 - Converts CIF -> PDB (BioPython)
-- Relabels chains A, B, C... in file order, so the first entity declared in the
-  BoltzGen YAML spec (the designed binder, or chain A for redesign) becomes chain A
-- Extracts the `design_mask` array from the .npz sidecar and inverts it into
-  `bg_inpaint_seq` (True = fixed/not to be redesigned by ProteinMPNN/FAMPNN,
-  False = designable). This follows the same per-tool naming convention as
-  RFdiffusion's `rfd_inpaint_seq` and BindCraft's `bc_inpaint_seq`; downstream
-  consumer scripts check all three possible keys since only one is present per
-  fold_N.json depending on which tool produced the design.
+- Relabels chains A, B, C..., placing BoltzGen's own chain 'A' (the designed binder,
+  or chain A for redesign) first regardless of its physical position in the CIF -
+  BoltzGen preserves original chain IDs but does not reorder chains by role, so for
+  boltzgen_motifscaff the designed chain can legitimately appear anywhere in the file
+- Extracts the `design_mask` array from the .npz sidecar (in BoltzGen's original
+  physical chain order - realigned to match the relabeled PDB via
+  compute_residue_permutation) and inverts it into `bg_inpaint_seq` (True = fixed/not
+  to be redesigned by ProteinMPNN/FAMPNN, False = designable). This follows the same
+  per-tool naming convention as RFdiffusion's `rfd_inpaint_seq` and BindCraft's
+  `bc_inpaint_seq`; downstream consumer scripts check all three possible keys since
+  only one is present per fold_N.json depending on which tool produced the design.
 - Assigns sequential fold_id's starting from 0
 """
 
@@ -24,21 +27,67 @@ from Bio.PDB import Chain, MMCIFParser, Model, PDBIO, Structure
 
 def get_protein_chains_in_order(model):
     """
-    Return chains (in file order) that contain at least one standard residue.
+    Return chains that contain at least one standard residue, with BoltzGen's own
+    chain 'A' (the designed chain) placed first and all others kept in file order.
+
+    BoltzGen preserves the original author chain ID on write but does not reorder
+    chains by role, so chain 'A' can appear anywhere in the file - relabeling by raw
+    file order would silently swap the designed chain with a fixed context chain.
 
     Args:
         model: BioPython Model object
 
     Returns:
-        list: Chain objects in file order
+        list: Chain objects, chain 'A' first, remaining chains in file order
     """
-    return [chain for chain in model if any(res.id[0] == ' ' for res in chain)]
+    chains = [chain for chain in model if any(res.id[0] == ' ' for res in chain)]
+    if not chains:
+        return chains
+    chain_a = [chain for chain in chains if chain.id == 'A']
+    if not chain_a:
+        raise ValueError("No chain 'A' (the designed chain) found among protein chains")
+    others = [chain for chain in chains if chain.id != 'A']
+    return chain_a + others
+
+
+def compute_residue_permutation(model):
+    """
+    Map each residue's position in the relabeled output (chain 'A' first, see
+    get_protein_chains_in_order) back to its index in the model's original physical
+    chain order. BoltzGen's per-residue arrays (e.g. design_mask in the .npz sidecar)
+    are written in physical file order and are NOT reordered to match the relabeled
+    PDB, so design_mask[permutation] is needed to realign them.
+
+    Args:
+        model: BioPython Model object
+
+    Returns:
+        list: original (physical-order) index for each residue in the new output order
+    """
+    physical_chains = [chain for chain in model if any(res.id[0] == ' ' for res in chain)]
+    offsets = {}
+    next_offset = 0
+    for chain in physical_chains:
+        offsets[chain.id] = next_offset
+        next_offset += sum(1 for res in chain if res.id[0] == ' ')
+
+    permutation = []
+    for chain in get_protein_chains_in_order(model):
+        offset = offsets[chain.id]
+        i = 0
+        for residue in chain:
+            if residue.id[0] != ' ':
+                continue
+            permutation.append(offset + i)
+            i += 1
+    return permutation
 
 
 def cif_to_relabelled_pdb(cif_path, pdb_path):
     """
     Convert a BoltzGen-generated CIF file to a PDB file, relabeling chains
-    A, B, C... in file order. HETATM/non-standard residues are dropped.
+    A, B, C... with BoltzGen's chain 'A' first (see get_protein_chains_in_order)
+    and remaining chains in file order. HETATM/non-standard residues are dropped.
     Residues are renumbered sequentially and continuously across chains
     (chain A: 1..n_res_A, chain B: n_res_A+1..n_res_A+n_res_B, etc.) so residue
     numbers don't overlap between chains - this matches the convention used by
@@ -50,7 +99,11 @@ def cif_to_relabelled_pdb(cif_path, pdb_path):
         pdb_path: Path to output PDB file
 
     Returns:
-        list: Number of standard residues in each output chain, in order (e.g. [134, 162])
+        tuple: (chain_lengths, permutation)
+            chain_lengths: Number of standard residues in each output chain, in
+                           order (e.g. [134, 162])
+            permutation: see compute_residue_permutation - used to realign
+                         design_mask with this relabeled residue order
     """
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure('design', str(cif_path))
@@ -59,6 +112,8 @@ def cif_to_relabelled_pdb(cif_path, pdb_path):
     orig_chains = get_protein_chains_in_order(model)
     if not orig_chains:
         raise ValueError(f"No protein chains found in {cif_path}")
+
+    permutation = compute_residue_permutation(model)
 
     new_structure = Structure.Structure('design')
     new_model = Model.Model(0)
@@ -86,7 +141,7 @@ def cif_to_relabelled_pdb(cif_path, pdb_path):
     io.set_structure(new_structure)
     io.save(str(pdb_path))
 
-    return chain_lengths
+    return chain_lengths, permutation
 
 
 def load_design_mask(npz_path):
@@ -168,7 +223,7 @@ def process_design(cif_path, npz_path, fold_id, output_dir, design_mode):
     output_pdb = output_dir / f"fold_{fold_id}.pdb"
     output_json = output_dir / f"fold_{fold_id}.json"
 
-    chain_lengths = cif_to_relabelled_pdb(cif_path, output_pdb)
+    chain_lengths, permutation = cif_to_relabelled_pdb(cif_path, output_pdb)
     design_mask = load_design_mask(npz_path)
 
     if sum(chain_lengths) != len(design_mask):
@@ -177,6 +232,9 @@ def process_design(cif_path, npz_path, fold_id, output_dir, design_mode):
             f"Residue count mismatch (PDB={sum(chain_lengths)}, "
             f"design_mask={len(design_mask)})"
         )
+
+    # Realign design_mask (physical file order) with the relabeled PDB's residue order
+    design_mask = design_mask[permutation]
 
     metadata = build_metadata(fold_id, design_mask, design_mode)
     with open(output_json, 'w') as f:

@@ -354,9 +354,8 @@
         },
         "boltz_input_msa": {
           "type": "string",
-          "description": "Path to a multiple sequence alignment (.a3m format) for the input PDB. Applies to chain B in binder modes or chain A in monomer modes. If null, single-sequence mode is used.",
-          "format": "file-path",
-          "pattern": "\\.a3m$",
+          "description": "Comma-separated list of one-or-more multiple sequence alignment files (.a3m format) for the input PDB. In binder modes, applied to the non-binder (target) chain(s) (e.g. B, or B+C+... if there are multiple target chains): a single file is applied to all target chains (e.g. an identical-sequence multi-chain target), or multiple files are matched positionally one-per-chain in chain order. In monomer modes, applied to chain A. MSA must match the entire sequence of the chain it is applied to or will be ignored by Boltz for that chain. If null, single-sequence mode is used. e.g. 'lib/pdl1_msa.a3m' or 'lib/chainB_msa.a3m,lib/chainC_msa.a3m'",
+          "pattern": "^[^,]+\\.a3m(,[^,]+\\.a3m)*$",
           "hidden": true
         },
         "boltz_extra_config": {

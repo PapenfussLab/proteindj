@@ -46,9 +46,28 @@ def get_chain_atoms(structure, chain_id, atom_type="CA"):
     except KeyError:
         raise ValueError(f"Chain {chain_id} not found in structure")
 
+def get_target_atoms(structure, binder_chain='A', atom_type="CA"):
+    """Get specified atoms from all non-binder (target) chains, in chain order.
+
+    Generalizes to multiple target chains (B, C, D...), matching
+    align_boltz.py's get_target_ca_atoms.
+    """
+    atoms = [
+        atom
+        for chain in structure[0]
+        if chain.id != binder_chain
+        for residue in chain
+        if residue.id[0] == ' '  # standard residues only (HETATM ions can also be named 'CA')
+        for atom in residue
+        if atom.get_name() == atom_type
+    ]
+    if not atoms:
+        raise ValueError(f"No {atom_type} atoms found in target chains (excluding '{binder_chain}')")
+    return atoms
+
 def align_pdb(args):
     """
-    Align target PDB to reference PDB using chain B
+    Align target PDB to reference PDB using all target (non-binder) chains
     Returns tuple of (target_name, rmsd, error)
     """
     reference_pdb, target_pdb, output_path = args
@@ -59,9 +78,9 @@ def align_pdb(args):
         ref_structure = parser.get_structure("reference", reference_pdb)
         target_structure = parser.get_structure("target", target_pdb)
         
-        # Get CA atoms from chain B of both structures
-        ref_atoms = get_chain_atoms(ref_structure, 'B')
-        target_atoms = get_chain_atoms(target_structure, 'B')
+        # Get CA atoms from all target chains of both structures
+        ref_atoms = get_target_atoms(ref_structure, binder_chain='A')
+        target_atoms = get_target_atoms(target_structure, binder_chain='A')
         
         # Ensure we have the same number of atoms for alignment
         min_length = min(len(ref_atoms), len(target_atoms))

@@ -7,8 +7,8 @@ this deterministic Tier A suite.
 from Bio.PDB import PDBParser
 
 from merge_uncropped_target import (
-    get_sequence_from_structure,
-    get_chain_atoms,
+    get_sequence_and_atoms,
+    get_target_chain_ids,
     merge_chains_to_single_chain,
 )
 
@@ -25,48 +25,60 @@ def _parse(path):
 
 
 # ---------------------------------------------------------------------------
-# get_sequence_from_structure
+# get_sequence_and_atoms
 # ---------------------------------------------------------------------------
 
-def test_get_sequence_from_structure_maps_known_residues(tmp_path, pdb_atom_line):
+def test_get_sequence_and_atoms_maps_known_residues(tmp_path, pdb_atom_line):
     lines = [
         pdb_atom_line(serial=1, chain='A', resnum=1, resname='ALA'),
         pdb_atom_line(serial=2, chain='A', resnum=2, resname='GLY'),
         pdb_atom_line(serial=3, chain='A', resnum=3, resname='CYS'),
     ]
     structure = _parse(_write_pdb(tmp_path, lines))
-    assert get_sequence_from_structure(structure, 'A') == "AGC"
+    seq, _ = get_sequence_and_atoms(structure, ['A'])
+    assert seq == "AGC"
 
 
-def test_get_sequence_from_structure_unknown_residue_is_x(tmp_path, pdb_atom_line):
+def test_get_sequence_and_atoms_unknown_residue_is_x(tmp_path, pdb_atom_line):
     lines = [
         pdb_atom_line(serial=1, chain='A', resnum=1, resname='ALA'),
         pdb_atom_line(serial=2, chain='A', resnum=2, resname='LIG'),
     ]
     structure = _parse(_write_pdb(tmp_path, lines))
-    assert get_sequence_from_structure(structure, 'A') == "AX"
+    seq, _ = get_sequence_and_atoms(structure, ['A'])
+    assert seq == "AX"
 
 
-def test_get_sequence_from_structure_skips_hetatm(tmp_path, pdb_atom_line):
+def test_get_sequence_and_atoms_skips_hetatm(tmp_path, pdb_atom_line):
     lines = [
         pdb_atom_line(serial=1, chain='A', resnum=1, resname='ALA'),
         "HETATM    2  O   HOH A   2      10.000  10.000  10.000  1.00  0.00           O",
     ]
     structure = _parse(_write_pdb(tmp_path, lines))
-    assert get_sequence_from_structure(structure, 'A') == "A"
+    seq, _ = get_sequence_and_atoms(structure, ['A'])
+    assert seq == "A"
 
 
-def test_get_sequence_from_structure_missing_chain_returns_empty(tmp_path, pdb_atom_line):
+def test_get_sequence_and_atoms_missing_chain_returns_empty(tmp_path, pdb_atom_line):
     lines = [pdb_atom_line(serial=1, chain='A', resnum=1, resname='ALA')]
     structure = _parse(_write_pdb(tmp_path, lines))
-    assert get_sequence_from_structure(structure, 'Z') == ""
+    seq, atoms = get_sequence_and_atoms(structure, ['Z'])
+    assert seq == ""
+    assert atoms == []
 
 
-# ---------------------------------------------------------------------------
-# get_chain_atoms
-# ---------------------------------------------------------------------------
+def test_get_sequence_and_atoms_concatenates_multiple_chains(tmp_path, pdb_atom_line):
+    lines = [
+        pdb_atom_line(serial=1, chain='B', resnum=1, resname='ALA'),
+        pdb_atom_line(serial=2, chain='C', resnum=1, resname='GLY'),
+    ]
+    structure = _parse(_write_pdb(tmp_path, lines))
+    seq, atoms = get_sequence_and_atoms(structure, ['B', 'C'])
+    assert seq == "AG"
+    assert [a.get_serial_number() for a in atoms] == [1, 2]
 
-def test_get_chain_atoms_returns_one_atom_per_residue(tmp_path, pdb_atom_line):
+
+def test_get_sequence_and_atoms_returns_one_atom_per_residue(tmp_path, pdb_atom_line):
     lines = [
         pdb_atom_line(serial=1, name='N', chain='A', resnum=1),
         pdb_atom_line(serial=2, name='CA', chain='A', resnum=1),
@@ -75,14 +87,22 @@ def test_get_chain_atoms_returns_one_atom_per_residue(tmp_path, pdb_atom_line):
         pdb_atom_line(serial=5, name='CA', chain='A', resnum=2),
     ]
     structure = _parse(_write_pdb(tmp_path, lines))
-    atoms = get_chain_atoms(structure, 'A', atom_type='CA')
+    _, atoms = get_sequence_and_atoms(structure, ['A'], atom_type='CA')
     assert [a.get_serial_number() for a in atoms] == [2, 5]
 
 
-def test_get_chain_atoms_missing_chain_returns_empty_list(tmp_path, pdb_atom_line):
-    lines = [pdb_atom_line(serial=1, chain='A', resnum=1)]
+# ---------------------------------------------------------------------------
+# get_target_chain_ids
+# ---------------------------------------------------------------------------
+
+def test_get_target_chain_ids_excludes_binder_chain(tmp_path, pdb_atom_line):
+    lines = [
+        pdb_atom_line(serial=1, chain='A', resnum=1, resname='ALA'),
+        pdb_atom_line(serial=2, chain='B', resnum=1, resname='GLY'),
+        pdb_atom_line(serial=3, chain='C', resnum=1, resname='CYS'),
+    ]
     structure = _parse(_write_pdb(tmp_path, lines))
-    assert get_chain_atoms(structure, 'Z') == []
+    assert get_target_chain_ids(structure, binder_chain='A') == ['B', 'C']
 
 
 # ---------------------------------------------------------------------------

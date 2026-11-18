@@ -14,7 +14,7 @@ From: nvidia/cuda:12.9.1-base-ubuntu22.04
     git clone \
         https://github.com/PapenfussLab/dl_binder_design.git \
         /dl_binder_design \
-    && git -C /dl_binder_design checkout f159e83
+    && git -C /dl_binder_design checkout 182b155
     # Retrieve ProteinMPNN code
     git clone \
         https://github.com/dauparas/ProteinMPNN.git \
