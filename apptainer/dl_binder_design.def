@@ -66,7 +66,7 @@ From: nvidia/cuda:12.9.1-base-ubuntu22.04
 
 %labels
     AUTHOR JoshuaHardy, DylanSilke
-    Version 3.0
+    Version 3.1
     Description "Apptainer container for dl_binder_design including ProteinMPNN scripts and AlphaFold2 Initial-Guess"
 
 %help

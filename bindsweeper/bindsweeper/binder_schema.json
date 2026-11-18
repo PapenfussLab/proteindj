@@ -44,7 +44,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "seq_method": {
@@ -983,7 +983,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "rfd_foldcond_scaffold_dir": {
@@ -1923,7 +1923,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "motifscaff_spec": {
@@ -2876,7 +2876,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "rfd_partialdiff_timesteps": {
@@ -4801,7 +4801,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "bg_not_binding_residues": {
@@ -5696,7 +5696,7 @@
         "string",
         "null"
       ],
-      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
       "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
     },
     "motifscaff_spec": {
@@ -6138,6 +6138,754 @@
         "null"
       ],
       "description": "Max PSCE score for designed side-chains. A lower score means FAMPNN is more confident in the sequence."
+    },
+    "af2_min_iptm": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Min predicted interface TM-score (ipTM) between binder and target e.g. 0.8"
+    },
+    "af2_max_pae_interaction": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max predicted aligned error for interactions e.g. 10"
+    },
+    "af2_max_pae_overall": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max predicted aligned error for all chains e.g. 10"
+    },
+    "af2_max_pae_binder": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max predicted aligned error for binder e.g. 5"
+    },
+    "af2_max_pae_target": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max predicted aligned error for target e.g. 5"
+    },
+    "af2_min_plddt_overall": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Min average pLDDT score for target and binder chains e.g. 90"
+    },
+    "af2_min_plddt_binder": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Min pLDDT score required for binder e.g. 85"
+    },
+    "af2_min_plddt_target": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Min pLDDT score required for target e.g 90"
+    },
+    "af2_max_rmsd_overall": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max RMSD when all chains are aligned e.g. 2"
+    },
+    "af2_max_rmsd_binder_bndaln": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max binder RMSD when binder chains are aligned e.g. 1"
+    },
+    "af2_max_rmsd_binder_tgtaln": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max binder RMSD when target chains are aligned e.g. 2"
+    },
+    "af2_max_rmsd_target": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max target RMSD when target chains are aligned e.g. 2"
+    },
+    "boltz_max_rmsd_overall": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max RMSD between all chains of Boltz-2 prediction and input design. e.g. 2.5"
+    },
+    "boltz_max_rmsd_binder": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max RMSD between binder chains of Boltz-2 prediction and input design. e.g. 1.5"
+    },
+    "boltz_max_rmsd_target": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max RMSD between target chains of Boltz-2 prediction and input design. e.g. 1"
+    },
+    "boltz_min_conf_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum confidence score e.g. 0.85"
+    },
+    "boltz_min_ptm": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum predicted TM-score e.g. 0.7"
+    },
+    "boltz_min_ptm_binder": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum predicted TM-score of binder chain e.g. 0.8"
+    },
+    "boltz_min_ptm_target": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum predicted TM-score of target chain e.g. 0.9"
+    },
+    "boltz_min_iptm": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum predicted TM-score of binder-target interface e.g. 0.85"
+    },
+    "boltz_min_plddt": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum pLDDT score e.g. 0.85"
+    },
+    "boltz_min_iplddt": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum pLDDT score of the binder-target interface e.g. 0.8"
+    },
+    "boltz_max_pde": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum predicted distance error e.g. 10"
+    },
+    "boltz_max_ipde": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum predicted distance error for the binder-target interface e.g 12"
+    },
+    "boltz_min_ipSAE_min": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum value allowed for the minimum interaction Prediction Score from Aligned Errors (ipSAE) of target and binder chains (0 to 1)"
+    },
+    "boltz_min_LIS": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum Local Interaction Score (LIS)"
+    },
+    "boltz_min_pDockQ2_min": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum value allowed for the minimum predicted DockQ Score v2 of target and binder chains (0 to 1)"
+    },
+    "boltz_max_pae_interaction": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum predicted aligned error at interaction interfaces (0 to ~30 Angstroms)"
+    },
+    "boltz_max_unbound_rmsd": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Max C-alpha RMSD between the unbound (target-free) binder prediction and the design. Requires boltz_predict_unbound_binder=true."
+    },
+    "boltz_min_unbound_conf_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum confidence score of the unbound (target-free) binder prediction. Requires boltz_predict_unbound_binder=true."
+    },
+    "boltz_min_unbound_ptm": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum pTM score of the unbound (target-free) binder prediction. Requires boltz_predict_unbound_binder=true."
+    },
+    "boltz_min_unbound_plddt": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum pLDDT score of the unbound (target-free) binder prediction. Requires boltz_predict_unbound_binder=true."
+    },
+    "boltz_max_unbound_pde": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum PDE score of the unbound (target-free) binder prediction. Requires boltz_predict_unbound_binder=true."
+    },
+    "pr_min_helices": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of alpha-helices in predicted structure"
+    },
+    "pr_max_helices": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of alpha-helices in predicted structure"
+    },
+    "pr_min_strands": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of beta-strands in predicted structure"
+    },
+    "pr_max_strands": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of beta-strands in predicted structure"
+    },
+    "pr_min_total_ss": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum total secondary structure elements (\u03b1-helices + \u03b2-strands) in predicted structure"
+    },
+    "pr_max_total_ss": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum total secondary structure elements (\u03b1-helices + \u03b2-strands) in predicted structure"
+    },
+    "pr_min_rog": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum radius of gyration (\u00c5) of predicted structure"
+    },
+    "pr_max_rog": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum radius of gyration (\u00c5) of predicted structure"
+    },
+    "pr_min_intface_bsa": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum buried surface area (\u00c5\u00b2) at the binding interface"
+    },
+    "pr_min_intface_shpcomp": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum shape complementarity of interface (0-1 scale; 1 is optimal)"
+    },
+    "pr_min_intface_hbonds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of hydrogen bonds at the interface"
+    },
+    "pr_max_intface_unsat_hbonds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of buried, unsatisfied hydrogen bonds at the interface"
+    },
+    "pr_max_intface_deltag": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum predicted binding free energy at the interface (PRODIGY IC-NIS model, kcal/mol; more negative is better)"
+    },
+    "pr_max_intface_deltagtobsa": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum ratio of delta-G to buried surface area"
+    },
+    "pr_max_surfhphobics": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum percentage of hydrophobic residues exposed on the surface"
+    },
+    "seq_min_ext_coef": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum extinction coefficient at 280nm (M\u207b\u00b9cm\u207b\u00b9)"
+    },
+    "seq_max_ext_coef": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum extinction coefficient at 280nm (M\u207b\u00b9cm\u207b\u00b9)"
+    },
+    "seq_min_pi": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum isoelectric point (pI) of the sequence"
+    },
+    "seq_max_pi": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum isoelectric point (pI) of the sequence"
+    },
+    "rfd_models": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to the RFdiffusion model checkpoints."
+    },
+    "af2_models": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to the AlphaFold2 databases."
+    },
+    "boltz_models": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to the Boltz-2 models."
+    },
+    "gpu_model": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GPU model to request, e.g., 'A30'.",
+      "example": "A30"
+    },
+    "gpu_queue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "GPU queue name or partition (if applicable, e.g. 'gpuq')"
+    },
+    "gpus": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Number of GPUs to request.",
+      "example": 4
+    },
+    "cpus": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Number of CPUs requested for CPU-only jobs",
+      "example": 24
+    },
+    "cpus_per_gpu": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Number of CPUs requested per GPU",
+      "example": 8
+    },
+    "memory_gpu": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Memory requested for GPU jobs",
+      "example": "24GB"
+    },
+    "memory_cpu": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Memory requested for CPU-only jobs",
+      "example": "24GB"
+    }
+  },
+  "rfd4_denovo": {
+    "num_designs": {
+      "type": "integer",
+      "description": "Number of designs to generate using RFdiffusion or Bindcraft.",
+      "example": 8
+    },
+    "seqs_per_design": {
+      "type": "integer",
+      "description": "Number of sequences to generate per design.",
+      "example": 1
+    },
+    "out_dir": {
+      "type": "string",
+      "description": "Output directory for results.",
+      "example": "${projectDir}/pdj_rfd4_denovo"
+    },
+    "design_length": {
+      "type": "string",
+      "description": "Design length. One or two dash separated values for min-max design length e.g. '60', '60-70'. Pipeline will randomly sample different sizes between these values.",
+      "pattern": "^\\d+(-\\d+)?$",
+      "example": "60-100"
+    },
+    "input_pdb": {
+      "type": "string",
+      "description": "Path to an input PDB file. e.g. 'target.pdb'",
+      "pattern": ".*\\.pdb$",
+      "example": "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
+    },
+    "hotspot_residues": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Specifies hotspot residues for binding. Comma-separated tokens, each a chain-qualified residue e.g. 'A56', a chain-qualified range e.g. 'A115-120', or a bare chain ID meaning the whole chain e.g. 'B'. e.g. 'A56,A115,A123'",
+      "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$",
+      "example": "A56,A115,A123"
+    },
+    "flexible_residues": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
+      "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$"
+    },
+    "pred_method": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Structure prediction method. Choose from 'af2' (AlphaFold2 Initial-Guess), 'boltz' (Boltz-2), or 'af2_boltz' (run AF2 first, filter, then run Boltz-2 on the survivors).",
+      "enum": [
+        "af2",
+        "boltz",
+        "af2_boltz"
+      ],
+      "example": "af2"
+    },
+    "zip_pdbs": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether to compress output final designs in a tar.gz archive. If false, results will be output as uncompressed PDB files.",
+      "example": true
+    },
+    "rank_designs": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether to rank final designs by prediction quality metrics and output ranked_designs.",
+      "example": true
+    },
+    "ranking_metric": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Structure prediction metric to use for ranking designs (e.g., 'af2_pae_interaction', 'boltz_ipSAE_min', 'boltz_iptm'). Must match the prediction method prefix (af2_* for AlphaFold2, boltz_* for Boltz-2). If null, defaults to 'af2_pae_interaction' for AlphaFold2 or 'boltz_ipSAE_min' for Boltz-2."
+    },
+    "max_designs": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of top-ranked designs to output (null = output all ranked designs)"
+    },
+    "max_seqs_per_fold": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of sequences per fold to keep after ranking (e.g. 4, null = no limit). Helps increase fold diversity."
+    },
+    "run_fold_only": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether to run fold design only and skip downstream stages (i.e. sequence design, prediction, and analysis)"
+    },
+    "skip_fold": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Skip Fold Design and run Sequence Design, Structure Prediction, and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B."
+    },
+    "skip_fold_seq": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Skip Fold Design and Sequence Design, and run Structure Prediction and Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B."
+    },
+    "skip_fold_seq_pred": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Skip Fold Design, Sequence Design, and Structure Prediction, and run Analysis only. Must provide 'skip_input_dir' directory below containing PDB and JSON files with metadata. Binder design PDBs must have binder as chain A and target as chain B."
+    },
+    "skip_input_dir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to input files when skipping stages e.g. './rfd_results'"
+    },
+    "rfd4_models": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Directory containing the RFD4-Proteina config.json and model.safetensors files, populated by scripts/download_models.sh.",
+      "example": "${projectDir}/models/rfd4"
+    },
+    "rfd4_inference_batch_size": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "RFD4 designs sampled simultaneously within each GPU task. Capped at the designs assigned to that GPU; does not change pipeline GPU allocation.",
+      "minimum": 1,
+      "example": 1
+    },
+    "uncropped_target_pdb": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to uncropped target PDB file to use in structure prediction e.g. 'benchmarkdata/5o45_pd-l1_uncropped.pdb'",
+      "pattern": ".*\\.pdb$"
+    },
+    "af2_initial_guess": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Use an initial-guess of the target chain(s) when performing binder structure prediction. When false, AF2 will not use an initial guess. Default = true",
+      "example": true
+    },
+    "af2_extra_config": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Additional configuration parameters to pass to AlphaFold2 Initial-Guess that are not externalised in Nextflow. e.g. '-recycle 3'"
+    },
+    "boltz_recycling_steps": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The number of recycling steps to use for prediction.",
+      "minimum": 1,
+      "example": 3
+    },
+    "boltz_diffusion_samples": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The number of diffusion samples to use for prediction.",
+      "minimum": 1,
+      "example": 1
+    },
+    "boltz_sampling_steps": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The number of sampling steps to use for prediction.",
+      "minimum": 1,
+      "example": 200
+    },
+    "boltz_use_potentials": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Use physics-based potentials during inference to improve physical plausibility of predictions (also known as Boltz-2x). Increases prediction time. Default = false",
+      "example": false
+    },
+    "boltz_use_templates": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether to use template structures to guide Boltz-2 predictions. Template is generated from input design structure. For monomer modes: uses chain A as template. For binder modes: uses chain B (target) as template only, similar to AlphaFold2 Initial-Guess.",
+      "example": true
+    },
+    "boltz_template_force": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether to enforce template structure using a potential (force constraint). Only applies if boltz_use_templates=true.",
+      "example": false
+    },
+    "boltz_template_threshold": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Distance threshold in Angstroms that the prediction can deviate from the template e.g. 1. Only applies if boltz_use_templates=true. If null, no distance threshold is applied."
+    },
+    "boltz_input_msa": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Path to a multiple sequence alignment (.a3m format) for the input PDB. Applies to chain B in binder modes or chain A in monomer modes. If null, single-sequence mode is used.",
+      "pattern": "\\.a3m$"
+    },
+    "boltz_extra_config": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Additional configuration parameters to pass to Boltz-2 that are not externalised in Nextflow. e.g. '--msa_pairing_strategy complete'"
+    },
+    "boltz_predict_unbound_binder": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Also predict the binder alone (no target) as a target-free monomer prediction with Boltz-2, to check whether the binder folds consistently to the design in the absence of the target. Binder design modes only. Runs as a pure single-sequence prediction (no template, no MSA).",
+      "example": false
+    },
+    "fold_min_helices": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of alpha-helices required. e.g. 3"
+    },
+    "fold_max_helices": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of alpha-helices allowed. e.g. 6"
+    },
+    "fold_min_strands": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of beta-strands required. e.g. 2"
+    },
+    "fold_max_strands": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of beta-strands allowed. e.g. 6"
+    },
+    "fold_min_ss": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minimum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 3"
+    },
+    "fold_max_ss": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Maximum number of secondary structure elements (\u03b1-helices + \u03b2-strands). e.g. 8"
+    },
+    "fold_min_rog": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Minimum radius of gyration (\u00c5). e.g. 10"
+    },
+    "fold_max_rog": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Maximum radius of gyration (\u00c5). e.g. 20"
     },
     "af2_min_iptm": {
       "type": [

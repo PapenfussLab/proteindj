@@ -12,6 +12,7 @@ ProteinDJ is a Nextflow pipeline for protein design that installs and utilises m
 - BioPython (from https://biopython.org/)
 - Boltz-2 (from https://github.com/jwohlwend/boltz)
 - BoltzGen (from https://github.com/HannesStark/boltzgen)
+- RFD4-Proteina (from https://github.com/RosettaCommons/RFD4-Proteina)
 - Full-Atom MPNN (from https://github.com/richardshuai/fampnn)
 - HyperMPNN (from https://github.com/meilerlab/HyperMPNN)
 - OpenMM (from https://openmm.org/) and PDBFixer (from https://github.com/openmm/pdbfixer)
@@ -54,7 +55,7 @@ git clone https://github.com/PapenfussLab/proteindj
 cd proteindj
 ```
 
-Next, download the models for AF2, Boltz, RFdiffusion etc. (~16 GB) using the download script . This may take a while depending on your internet connection. Note that this only needs to be done once on a cluster as long as the files and containers are in a location that can be accessed by all users (see [Installation Guide](docs/installation.md) for more details):
+Next, download the models for AF2, Boltz, RFdiffusion, RFD4 etc. (~18 GB) using the download script. This may take a while depending on your internet connection. Note that this only needs to be done once on a cluster as long as the files and containers are in a location that can be accessed by all users (see [Installation Guide](docs/installation.md) for more details):
 
 ```
 bash scripts/download_models.sh
@@ -66,7 +67,7 @@ Apptainer will automatically fetch containers as needed during the Nextflow run 
 
 The ProteinDJ consists of four stages:
 
-1. Fold Design - Using RFdiffusion, BindCraft, or BoltzGen
+1. Fold Design - Using RFdiffusion, BindCraft, BoltzGen, or RFD4-Proteina
 2. Sequence Design - Using ProteinMPNN or Full-Atom MPNN
 3. Structure Prediction - Using AlphaFold2 Initial Guess, Boltz-2, or both sequentially
 4. Analysis and Reporting - Using a combination of tools including PDBFixer/OpenMM, arpeggia, PRODIGY, and BioPython
@@ -82,6 +83,7 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - **bindcraft_denovo** - hallucination of new binders using BindCraft
 - **boltzgen_denovo** – generative design of new binders against a target using BoltzGen
 - **boltzgen_motifscaff** – redesign/rediffusion of an existing binder using BoltzGen
+- **rfd4_denovo** – co-design a binder's sequence and structure with RFD4-Proteina, then refold it with AF2 or Boltz-2
 
 <img src="img/modes_overview.png" height="720">
 
@@ -89,9 +91,9 @@ All the settings and parameters for ProteinDJ can be found in the `nextflow.conf
 
 | Parameter         | Example Value      | Description                                                                                                                                                                                     |
 | ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `design_mode`        | `'rfd_denovo'` | Pipeline mode. Choose from 'rfd_denovo', 'rfd_foldcond', 'rfd_motifscaff', 'rfd_partialdiff', 'bindcraft_denovo', 'boltzgen_denovo', or 'boltzgen_motifscaff'. Each automatically runs as monomer or binder design depending on inputs. |
+| `design_mode`        | `'rfd_denovo'` | Pipeline mode. Choose from 'rfd_denovo', 'rfd_foldcond', 'rfd_motifscaff', 'rfd_partialdiff', 'bindcraft_denovo', 'boltzgen_denovo', 'boltzgen_motifscaff', or 'rfd4_denovo'. |
 | `num_designs` | `8`                | Number of designs to generate using BindCraft, BoltzGen, or RFdiffusion.                                                                                                                                                |
-| `seqs_per_design` | `8`                | Number of sequences to generate per design.                                                                                                                                         |
+| `seqs_per_design` | `8`                | Number of sequences to generate per design; set to 1 for RFD4.                                                                                                                                         |
 | `out_dir`         | `'./pdj_results'`  | Output directory for results. Existing results in this directory will be overwritten.                                                                                                           |
 
 If a parameter has a prefix, it indicates that it is specific to an underlying program e.g. 'bg_' for BoltzGen. Other parameters are shared by multiple programs `input_pdb`, `hotspot_residues` etc. You can find a detailed description of all ProteinDJ parameters [here](docs/parameters.md).

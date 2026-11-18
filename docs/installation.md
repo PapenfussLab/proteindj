@@ -11,7 +11,7 @@ This guide will walk you through installing ProteinDJ and all its dependencies a
 Before starting, ensure you have:
 
 - **Linux/Unix system** with internet access
-- **Sufficient storage space**: ~16 GB for downloading models and ~50 GB for containers
+- **Sufficient storage space**: ~18 GB for downloaded models and ~50 GB for containers
 - **Administrative access** or ability to install software
 - **SLURM cluster** (if using HPC environment)
 
@@ -85,7 +85,23 @@ nextflow -version
 
 ## Step 3: Download Required Models
 
-> **💡 Tip:** This step downloads ~16 GB of model files. Consider doing this in a shared location so that other users can access the files.
+> **💡 Tip:** This step downloads ~18 GB of model files. Consider doing this in a shared location so that other users can access the files.
+
+### RFD4-Proteina Models (~1.7 GB)
+
+To run RFD4-Proteina, you will require the model checkpoint files. If you have not already downloaded the models, use the commands below, and update the `rfd4_models` variable in `nextflow.config` to the location of the model directory (e.g. './models/rfd4'):
+
+```bash
+mkdir -p models/rfd4
+
+# Download required model files
+hf download nvidia/RFD4-Proteina \
+    config.json model.safetensors \
+    --revision a06e2509c7033b010fc43614e9fd840303588502 \
+    --local-dir models/rfd4
+```
+
+RFD4 also uses cuEquivariance tuning data and compiled Triton kernels, which are shared between tasks in `rfd4_triton_cache` (default: `$HOME/.cache/proteindj/rfd4`). This cache directory is created automatically. Set `rfd4_triton_cache = null` in `nextflow.config` to keep a separate cache in each task's work directory.
 
 ### RFdiffusion Models (~3.7 GB)
 

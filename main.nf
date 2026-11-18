@@ -4,6 +4,7 @@ nextflow.enable.dsl = 2
 include { GenerateRFDContigs; GenerateRFDFoldCond; FilterFold ; RunRFD } from './modules/rfdiffusion.nf'
 include { AnalyseBC; PrepBC; RunBC } from './modules/bindcraft.nf'
 include { AnalyseBG; PrepBG; RunBG } from './modules/boltzgen.nf'
+include { PrepRFD4; RunRFD4; AnalyseRFD4; UseRFD4Sequences } from './modules/rfd4.nf'
 include { PrepFAMPNN ; RunFAMPNN } from './modules/fampnn.nf'
 include { FilterSeq; PrepMPNN ; RunMPNN } from './modules/proteinmpnn.nf'
 include { AlignAF2; FilterAF2; RunAF2 } from './modules/af2.nf'
@@ -20,6 +21,7 @@ include { Compress as CompressBoltz } from './modules/compress'
 include { Compress as CompressBoltzUnbound } from './modules/compress'
 include { Compress as CompressBC } from './modules/compress'
 include { Compress as CompressBG } from './modules/compress'
+include { Compress as CompressRFD4 } from './modules/compress'
 include { MergeUncroppedTarget } from './modules/merge_uncropped_target.nf'
 
 workflow {
@@ -54,7 +56,7 @@ workflow {
 
     def outputDirectory = params.out_dir
 
-    VALID_MODES = ['bindcraft_denovo', 'boltzgen_denovo', 'boltzgen_motifscaff', 'rfd_denovo', 'rfd_foldcond', 'rfd_motifscaff', 'rfd_partialdiff']
+    VALID_MODES = ['bindcraft_denovo', 'boltzgen_denovo', 'boltzgen_motifscaff', 'rfd4_denovo', 'rfd_denovo', 'rfd_foldcond', 'rfd_motifscaff', 'rfd_partialdiff']
     if (!(params.design_mode in VALID_MODES)) {
         throw new IllegalArgumentException("Invalid design mode: ${params.design_mode}. Must be one of: ${VALID_MODES.join(', ')}")
     }
@@ -62,7 +64,7 @@ workflow {
     // Auto-detect monomer vs binder behavior for RFdiffusion/BoltzGen modes (computed once, used throughout)
     def running_fold_design = !params.skip_fold && !params.skip_fold_seq && !params.skip_fold_seq_pred
     def is_binder_mode
-    if (params.design_mode == 'bindcraft_denovo') {
+    if (params.design_mode in ['bindcraft_denovo', 'rfd4_denovo']) {
         is_binder_mode = true
     } else if (running_fold_design) {
         // Fold design will run this invocation - detect from RFdiffusion/BoltzGen input parameters
@@ -261,6 +263,33 @@ workflow {
                 .rebatchTuples(bg_pdbs_jsons, 200)
                 .set { fold_tuples }
 
+        } else if (params.design_mode == 'rfd4_denovo') {
+            if (params.rfd4_triton_cache) {
+                def rfd4TritonCacheDir = file(params.rfd4_triton_cache)
+                if (!rfd4TritonCacheDir.isAbsolute()) {
+                    throw new IllegalArgumentException('rfd4_triton_cache must be an absolute path, or null to use the task work directory')
+                }
+                if (rfd4TritonCacheDir.exists() && !rfd4TritonCacheDir.isDirectory()) {
+                    throw new IllegalArgumentException("rfd4_triton_cache (${rfd4TritonCacheDir}) exists but is not a directory")
+                }
+                rfd4TritonCacheDir.mkdirs()
+                if (!rfd4TritonCacheDir.isDirectory()) {
+                    throw new IllegalArgumentException("Failed to create rfd4_triton_cache (${rfd4TritonCacheDir}). Check parent directory permissions.")
+                }
+            }
+            def inputFiles = engine.collectInputFiles().collect { file(it) }
+            inputFiles.each { inputFile -> inputFile.copyTo(inputsDir.resolve(inputFile.name)) }
+            PrepRFD4(file(params.input_pdb))
+            def designs_per_gpu = batch_size
+            PrepRFD4.out
+                .flatMap { spec, target ->
+                    (0..<num_batches).collect { batchId -> tuple(batchId, designs_per_gpu, spec, target) }
+                }
+                .set { rfd4_ch }
+            RunRFD4(rfd4_ch)
+            AnalyseRFD4(RunRFD4.out.samples)
+            CompressRFD4('rfd4', AnalyseRFD4.out.pdbs_jsons.flatten().collect())
+            Utils.rebatchTuples(AnalyseRFD4.out.pdbs_jsons, 200).set { fold_tuples }
         } else { // Use RFdiffusion for fold design
             // Check which contigs auto-generation strategy applies for this mode
             if (params.design_mode == 'rfd_foldcond'){
@@ -408,7 +437,12 @@ workflow {
     // Run Sequence Design if not skipped
     if (!params.skip_fold_seq & !params.skip_fold_seq_pred & !params.run_fold_only) {
         // Sequence design (either MPNN or FAMPNN)
-        if (params.seq_method == "mpnn") {
+        if (params.design_mode == 'rfd4_denovo') {
+            UseRFD4Sequences(filt_fold_pdbs_jsons)
+            UseRFD4Sequences.out.pdbs.collect().set { filt_seq_pdbs }
+            filt_fold_pdbs_jsons.set { seq_tuple }
+        }
+        else if (params.seq_method == "mpnn") {
             // Add FIXED labels to PDBs for target residues so the sequence does not change
             PrepMPNN(filt_fold_pdbs_jsons)
             
@@ -473,11 +507,13 @@ workflow {
         }
 
         // Filter designs by sequence score
-        FilterSeq(seq_tuple, seq_max_score_param, seq_filter_params)
-        FilterSeq.out.pdbs
-            .flatten()
-            .collect()
-            .set { filt_seq_pdbs }
+        if (params.design_mode != 'rfd4_denovo') {
+            FilterSeq(seq_tuple, seq_max_score_param, seq_filter_params)
+            FilterSeq.out.pdbs
+                .flatten()
+                .collect()
+                .set { filt_seq_pdbs }
+        }
     }
     else if (!params.skip_fold_seq_pred & !params.run_fold_only) {
         // Skip sequence design and run prediction using existing PDBs from specified directory

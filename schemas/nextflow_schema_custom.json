@@ -18,6 +18,7 @@
             "bindcraft_denovo",
             "boltzgen_denovo",
             "boltzgen_motifscaff",
+            "rfd4_denovo",
             "rfd_denovo",
             "rfd_foldcond",
             "rfd_motifscaff",
@@ -75,7 +76,7 @@
         },
         "flexible_residues": {
           "type": "string",
-          "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond.",
+          "description": "Residues whose structure should NOT be conditioned on (BoltzGen structure_groups visibility=0 / RFdiffusion contigmap.inpaint_str / RFD4 coordinate conditioning removed), useful for disordered/flexible regions e.g. loops or IDPs. Comma-separated tokens, each a chain-qualified residue e.g. 'B16', a chain-qualified range e.g. 'B10-13', or a bare chain ID e.g. 'C' meaning the whole chain is flexible. In boltzgen_motifscaff/rfd_motifscaff mode this may also reference chain A residues kept by motifscaff_spec. Used by boltzgen_denovo, boltzgen_motifscaff, rfd_motifscaff, rfd_partialdiff, and binder design with rfd_denovo/rfd_foldcond/rfd4_denovo. In RFD4 the target sequence remains fixed.",
           "pattern": "^([A-Za-z]+(\\d+(-\\d+)?)?)(,[A-Za-z]+(\\d+(-\\d+)?)?)*$",
           "default": null
         },
@@ -216,6 +217,18 @@
           "format": "directory-path",
           "hidden": true,
           "default": null
+        },
+        "rfd4_models": {
+          "type": "string",
+          "format": "directory-path",
+          "default": "${projectDir}/models/rfd4",
+          "description": "Directory containing the RFD4-Proteina config.json and model.safetensors files, populated by scripts/download_models.sh."
+        },
+        "rfd4_inference_batch_size": {
+          "type": "integer",
+          "default": 1,
+          "minimum": 1,
+          "description": "RFD4 designs sampled simultaneously within each GPU task. Capped at the designs assigned to that GPU; does not change pipeline GPU allocation."
         }
       }
     },

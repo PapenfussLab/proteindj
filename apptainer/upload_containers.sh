@@ -15,6 +15,7 @@ CONTAINERS=(
     "fampnn"
     "python_tools"
     "rfdiffusion"
+    "rfd4"
 )
 
 # Check if version argument provided

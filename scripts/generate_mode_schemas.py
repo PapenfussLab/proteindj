@@ -112,6 +112,7 @@ def build_mode_schema(main_schema, mode, overrides, required):
                     "bindcraft_denovo",
                     "boltzgen_denovo",
                     "boltzgen_motifscaff",
+                    "rfd4_denovo",
                     "rfd_denovo",
                     "rfd_foldcond",
                     "rfd_motifscaff",

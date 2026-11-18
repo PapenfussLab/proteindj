@@ -17,6 +17,9 @@ Due to the creative nature of protein design and the complexity of RFdiffusion t
 - [**boltzgen_denovo**](#mode-boltzgendenovo) – generative design of new monomers/binders using BoltzGen
 - [**boltzgen_motifscaff**](#mode-boltzgenmotifscaff) – redesign/rediffusion of an existing monomer/binder using BoltzGen
 
+[**RFD4-Proteina design**](#rfd4design)
+- [**rfd4_denovo**](#mode-rfd4denovo) – co-design a binder's sequence and structure against a single-chain target, then refold it for evaluation
+
 ## Preparing Target Structures for Binder Design <a name="binderdesign"></a>
 
 To design binders with ProteinDJ, it is important to prepare your target structure. Ideally, your structure will be a high-resolution experimental structure or a high-confidence structural prediction. Ligands are not compatible with ProteinDJ. Non-natural amino acids in protein chains will result in an error from RFdiffusion and be replaced by alanines in BindCraft, so it is best to replace these with a suitable natural amino acid before running ProteinDJ. Since the runtime of these programs scale exponentially with target size you might want to crop the size of your target to a minimal domain. See below for an example of how to prepare a structure. You should avoid exposing hydrophobic cores of your target domain as RFdiffusion/BindCraft/BoltzGen will likely want to design a binder there (since they have a bias towards hydrophobic patches).
@@ -624,5 +627,54 @@ boltzgen_motifscaff {
 ```
 
 For more details on BoltzGen, see the official [GitHub](https://github.com/HannesStark/boltzgen).
+
+## RFD4-Proteina Binder Design <a name="rfd4design"></a>
+
+### RFD4 De Novo Mode (rfd4_denovo) <a name="mode-rfd4denovo"></a>
+
+RFD4-Proteina designs a binder backbone and sequence together against a target protein. To run this mode, provide a target PDB and a design length. The target PDB must contain one protein chain with standard amino acids. For example, to design binders 60–100 residues long against PD-L1:
+
+
+```groovy
+ rfd4_denovo {
+    params {
+        design_mode = 'rfd4_denovo'
+        input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
+        design_length = '60-100'
+        pred_method = 'boltz'
+    }
+}
+```
+
+You can guide binder placement with optional `hotspot_residues` (see [Specifying Hotspot / Target Residues](#specifying-hotspot--target-residues) for the accepted format):
+
+```
+rfd4_denovo {
+    params {
+        design_mode = 'rfd4_denovo'
+        input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
+        design_length = '60-100'
+        hotspot_residues = 'A56,A115,A123'
+    }
+}
+```
+
+If part of the target is disordered or flexible, use `flexible_residues` to leave that region's
+structure unconditioned. As in RFdiffusion binder design, this changes structural conditioning only:
+the target sequence remains fixed while RFD4 generates the selected residues' conformation in the
+complex.
+
+```groovy
+rfd4_denovo {
+    params {
+        design_mode = 'rfd4_denovo'
+        input_pdb = './benchmarkdata/5o45_pd-l1.pdb'
+        design_length = '60-100'
+        flexible_residues = 'A17-20'
+    }
+}
+```
+
+RFD4 designs the binder sequence and structure together, so set `seqs_per_design = 1`. You can select AF2 or Boltz-2 for structure prediction with `pred_method`.
 
 [⬅️ Back to Main README](../README.md)

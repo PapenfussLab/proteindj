@@ -32,6 +32,23 @@ nextflow_pipeline {
         }
     }
 
+    test("rfd4_denovo binder co-design with refolding") {
+        when {
+            params {
+                design_mode = "rfd4_denovo"
+                design_length = "60-100"
+                input_pdb = "${projectDir}/benchmarkdata/5o45_pd-l1.pdb"
+                hotspot_residues = "A56,A115"
+                flexible_residues = "A17-20"
+                seqs_per_design = 1
+                pred_method = "boltz"
+            }
+        }
+        then {
+            assert workflow.success
+        }
+    }
+
     test("rfd_foldcond monomer") {
         when {
             params {

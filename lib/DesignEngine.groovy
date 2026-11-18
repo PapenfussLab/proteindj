@@ -35,6 +35,9 @@ abstract class DesignEngine {
         if (params.design_mode in ['boltzgen_denovo', 'boltzgen_motifscaff']) {
             return new BoltzGenEngine(params, isBinderMode)
         }
+        if (params.design_mode == 'rfd4_denovo') {
+            return new RFD4Engine(params, isBinderMode)
+        }
         return new RFDEngine(params, isBinderMode)
     }
 }

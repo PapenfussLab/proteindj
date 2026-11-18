@@ -52,6 +52,72 @@ nextflow_function {
         }
     }
 
+    test("forMode dispatches rfd4_denovo to RFD4Engine") {
+        when {
+            function {
+                """
+                input[0] = "[A1-88/0]"
+                """
+            }
+        }
+        then {
+            assert function.success
+            assert DesignEngine.forMode([design_mode: "rfd4_denovo"], true).class.simpleName == 'RFD4Engine'
+        }
+    }
+
+    test("RFD4 inference batch size must be positive") {
+        when {
+            function {
+                """
+                input[0] = "[A1-88/0]"
+                """
+            }
+        }
+        then {
+            assert function.success
+            def models = File.createTempDir('rfd4-models-', '')
+            new File(models, 'config.json').text = '{}'
+            new File(models, 'model.safetensors').text = ''
+            def base = [design_mode: 'rfd4_denovo', design_length: '60-100',
+                        input_pdb: 'target.pdb', seqs_per_design: 1,
+                        rfd4_models: models.absolutePath]
+            try {
+                new RFD4Engine(base + [rfd4_inference_batch_size: 4], true).validateParams()
+                def threw = false
+                try {
+                    new RFD4Engine(base + [rfd4_inference_batch_size: 0], true).validateParams()
+                } catch (IllegalArgumentException e) {
+                    threw = true
+                }
+                assert threw
+            } finally {
+                models.deleteDir()
+            }
+        }
+    }
+
+    test("RFD4Engine.validateParams rejects an invalid flexible_residues format") {
+        when {
+            function {
+                """
+                input[0] = "[A1-88/0]"
+                """
+            }
+        }
+        then {
+            assert function.success
+            def threw = false
+            try {
+                new RFD4Engine([design_mode: 'rfd4_denovo', design_length: '60-100',
+                    input_pdb: 'target.pdb', flexible_residues: '10-20'], true).validateParams()
+            } catch (IllegalArgumentException e) {
+                threw = e.message.contains('flexible_residues format invalid')
+            }
+            assert threw
+        }
+    }
+
     test("BindCraftEngine.validateParams accepts valid bc_chains and hotspot_residues") {
         when {
             function {

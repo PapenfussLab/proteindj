@@ -2,7 +2,7 @@
 
 # RFdiffusion, AlphaFold2, Boltz-2, and BoltzGen Model Downloader
 # This script downloads all required models for protein prediction pipelines
-# Total download size: ~16 GB
+# Total installed model size: ~18 GB
 
 set -e  # Exit on any error
 
@@ -85,7 +85,7 @@ verify_file() {
 }
 
 print_status "Starting model downloads..."
-print_status "Total expected download size: ~19.2 GB. Final size: ~16.0 GB"
+print_status "Total expected download size: ~20.9 GB. Final size: ~17.7 GB"
 print_status "This may take a while depending on your internet connection."
 
 # ============================================================================
@@ -238,6 +238,26 @@ fi
 print_success "BoltzGen models download completed!"
 
 # ============================================================================
+# RFD4-Proteina Model Bundle (~1.7 GB)
+# ============================================================================
+# RFD4 loads its denoiser and autoencoder from a single Hugging Face bundle.
+# Download the exact revision selected by the RFD4 release as a local bundle so
+# a Nextflow task can load it directly without contacting Hugging Face.
+
+print_status "Downloading RFD4-Proteina model bundle (~1.7 GB)..."
+mkdir -p models/rfd4
+
+RFD4_REPO="nvidia/RFD4-Proteina"
+RFD4_REVISION="a06e2509c7033b010fc43614e9fd840303588502"
+
+hf download "$RFD4_REPO" \
+    config.json model.safetensors \
+    --revision "$RFD4_REVISION" \
+    --local-dir models/rfd4 || exit 1
+
+print_success "RFD4-Proteina model bundle downloaded to models/rfd4!"
+
+# ============================================================================
 # ProteinMPNN Model Weights (~0.1 GB)
 # ============================================================================
 
@@ -327,6 +347,14 @@ else
     print_error "BoltzGen: Missing required files (boltzgen1_diverse.ckpt, boltzgen1_adherence.ckpt or mols.zip)"
 fi
 
+# Check the downloaded RFD4 model directory
+print_status "Checking RFD4-Proteina model bundle..."
+if [ -f "models/rfd4/config.json" ] && [ -f "models/rfd4/model.safetensors" ]; then
+    print_success "RFD4-Proteina: Found config.json and model.safetensors in the local cache"
+else
+    print_error "RFD4-Proteina: Model bundle is missing or incomplete"
+fi
+
 # Check ProteinMPNN weights
 print_status "Checking ProteinMPNN weights..."
 vanilla_count=$(ls -1 models/mpnn/vanilla_model_weights/*.pt 2>/dev/null | wc -l)
@@ -344,6 +372,7 @@ echo "  - RFdiffusion models: $(du -sh models/rfd 2>/dev/null | cut -f1 || echo 
 echo "  - AlphaFold2 models:  $(du -sh models/af2 2>/dev/null | cut -f1 || echo 'N/A')"
 echo "  - Boltz-2 models:     $(du -sh models/boltz 2>/dev/null | cut -f1 || echo 'N/A')"
 echo "  - BoltzGen models:    $(du -sh models/boltzgen 2>/dev/null | cut -f1 || echo 'N/A')"
+echo "  - RFD4 models:        $(du -sh models/rfd4 2>/dev/null | cut -f1 || echo 'N/A')"
 echo "  - ProteinMPNN models: $(du -sh models/mpnn 2>/dev/null | cut -f1 || echo 'N/A')"
 echo "  - Total size:         $(du -sh models/ 2>/dev/null | tail -1 | cut -f1 || echo 'N/A')"
 
@@ -354,3 +383,4 @@ echo "  - models/mpnn = './models/mpnn'"
 echo "  - models/af2 = './models/af2'"
 echo "  - models/boltz = './models/boltz'"
 echo "  - models/boltzgen = './models/boltzgen'"
+echo "  - rfd4_models = './models/rfd4'"

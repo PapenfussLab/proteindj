@@ -12,6 +12,7 @@ declare -A CONTAINERS=(
     ["fampnn"]="fampnn.def"
     ["python_tools"]="python_tools.def"
     ["rfdiffusion"]="rfdiffusion.def"
+    ["rfd4"]="rfd4.def"
 )
 
 # Enable/disable container builds (1=enabled, 0=disabled)
@@ -23,6 +24,7 @@ BUILD_DL_BINDER_DESIGN=1
 BUILD_FAMPNN=1
 BUILD_PYTHON_TOOLS=1
 BUILD_RFDIFFUSION=1
+BUILD_RFD4=1
 
 # Function to build a single container
 build_container() {
