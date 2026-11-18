@@ -587,8 +587,10 @@ workflow {
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { templates_ch }
 
-            // Handle MSA file - use empty channel if not present
+            // Handle MSA file(s) - use empty channel if not present. With multiple MSAs the
+            // output is a list, so wrap it to stop combine() flattening it into the tuple
             PrepBoltz.out.msa_file
+                .map { [it] }
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { msa_ch }
 
@@ -753,8 +755,10 @@ workflow {
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { templates_ch }
 
-            // Handle MSA file - use empty channel if not present
+            // Handle MSA file(s) - use empty channel if not present. With multiple MSAs the
+            // output is a list, so wrap it to stop combine() flattening it into the tuple
             PrepBoltz.out.msa_file
+                .map { [it] }
                 .ifEmpty(file("${projectDir}/lib/NO_FILE"))
                 .set { msa_ch }
 

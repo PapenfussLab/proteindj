@@ -56,7 +56,9 @@ def get_target_atoms(structure, binder_chain='A', atom_type="CA"):
         atom
         for chain in structure[0]
         if chain.id != binder_chain
-        for atom in unfold_entities(chain, 'A')
+        for residue in chain
+        if residue.id[0] == ' '  # standard residues only (HETATM ions can also be named 'CA')
+        for atom in residue
         if atom.get_name() == atom_type
     ]
     if not atoms:

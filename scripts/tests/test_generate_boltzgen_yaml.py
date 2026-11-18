@@ -119,6 +119,13 @@ def test_clean_pdb_for_boltzgen_reorders_chain_a_first(tmp_path, pdb_atom_line):
     assert output_path.read_text().splitlines() == [a_line, a_ter, b_line, b_ter]
 
 
+def test_clean_pdb_for_boltzgen_reorder_without_chain_a_raises(tmp_path, pdb_atom_line):
+    input_path = tmp_path / "in.pdb"
+    input_path.write_text(f"{pdb_atom_line(chain='B', resnum=1)}\n")
+    with pytest.raises(ValueError, match="No chain 'A'"):
+        clean_pdb_for_boltzgen(input_path, tmp_path / "out.pdb", reorder_chain_a_first=True)
+
+
 # ---------------------------------------------------------------------------
 # parse_design_length
 # ---------------------------------------------------------------------------

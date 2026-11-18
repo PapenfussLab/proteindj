@@ -204,6 +204,8 @@ def _relax_structure(pdb_path, ph=7.0, restraint_k=1000.0):
 
     fixer_input_path = _reorder_chains_alphabetically(pdb_path)
     fixer = PDBFixer(filename=str(fixer_input_path))
+    if fixer_input_path != pdb_path:
+        fixer_input_path.unlink()  # temporary chain-sorted copy, already loaded
     # Boltz/AF2-predicted PDBs often omit OXT atoms at genuine chain termini,
     # which otherwise makes ForceField unable to tell whether a chain's last
     # residue is an internal residue (expects a peptide bond onward) or a

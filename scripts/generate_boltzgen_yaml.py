@@ -133,6 +133,8 @@ def clean_pdb_for_boltzgen(input_path, output_path, reorder_chain_a_first=False)
         else:
             header_lines.append(line)
 
+    if 'A' not in chain_lines:
+        raise ValueError(f"No chain 'A' found in {input_path} to place first")
     ordered_chains = ['A'] + [c for c in chain_order if c != 'A']
     with open(output_path, 'w') as fout:
         fout.writelines(header_lines)
