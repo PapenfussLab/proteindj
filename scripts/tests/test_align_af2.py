@@ -107,3 +107,14 @@ def test_get_target_atoms_no_target_chains_raises(tmp_path, pdb_atom_line):
     structure = _parse(_write_pdb(tmp_path, lines))
     with pytest.raises(ValueError, match="No CA atoms found in target chains"):
         get_target_atoms(structure, binder_chain='A')
+
+
+def test_get_target_atoms_ignores_hetatm_calcium_named_ca(tmp_path, pdb_atom_line):
+    lines = [
+        pdb_atom_line(serial=1, name='CA', chain='A', resnum=1),
+        pdb_atom_line(serial=2, name='CA', chain='B', resnum=1),
+        "HETATM    3 CA    CA B 101      10.000  10.000  10.000  1.00  0.00          CA",
+    ]
+    structure = _parse(_write_pdb(tmp_path, lines))
+    atoms = get_target_atoms(structure, binder_chain='A')
+    assert [a.get_serial_number() for a in atoms] == [2]

@@ -178,7 +178,7 @@ def test_extract_sequences_multiple_msa_matched_positionally(tmp_path, pdb_atom_
 
 def test_extract_sequences_mismatched_msa_count_matches_best_effort(tmp_path, pdb_atom_line, capsys):
     pdb_path = _write_three_chain_pdb(tmp_path, pdb_atom_line)
-    # Only one file for two eligible target chains (B, C) -> positional match, C left unmatched
+    # Three files for two eligible target chains (B, C) -> positional match, extra file unused
     sequences, _ = extract_sequences(
         pdb_path, msa_files=['b_target.a3m', 'extra.a3m', 'unused.a3m'], msa_exclude_chain='A'
     )
